@@ -18,15 +18,7 @@ class CBackend(Backend):
         self.c_core = pure_c_backend_core
 
     def zeros(self, shape, dtype=complex):
-        if isinstance(shape, int):
-            shape = (shape,)
-        if len(shape) == 2:
-            return self.c_core.zeros(shape[0], shape[1])
-        else:
-            # Fallback to pure Python for other shapes
-            if len(shape) == 1:
-                return [0 + 0j if dtype == complex else 0] * shape[0]
-            return None  # Not implemented for higher dimensions
+        return self.c_core.zeros(shape[0], shape[1])
 
     def linspace(self, start, stop, num):
         return self.c_core.linspace(start, stop, num)
