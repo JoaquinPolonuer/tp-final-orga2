@@ -1,14 +1,11 @@
 import math
 import cmath
-import math
-import cmath
-from typing import Union
 
 
 class PurePythonBackend:
     """Complete Pure Python backend implementation with proper FFT"""
 
-    def zeros(self, shape: Union[int, tuple[int, int]], dtype=complex) -> Union[list, list[list]]:
+    def zeros(self, shape: int | tuple[int, int], dtype=complex) -> list | list[list]:
         if isinstance(shape, int):
             return [0 + 0j if dtype == complex else 0] * shape
         rows, cols = shape
@@ -27,7 +24,7 @@ class PurePythonBackend:
         Y = [[y[i] for j in range(len(x))] for i in range(len(y))]
         return X, Y
 
-    def sqrt(self, x: Union[float, complex, list]) -> Union[float, list]:
+    def sqrt(self, x: float | complex | list) -> float | list:
         if isinstance(x, (list, tuple)):
             result = []
             for i in range(len(x)):
@@ -52,7 +49,7 @@ class PurePythonBackend:
             return math.sqrt(x.real**2 + x.imag**2)
         return math.sqrt(abs(x))
 
-    def exp(self, x: Union[float, complex, list]) -> Union[float, complex, list]:
+    def exp(self, x: float | complex | list) -> float | complex | list:
         if isinstance(x, (list, tuple)):
             result = []
             for i in range(len(x)):
@@ -182,7 +179,7 @@ class PurePythonBackend:
                 result.append((i - n) / (n * d))
         return result
 
-    def abs(self, x: Union[complex, list]) -> Union[float, list]:
+    def abs(self, x: complex | list) -> float | list:
         """Absolute value / magnitude"""
         if isinstance(x, (list, tuple)):
             result = []
@@ -208,7 +205,7 @@ class PurePythonBackend:
             return math.sqrt(x.real**2 + x.imag**2)
         return abs(x)
 
-    def real(self, x: Union[complex, list]) -> Union[float, list]:
+    def real(self, x: complex | list) -> float | list:
         """Real part extraction"""
         if isinstance(x, (list, tuple)):
             result = []
@@ -234,7 +231,7 @@ class PurePythonBackend:
             return x.real
         return x
 
-    def max(self, x: Union[float, list]) -> float:
+    def max(self, x: float | list) -> float:
         """Maximum value"""
         if isinstance(x, (list, tuple)):
             if isinstance(x[0], (list, tuple)):
@@ -250,7 +247,7 @@ class PurePythonBackend:
                 return max(x)
         return x
 
-    def sum(self, x: Union[float, list]) -> float:
+    def sum(self, x: float | list) -> float:
         """Sum of all elements"""
         if isinstance(x, (list, tuple)):
             if isinstance(x[0], (list, tuple)):
@@ -299,7 +296,7 @@ class PurePythonBackend:
             # 1D arrays
             return [a[i] + b[i] for i in range(len(a))]
 
-    def power(self, x: Union[float, list], p: float) -> Union[float, list]:
+    def power(self, x: float | list, p: float) -> float | list:
         """Element-wise power operation"""
         if isinstance(x, (list, tuple)):
             result = []
