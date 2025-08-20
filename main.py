@@ -39,9 +39,22 @@ class WaveSimulation2D:
         self.KX, self.KY = self.backend.meshgrid(kx, ky)
 
         # Calculate K magnitude
-        if isinstance(self.backend, (NumpyBackend, CBackend)):
+        if isinstance(self.backend, NumpyBackend):
             self.K = self.backend.sqrt(np.array(self.KX) ** 2 + np.array(self.KY) ** 2) * 2 * np.pi
             self.K[0, 0] = 1e-10
+        elif isinstance(self.backend, CBackend):
+            # C backend: calculate K magnitude without NumPy
+            self.K = []
+            for i in range(size):
+                row = []
+                for j in range(size):
+                    kx_val = self.KX[i][j]
+                    ky_val = self.KY[i][j]
+                    k_mag = math.sqrt(kx_val**2 + ky_val**2) * 2 * math.pi
+                    if i == 0 and j == 0:
+                        k_mag = 1e-10
+                    row.append(k_mag)
+                self.K.append(row)
         else:
             # For pure Python, simplified K calculation
             self.K = [
@@ -69,7 +82,7 @@ class WaveSimulation2D:
         y_idx = self.backend.clip(y_idx, 0, self.size - 1)
 
         # Create wave pattern - simplified for backend compatibility
-        if isinstance(self.backend, (NumpyBackend, CBackend)):
+        if isinstance(self.backend, NumpyBackend):
             # Use full NumPy implementation
             envelope = amplitude * np.exp(
                 -((np.array(self.X) - x_pos) ** 2 + (np.array(self.Y) - y_pos) ** 2) / width**2
@@ -95,7 +108,7 @@ class WaveSimulation2D:
 
     def step(self):
         """Advance simulation by one time step"""
-        if isinstance(self.backend, (NumpyBackend, CBackend)):
+        if isinstance(self.backend, NumpyBackend):
             omega = self.wave_speed * self.K
             phase_factor = np.exp(-1j * omega * self.dt)
             self.wave_k *= phase_factor
@@ -111,11 +124,11 @@ class WaveSimulation2D:
 
     def get_intensity(self):
         """Get wave intensity for visualization"""
-        return (
-            self.backend.abs(self.wave) ** 2
-            if isinstance(self.backend, (NumpyBackend, CBackend))
-            else [[abs(self.wave[i][j]) ** 2 for j in range(self.size)] for i in range(self.size)]
-        )
+        if isinstance(self.backend, NumpyBackend):
+            return self.backend.abs(self.wave) ** 2
+        else:
+            # For C backend and pure Python backend
+            return [[abs(self.wave[i][j]) ** 2 for j in range(self.size)] for i in range(self.size)]
 
     def get_real_part(self):
         """Get real part of wave for visualization"""
