@@ -3,19 +3,19 @@ import cmath
 from backends.backend import Backend
 
 try:
-    from backends import c_backend_core
+    from backends import pure_c_backend_core
 except ImportError:
     raise ImportError(
-        "C backend core module not available. "
+        "Pure C backend core module not available. "
         "Please compile it using: python setup.py build_ext --inplace"
     )
 
 
 class CBackend(Backend):
-    """C backend implementation using optimized C functions for critical operations"""
+    """C backend implementation using optimized C functions without NumPy dependencies"""
 
     def __init__(self):
-        self.c_core = c_backend_core
+        self.c_core = pure_c_backend_core
 
     def zeros(self, shape, dtype=complex):
         if isinstance(shape, int):
