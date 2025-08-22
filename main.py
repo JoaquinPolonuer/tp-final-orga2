@@ -43,8 +43,8 @@ class WaveSimulation2D:
         if isinstance(self.backend, NumpyBackend):
             self.K = self.backend.sqrt(np.array(self.KX) ** 2 + np.array(self.KY) ** 2) * 2 * np.pi
             self.K[0, 0] = 1e-10
-        elif isinstance(self.backend, CBackend):
-            # C backend: calculate K magnitude without NumPy
+        else:
+            # For C backend and pure Python backend
             self.K = []
             for i in range(size):
                 row = []
@@ -56,19 +56,6 @@ class WaveSimulation2D:
                         k_mag = 1e-10
                     row.append(k_mag)
                 self.K.append(row)
-        else:
-            # For pure Python, simplified K calculation
-            self.K = [
-                [
-                    (
-                        1e-10
-                        if i == 0 and j == 0
-                        else math.sqrt(self.KX[i][j] ** 2 + self.KY[i][j] ** 2) * 2 * math.pi
-                    )
-                    for j in range(size)
-                ]
-                for i in range(size)
-            ]
 
         # Initialize wave field
         self.wave = self.backend.zeros((size, size), dtype=complex)
