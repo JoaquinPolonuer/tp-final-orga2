@@ -171,18 +171,12 @@ class WaveVisualizer:
 
     def _connect_events(self):
         self.fig.canvas.mpl_connect("button_press_event", self._on_click)
-        self.fig.canvas.mpl_connect("key_press_event", self._on_key)
 
     def _on_click(self, event):
         if event.inaxes in [self.ax1, self.ax2] and event.button == 1:
             x_click, y_click = event.xdata, event.ydata
             if x_click is not None and y_click is not None:
                 self.sim.add_wave_source(x_click, y_click, amplitude=0.8, frequency=4.0)
-
-    def _on_key(self, event):
-        if event.key == "c":
-            self.sim.wave = self.sim.backend.zeros((self.sim.size, self.sim.size), dtype=complex)
-            self.sim.wave_k = self.sim.backend.fft2(self.sim.wave)
 
     def _update_fps(self):
         self.fps_counter["frame_count"] += 1
