@@ -8,19 +8,19 @@ import time
 from backends.numpy_backend import NumpyBackend
 from backends.pure_python_backend import PurePythonBackend
 from backends.c_backend import CBackend
+from utils import to_array
+
+backends = {
+    "numpy": NumpyBackend,
+    "python": PurePythonBackend,
+    "c": CBackend,
+}
 
 
 class WaveSimulation2D:
     def __init__(self, backend="numpy", size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
-        # Select backend
-        if backend == "numpy":
-            self.backend = NumpyBackend()
-        elif backend == "python":
-            self.backend = PurePythonBackend()
-        elif backend == "c":
-            self.backend = CBackend()
-        else:
-            raise ValueError(f"Unknown backend: {backend}")
+
+        self.backend = backends.get(backend, NumpyBackend)()
 
         self.size = size
         self.domain_size = domain_size
@@ -29,14 +29,15 @@ class WaveSimulation2D:
 
         # Spatial grid
         self.dx = domain_size / size
-        x = self.backend.linspace(-domain_size / 2, domain_size / 2, size)
-        y = self.backend.linspace(-domain_size / 2, domain_size / 2, size)
-        self.X, self.Y = self.backend.meshgrid(x, y)
+        self.X, self.Y = self.backend.meshgrid(
+            self.backend.linspace(-domain_size / 2, domain_size / 2, size),
+            self.backend.linspace(-domain_size / 2, domain_size / 2, size),
+        )
 
         # Frequency grid (k-space)
-        kx = self.backend.fftfreq(size, self.dx)
-        ky = self.backend.fftfreq(size, self.dx)
-        self.KX, self.KY = self.backend.meshgrid(kx, ky)
+        self.KX, self.KY = self.backend.meshgrid(
+            self.backend.fftfreq(size, self.dx), self.backend.fftfreq(size, self.dx)
+        )
 
         # Calculate K magnitude
         if isinstance(self.backend, NumpyBackend):
@@ -150,14 +151,9 @@ def run_simulation(backend="numpy", simulation_size=128):
 
     # Set up visualization with FPS counter
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
-    animation_running = True
 
     # FPS tracking
     fps_counter = {"frame_count": 0, "start_time": time.time(), "last_fps": 0.0}
-
-    # Convert data for matplotlib (handle both numpy arrays and lists)
-    def to_array(data):
-        return np.array(data) if not isinstance(data, np.ndarray) else data
 
     im1 = ax1.imshow(
         to_array(sim.get_intensity()),
@@ -187,21 +183,10 @@ def run_simulation(backend="numpy", simulation_size=128):
             if x_click is not None and y_click is not None:
                 sim.add_wave_source(x_click, y_click, amplitude=0.8, frequency=4.0)
 
-    def on_key(event):
-        nonlocal animation_running
-        if event.key == " ":
-            animation_running = not animation_running
-        elif event.key == "c":
-            sim.wave = sim.backend.zeros((sim.size, sim.size), dtype=complex)
-            sim.wave_k = sim.backend.fft2(sim.wave)
-
     fig.canvas.mpl_connect("button_press_event", on_click)
-    fig.canvas.mpl_connect("key_press_event", on_key)
 
     def animate(frame):
-        if animation_running:
-            for _ in range(3):
-                sim.step()
+        sim.step()
 
         # Update FPS counter
         fps_counter["frame_count"] += 1
@@ -243,7 +228,7 @@ def run_simulation(backend="numpy", simulation_size=128):
 
 if __name__ == "__main__":
     # Choose backend: 'numpy', 'python', or 'c'
-    backend_choice = "c"  # Change to 'python' to test pure Python backend, 'c' for C backend
+    backend_choice = "numpy"  # Change to 'python' to test pure Python backend, 'c' for C backend
 
     simulation, anim = run_simulation(backend=backend_choice, simulation_size=128)
 
