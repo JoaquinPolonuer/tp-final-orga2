@@ -25,10 +25,10 @@ class WaveSimulation2D:
         self.size = size
         self.domain_size = domain_size
         self.wave_speed = wave_speed
+        self.dx = domain_size / size
         self.dt = dt
 
         # Spatial grid
-        self.dx = domain_size / size
         self.X, self.Y = self.backend.meshgrid(
             self.backend.linspace(-domain_size / 2, domain_size / 2, size),
             self.backend.linspace(-domain_size / 2, domain_size / 2, size),
@@ -162,8 +162,8 @@ class WaveVisualizer:
             to_array(self.sim.get_real_part()),
             extent=[-4, 4, -4, 4],
             cmap="RdBu",
-            vmin=-1,
-            vmax=1,
+            vmin=-0.5,
+            vmax=0.5,
             origin="lower",
         )
         self.ax2.set_title(f"Wave Real Part Re(ψ) ({self.backend_name} backend)")
@@ -205,14 +205,6 @@ class WaveVisualizer:
         intensity = to_array(self.sim.get_intensity())
         real_part = to_array(self.sim.get_real_part())
 
-        max_intensity = np.max(intensity)
-        if max_intensity > 0:
-            self.im1.set_clim(0, max_intensity * 1.1)
-
-        max_real = np.max(np.abs(real_part))
-        if max_real > 0:
-            self.im2.set_clim(-max_real * 1.1, max_real * 1.1)
-
         self.im1.set_data(intensity)
         self.im2.set_data(real_part)
 
@@ -227,7 +219,7 @@ class WaveVisualizer:
 
 if __name__ == "__main__":
     # Choose backend: 'numpy', 'python', or 'c'
-    backend_name = "python"  # Change to 'python' to test pure Python backend, 'c' for C backend
+    backend_name = "c"  # Change to 'python' to test pure Python backend, 'c' for C backend
 
     sim = WaveSimulation2D(
         backend=backend_name,
