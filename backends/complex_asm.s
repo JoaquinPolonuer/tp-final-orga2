@@ -8,53 +8,49 @@
 # - 8 bytes: imag (double)
 # Total: 16 bytes
 #
-# x86-64 calling convention for structs:
-# - Complex a: a.real in xmm0, a.imag in xmm1
-# - Complex b: b.real in xmm2, b.imag in xmm3
-# - Return: result.real in xmm0, result.imag in xmm1
+# x86-64 calling convention for pointers:
+# - Complex *a: pointer in rdi
+# - Complex *b: pointer in rsi
+# - Complex *result: pointer in rdx
 
-# Complex asm_complex_add(Complex a, Complex b)
-# Parameters: a.real=xmm0, a.imag=xmm1, b.real=xmm2, b.imag=xmm3
-# Returns: result.real=xmm0, result.imag=xmm1
+# void asm_complex_add(Complex *a, Complex *b, Complex *result)
+# Parameters: a=rdi, b=rsi, result=rdx
 asm_complex_add:
-    # Add real parts: xmm0 = a.real + b.real
-    addsd %xmm2, %xmm0
-    
-    # Add imaginary parts: xmm1 = a.imag + b.imag
-    addsd %xmm3, %xmm1
-    
+    movupd  (%rdi), %xmm0       # xmm0 = [a.real, a.imag]
+    addpd   (%rsi), %xmm0       # xmm0 += [b.real, b.imag]
+    movupd  %xmm0, (%rdx)       # store result
     ret
 
-# Complex asm_complex_sub(Complex a, Complex b)
-# Parameters: a.real=xmm0, a.imag=xmm1, b.real=xmm2, b.imag=xmm3
-# Returns: result.real=xmm0, result.imag=xmm1
+# void asm_complex_sub(Complex *a, Complex *b, Complex *result)
+# Parameters: a=rdi, b=rsi, result=rdx
 asm_complex_sub:
-    # Subtract real parts: xmm0 = a.real - b.real
-    subsd %xmm2, %xmm0
-    
-    # Subtract imaginary parts: xmm1 = a.imag - b.imag
-    subsd %xmm3, %xmm1
-    
+    movupd  (%rdi), %xmm0       # xmm0 = [a.real, a.imag]
+    subpd   (%rsi), %xmm0       # xmm0 -= [b.real, b.imag]
+    movupd  %xmm0, (%rdx)
     ret
 
-# Complex asm_complex_mul(Complex a, Complex b)
-# Parameters: a.real=xmm0, a.imag=xmm1, b.real=xmm2, b.imag=xmm3
-# Returns: result.real=xmm0, result.imag=xmm1
-# Formula: (a.real + i*a.imag) * (b.real + i*b.imag)
-#        = (a.real*b.real - a.imag*b.imag) + i*(a.real*b.imag + a.imag*b.real)
+# void asm_complex_mul(Complex *a, Complex *b, Complex *result)
+# a=rdi, b=rsi, result=rdx
 asm_complex_mul:
-    # Save original values we'll need later
-    movsd %xmm0, %xmm4       # xmm4 = a.real
-    movsd %xmm1, %xmm5       # xmm5 = a.imag
-    
-    # Calculate real part: a.real*b.real - a.imag*b.imag
-    mulsd %xmm2, %xmm0       # xmm0 = a.real * b.real
-    mulsd %xmm3, %xmm5       # xmm5 = a.imag * b.imag
-    subsd %xmm5, %xmm0       # xmm0 = a.real*b.real - a.imag*b.imag (result.real)
-    
-    # Calculate imaginary part: a.real*b.imag + a.imag*b.real
-    mulsd %xmm3, %xmm4       # xmm4 = a.real * b.imag
-    mulsd %xmm2, %xmm1       # xmm1 = a.imag * b.real
-    addsd %xmm4, %xmm1       # xmm1 = a.real*b.imag + a.imag*b.real (result.imag)
-    
+    movupd  (%rdi), %xmm0        # xmm0 = [ar, ai]
+    movupd  (%rsi), %xmm1        # xmm1 = [br, bi]
+
+    movapd  %xmm1, %xmm2         # xmm2 = [br, bi]
+    movapd  %xmm0, %xmm3         # xmm3 = [ar, ai]
+
+    # Duplicate br and bi into lanes
+    unpcklpd %xmm1, %xmm1        # xmm1 = [br, br]
+    unpckhpd %xmm2, %xmm2        # xmm2 = [bi, bi]
+
+    # Cross products
+    mulpd   %xmm1, %xmm0         # xmm0 = [ar*br, ai*br]
+    mulpd   %xmm2, %xmm3         # xmm3 = [ar*bi, ai*bi]
+
+    # Arrange for add/sub: want [ai*bi, ar*bi] to pair with [ar*br, ai*br]
+    shufpd  $0x1, %xmm3, %xmm3   # xmm3 = [ai*bi, ar*bi]
+
+    # (real, imag) = (ar*br - ai*bi, ai*br + ar*bi)
+    addsubpd %xmm3, %xmm0        # xmm0 = [real, imag]
+
+    movupd  %xmm0, (%rdx)
     ret

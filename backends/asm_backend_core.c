@@ -11,9 +11,9 @@ typedef struct
 } Complex;
 
 // Assembly function declarations
-extern Complex asm_complex_add(Complex a, Complex b);
-extern Complex asm_complex_sub(Complex a, Complex b);
-extern Complex asm_complex_mul(Complex a, Complex b);
+extern void asm_complex_add(Complex *a, Complex *b, Complex *result);
+extern void asm_complex_sub(Complex *a, Complex *b, Complex *result);
+extern void asm_complex_mul(Complex *a, Complex *b, Complex *result);
 
 // Convert Python list of lists to C array
 static Complex *python_to_c_array(PyObject *py_list, int *rows, int *cols)
@@ -126,6 +126,7 @@ static void fft_1d(Complex *x, int n, int inverse)
 
     bit_reverse(x, n);
 
+    Complex v, temp_result;
     for (int len = 2; len <= n; len <<= 1)
     {
         double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
@@ -136,11 +137,11 @@ static void fft_1d(Complex *x, int n, int inverse)
             Complex wn = {1.0, 0.0};
             for (int j = 0; j < len / 2; j++)
             {
-                Complex u = x[i + j];
-                Complex v = asm_complex_mul(x[i + j + len / 2], wn);
-                x[i + j] = asm_complex_add(u, v);
-                x[i + j + len / 2] = asm_complex_sub(u, v);
-                wn = asm_complex_mul(wn, w);
+                asm_complex_mul(&x[i + j + len / 2], &wn, &v);
+                asm_complex_add(&x[i + j], &v, &x[i + j]);
+                asm_complex_sub(&x[i + j], &v, &x[i + j + len / 2]);
+                asm_complex_mul(&wn, &w, &temp_result);
+                wn = temp_result;
             }
         }
     }
