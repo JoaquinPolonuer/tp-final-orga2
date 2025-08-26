@@ -97,56 +97,6 @@ static void bit_reverse(Complex *x, int n)
 }
 
 // 1D FFT implementation (Cooley-Tukey)
-static void fft_1d(Complex *x, int n, int inverse)
-{
-    // Ensure n is power of 2
-    int power = 1;
-    while (power < n)
-        power <<= 1;
-
-    if (power != n)
-    {
-        // Pad with zeros
-        for (int i = n; i < power; i++)
-        {
-            x[i].real = 0.0;
-            x[i].imag = 0.0;
-        }
-        n = power;
-    }
-
-    bit_reverse(x, n);
-
-    for (int len = 2; len <= n; len <<= 1)
-    {
-        double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
-        Complex w = {cos(angle), sin(angle)};
-
-        for (int i = 0; i < n; i += len)
-        {
-            Complex wn = {1.0, 0.0};
-            for (int j = 0; j < len / 2; j++)
-            {
-                Complex u = x[i + j];
-                Complex v = complex_mul(x[i + j + len / 2], wn);
-                x[i + j] = complex_add(u, v);
-                x[i + j + len / 2] = complex_sub(u, v);
-                wn = complex_mul(wn, w);
-            }
-        }
-    }
-
-    if (inverse)
-    {
-        for (int i = 0; i < n; i++)
-        {
-            x[i].real /= n;
-            x[i].imag /= n;
-        }
-    }
-}
-
-// 1D FFT implementation (Cooley-Tukey)
 static void fft_1d_vectorized(Complex *x, int n, int inverse)
 {
 
@@ -555,12 +505,12 @@ static PyMethodDef PureCBackendMethods[] = {
 // Module definition
 static struct PyModuleDef purecbackendmodule = {
     PyModuleDef_HEAD_INIT,
-    "c_backend_core",
+    "c_backend_optimized",
     "Pure C backend core functions without NumPy",
     -1,
     PureCBackendMethods};
 
-PyMODINIT_FUNC PyInit_c_backend_core(void)
+PyMODINIT_FUNC PyInit_c_backend_optimized(void)
 {
     return PyModule_Create(&purecbackendmodule);
 }
