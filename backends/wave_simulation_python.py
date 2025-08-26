@@ -11,14 +11,14 @@ class PythonWaveSimulation2D:
         self.dx = domain_size / size
         self.dt = dt
 
-        # Spatial grid
-        self.X, self.Y = np.meshgrid(
-            np.linspace(-domain_size / 2, domain_size / 2, size),
-            np.linspace(-domain_size / 2, domain_size / 2, size),
-        )
+        # Spatial grid - store (X,Y) tuples at each grid point
+        x_coords = np.linspace(-domain_size / 2, domain_size / 2, size)
+        y_coords = np.linspace(-domain_size / 2, domain_size / 2, size)
+        self.grid = [[(x_coords[j], y_coords[i]) for j in range(size)] for i in range(size)]
 
-        # Frequency grid (k-space)
-        self.KX, self.KY = np.meshgrid(self.fftfreq(size, self.dx), self.fftfreq(size, self.dx))
+        # Frequency grid (k-space) - store (KX,KY) tuples at each grid point
+        k_coords = self.fftfreq(size, self.dx)
+        self.k_grid = [[(k_coords[j], k_coords[i]) for j in range(size)] for i in range(size)]
 
         self.K = self._initialize_K(size=size)
 
@@ -36,8 +36,7 @@ class PythonWaveSimulation2D:
 
         for i in range(self.size):
             for j in range(self.size):
-                x_val = self.X[i][j]
-                y_val = self.Y[i][j]
+                x_val, y_val = self.grid[i][j]
                 r_sq = (x_val - x_pos) ** 2 + (y_val - y_pos) ** 2
                 envelope = amplitude * math.exp(-r_sq / width**2)
                 r = math.sqrt(r_sq)
@@ -52,8 +51,7 @@ class PythonWaveSimulation2D:
         for i in range(size):
             row = []
             for j in range(size):
-                kx_val = self.KX[i][j]
-                ky_val = self.KY[i][j]
+                kx_val, ky_val = self.k_grid[i][j]
                 k_mag = math.sqrt(kx_val**2 + ky_val**2) * 2 * math.pi
                 if i == 0 and j == 0:
                     k_mag = 1e-10
