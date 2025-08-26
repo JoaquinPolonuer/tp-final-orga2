@@ -33,9 +33,9 @@ class CustomBuildExt(build_ext):
 c_backend_extension = Extension(
     "backends.c_backend_core",
     sources=["backends/c_backend_core.c"],
-    # libraries=["m"],  # Link math library
-    # extra_compile_args=["-O3", "-ffast-math", "-march=native"],
-    # extra_link_args=["-lm"],
+    libraries=["m"],  # Link math library
+    extra_compile_args=["-O3", "-ffast-math", "-mavx", "-mavx2"],
+    extra_link_args=["-lm"],
 )
 
 # asm_backend_extension = Extension(

@@ -4,6 +4,7 @@
 #include <string.h>
 #include <time.h>
 #include <math.h>
+#include <immintrin.h>
 
 typedef struct
 {
@@ -44,6 +45,33 @@ static Complex complex_mul(Complex a, Complex b)
         a.real * b.real - a.imag * b.imag,
         a.real * b.imag + a.imag * b.real};
     return result;
+}
+
+// SIMD complex operations
+// Data layout: [real1, imag1, real2, imag2] in __m256d
+static inline __m256d complex_add_simd(__m256d z1, __m256d z2)
+{
+    return _mm256_add_pd(z1, z2);
+}
+
+static inline __m256d complex_sub_simd(__m256d z1, __m256d z2)
+{
+    return _mm256_sub_pd(z1, z2);
+}
+
+static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
+{
+    // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
+    // Result = [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
+
+    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // [a1*c1, b1*d1, a2*c2, b2*d2]
+    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // [d1, c1, d2, c2]
+    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // [a1*d1, b1*c1, a2*d2, b2*c2]
+
+    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd); // [a1*c1-b1*d1, a1*c1-b1*d1, a2*c2-b2*d2, a2*c2-b2*d2]
+    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc); // [a1*d1+b1*c1, a1*d1+b1*c1, a2*d2+b2*c2, a2*d2+b2*c2]
+
+    return _mm256_unpacklo_pd(real_parts, imag_parts); // [a1*c1-b1*d1, a1*d1+b1*c1, a2*c2-b2*d2, a2*d2+b2*c2]
 }
 
 // Bit reversal for FFT
@@ -118,6 +146,97 @@ static void fft_1d(Complex *x, int n, int inverse)
     }
 }
 
+// 1D FFT implementation (Cooley-Tukey)
+static void fft_1d_vectorized(Complex *x, int n, int inverse)
+{
+    // // clock_t start, end;
+    // // start = clock();
+
+    // Ensure n is power of 2
+    int power = 1;
+    while (power < n)
+        power <<= 1;
+
+    if (power != n)
+    {
+        // Pad with zeros
+        for (int i = n; i < power; i++)
+        {
+            x[i].real = 0.0;
+            x[i].imag = 0.0;
+        }
+        n = power;
+    }
+
+    // // end = clock();
+    // // printf("Part 1: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+
+    // // start = clock();
+    bit_reverse(x, n);
+    // // end = clock();
+    // // printf("Bit reverse: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+
+    // // start = clock();
+    for (int len = 2; len <= n; len <<= 1)
+    {
+        double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
+        Complex w = {cos(angle), sin(angle)};
+
+        for (int i = 0; i < n; i += len)
+        {
+            Complex wn = {1.0, 0.0};
+            int j;
+
+            // SIMD loop: process 2 complex pairs at once
+            for (j = 0; j < (len / 2) - 1; j += 2)
+            {
+                // Load 2 pairs of complex numbers
+                __m256d u = _mm256_loadu_pd((double *)&x[i + j]);           // [u1.real, u1.imag, u2.real, u2.imag]
+                __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]); // [v1.real, v1.imag, v2.real, v2.imag]
+
+                // Prepare twiddle factors: wn and wn*w
+                Complex wn2 = complex_mul(wn, w);
+                __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag);
+
+                // v = v * twiddle
+                v = complex_mul_simd(v, twiddle);
+
+                // Butterfly operations
+                __m256d result1 = complex_add_simd(u, v); // u + v
+                __m256d result2 = complex_sub_simd(u, v); // u - v
+
+                // Store results
+                _mm256_storeu_pd((double *)&x[i + j], result1);
+                _mm256_storeu_pd((double *)&x[i + j + len / 2], result2);
+
+                // Update twiddle factor for next iteration
+                wn = complex_mul(wn2, w);
+            }
+
+            // Handle remaining iterations (scalar)
+            for (; j < len / 2; j++)
+            {
+                Complex u = x[i + j];
+                Complex v = complex_mul(x[i + j + len / 2], wn);
+                x[i + j] = complex_add(u, v);
+                x[i + j + len / 2] = complex_sub(u, v);
+                wn = complex_mul(wn, w);
+            }
+        }
+    }
+    // // end = clock();
+    // // printf("Loop: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+
+    if (inverse)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            x[i].real /= n;
+            x[i].imag /= n;
+        }
+    }
+}
+
 // 2D FFT implementation
 static void fft2d(Complex *data, int rows, int cols, int inverse)
 {
@@ -133,9 +252,9 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
     // // end = clock();
-    // // printf("FFT on rows: %.3f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+    // // printf("FFT on rows: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
-
+    
     // FFT on columns
     // // start = clock();
     temp = (Complex *)realloc(temp, rows * sizeof(Complex));
@@ -152,7 +271,7 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         }
     }
     // // end = clock();
-    // // printf("FFT on columns: %.3f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+    // // printf("FFT on columns: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
 
     free(temp);
@@ -316,18 +435,18 @@ static void wave_sim_step(WaveSimulation *sim)
         }
     }
     // // end = clock();
-    // // printf("Phase evolution: %.3f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+    // // printf("Phase evolution: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
     // // start = clock();
     // Transform back to real space
     memcpy(sim->wave, sim->wave_k, sim->size * sim->size * sizeof(Complex));
     // // end = clock();
-    // // printf("Memory copy: %.3f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+    // // printf("Memory copy: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
     // // start = clock();
     fft2d(sim->wave, sim->size, sim->size, 1);
     // // end = clock();
-    // // printf("FFT: %.3f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
+    // // printf("FFT: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 }
 
 static PyObject *wave_sim_get_intensity(WaveSimulation *sim)
