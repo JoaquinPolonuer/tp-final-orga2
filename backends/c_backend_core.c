@@ -3,12 +3,26 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 
 typedef struct
 {
     double real;
     double imag;
 } Complex;
+
+typedef struct {
+    Complex *wave;
+    Complex *wave_k;
+    double *grid_coords;    // Flattened array: [x0,y0,x1,y1,...] for memory efficiency
+    double *k_grid_coords;  // Flattened array: [kx0,ky0,kx1,ky1,...]  
+    double *K;              // K magnitude array
+    int size;
+    double domain_size;
+    double wave_speed;
+    double dt;
+    double dx;
+} WaveSimulation;
 
 // Helper functions
 static Complex complex_add(Complex a, Complex b)
@@ -29,74 +43,6 @@ static Complex complex_mul(Complex a, Complex b)
         a.real * b.real - a.imag * b.imag,
         a.real * b.imag + a.imag * b.real};
     return result;
-}
-
-// Convert Python list of lists to C array
-static Complex *python_to_c_array(PyObject *py_list, int *rows, int *cols)
-{
-    if (!PyList_Check(py_list))
-    {
-        return NULL;
-    }
-
-    *rows = (int)PyList_Size(py_list);
-    if (*rows == 0)
-        return NULL;
-
-    PyObject *first_row = PyList_GetItem(py_list, 0);
-    if (!PyList_Check(first_row))
-    {
-        return NULL;
-    }
-
-    *cols = (int)PyList_Size(first_row);
-    Complex *array = (Complex *)malloc((*rows) * (*cols) * sizeof(Complex));
-
-    for (int i = 0; i < *rows; i++)
-    {
-        PyObject *row = PyList_GetItem(py_list, i);
-        for (int j = 0; j < *cols; j++)
-        {
-            PyObject *item = PyList_GetItem(row, j);
-            if (PyComplex_Check(item))
-            {
-                array[i * (*cols) + j].real = PyComplex_RealAsDouble(item);
-                array[i * (*cols) + j].imag = PyComplex_ImagAsDouble(item);
-            }
-            else if (PyFloat_Check(item))
-            {
-                array[i * (*cols) + j].real = PyFloat_AsDouble(item);
-                array[i * (*cols) + j].imag = 0.0;
-            }
-            else if (PyLong_Check(item))
-            {
-                array[i * (*cols) + j].real = (double)PyLong_AsLong(item);
-                array[i * (*cols) + j].imag = 0.0;
-            }
-        }
-    }
-
-    return array;
-}
-
-// Convert C array to Python list of lists
-static PyObject *c_to_python_array(Complex *array, int rows, int cols)
-{
-    PyObject *py_list = PyList_New(rows);
-
-    for (int i = 0; i < rows; i++)
-    {
-        PyObject *row = PyList_New(cols);
-        for (int j = 0; j < cols; j++)
-        {
-            Complex val = array[i * cols + j];
-            PyObject *complex_val = PyComplex_FromDoubles(val.real, val.imag);
-            PyList_SetItem(row, j, complex_val);
-        }
-        PyList_SetItem(py_list, i, row);
-    }
-
-    return py_list;
 }
 
 // Bit reversal for FFT
@@ -202,156 +148,264 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
     free(temp);
 }
 
-static PyObject *c_fft2(PyObject *self, PyObject *args)
+// Wave Simulation Functions
+static WaveSimulation* create_wave_simulation(int size, double domain_size, double wave_speed, double dt)
 {
-    PyObject *input_obj;
-    if (!PyArg_ParseTuple(args, "O", &input_obj))
-    {
+    WaveSimulation *sim = (WaveSimulation*)malloc(sizeof(WaveSimulation));
+    if (!sim) return NULL;
+    
+    sim->size = size;
+    sim->domain_size = domain_size;
+    sim->wave_speed = wave_speed;
+    sim->dt = dt;
+    sim->dx = domain_size / size;
+    
+    // Allocate arrays
+    sim->wave = (Complex*)calloc(size * size, sizeof(Complex));
+    sim->wave_k = (Complex*)calloc(size * size, sizeof(Complex));
+    sim->grid_coords = (double*)malloc(size * size * 2 * sizeof(double));
+    sim->k_grid_coords = (double*)malloc(size * size * 2 * sizeof(double));
+    sim->K = (double*)malloc(size * size * sizeof(double));
+    
+    if (!sim->wave || !sim->wave_k || !sim->grid_coords || !sim->k_grid_coords || !sim->K) {
+        free(sim->wave);
+        free(sim->wave_k);
+        free(sim->grid_coords);
+        free(sim->k_grid_coords);
+        free(sim->K);
+        free(sim);
         return NULL;
     }
-
-    int rows, cols;
-    Complex *data = python_to_c_array(input_obj, &rows, &cols);
-    if (data == NULL)
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected list of lists");
-        return NULL;
-    }
-
-    fft2d(data, rows, cols, 0);
-
-    PyObject *result = c_to_python_array(data, rows, cols);
-
-    free(data);
-
-    return result;
-}
-
-static PyObject *c_ifft2(PyObject *self, PyObject *args)
-{
-    PyObject *input_obj;
-    if (!PyArg_ParseTuple(args, "O", &input_obj))
-    {
-        return NULL;
-    }
-
-    int rows, cols;
-    Complex *data = python_to_c_array(input_obj, &rows, &cols);
-    if (data == NULL)
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected list of lists");
-        return NULL;
-    }
-
-    fft2d(data, rows, cols, 1);
-
-    PyObject *result = c_to_python_array(data, rows, cols);
-
-    free(data);
-
-    return result;
-}
-
-static PyObject *c_fftfreq(PyObject *self, PyObject *args)
-{
-    int n;
-    double d = 1.0;
-    if (!PyArg_ParseTuple(args, "i|d", &n, &d))
-    {
-        return NULL;
-    }
-
-    PyObject *py_list = PyList_New(n);
-
-    for (int i = 0; i < n; i++)
-    {
-        double freq;
-        if (i <= n / 2)
-        {
-            freq = (double)i / (n * d);
+    
+    // Initialize grid coordinates
+    double start = -domain_size / 2.0;
+    double step = domain_size / size;
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            int idx = (i * size + j) * 2;
+            sim->grid_coords[idx] = start + j * step;     // x
+            sim->grid_coords[idx + 1] = start + i * step; // y
         }
-        else
-        {
-            freq = (double)(i - n) / (n * d);
-        }
-        PyList_SetItem(py_list, i, PyFloat_FromDouble(freq));
     }
-
-    return py_list;
+    
+    // Initialize k-grid coordinates
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            int idx = (i * size + j) * 2;
+            double kx_freq, ky_freq;
+            
+            if (j <= size / 2) {
+                kx_freq = (double)j / (size * sim->dx);
+            } else {
+                kx_freq = (double)(j - size) / (size * sim->dx);
+            }
+            
+            if (i <= size / 2) {
+                ky_freq = (double)i / (size * sim->dx);
+            } else {
+                ky_freq = (double)(i - size) / (size * sim->dx);
+            }
+            
+            sim->k_grid_coords[idx] = kx_freq;
+            sim->k_grid_coords[idx + 1] = ky_freq;
+        }
+    }
+    
+    // Initialize K magnitude array
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            int idx = i * size + j;
+            int coord_idx = idx * 2;
+            double kx = sim->k_grid_coords[coord_idx];
+            double ky = sim->k_grid_coords[coord_idx + 1];
+            
+            double k_mag = sqrt(kx*kx + ky*ky) * 2.0 * M_PI;
+            if (i == 0 && j == 0) {
+                k_mag = 1e-10;
+            }
+            
+            sim->K[idx] = k_mag;
+        }
+    }
+    
+    return sim;
 }
 
-static PyObject *c_abs_array(PyObject *self, PyObject *args)
+static void destroy_wave_simulation(WaveSimulation *sim)
 {
-    PyObject *input_obj;
-    if (!PyArg_ParseTuple(args, "O", &input_obj))
-    {
-        return NULL;
+    if (sim) {
+        free(sim->wave);
+        free(sim->wave_k);
+        free(sim->grid_coords);
+        free(sim->k_grid_coords);
+        free(sim->K);
+        free(sim);
     }
+}
 
-    int rows, cols;
-    Complex *data = python_to_c_array(input_obj, &rows, &cols);
-    if (data == NULL)
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected list of lists");
-        return NULL;
+static void wave_sim_add_source(WaveSimulation *sim, double x_pos, double y_pos, 
+                               double amplitude, double frequency, double width)
+{
+    for (int i = 0; i < sim->size; i++) {
+        for (int j = 0; j < sim->size; j++) {
+            int coord_idx = (i * sim->size + j) * 2;
+            double x_val = sim->grid_coords[coord_idx];
+            double y_val = sim->grid_coords[coord_idx + 1];
+            
+            double r_sq = (x_val - x_pos) * (x_val - x_pos) + (y_val - y_pos) * (y_val - y_pos);
+            double envelope = amplitude * exp(-r_sq / (width * width));
+            double r = sqrt(r_sq);
+            double phase = frequency * r;
+            
+            int wave_idx = i * sim->size + j;
+            Complex new_val = {envelope * cos(phase), envelope * sin(phase)};
+            sim->wave[wave_idx] = complex_add(sim->wave[wave_idx], new_val);
+        }
     }
+    
+    // Update wave_k using FFT
+    memcpy(sim->wave_k, sim->wave, sim->size * sim->size * sizeof(Complex));
+    fft2d(sim->wave_k, sim->size, sim->size, 0);
+}
 
-    PyObject *result = PyList_New(rows);
-    for (int i = 0; i < rows; i++)
-    {
-        PyObject *row = PyList_New(cols);
-        for (int j = 0; j < cols; j++)
-        {
-            Complex val = data[i * cols + j];
-            double abs_val = sqrt(val.real * val.real + val.imag * val.imag);
-            PyList_SetItem(row, j, PyFloat_FromDouble(abs_val));
+static void wave_sim_step(WaveSimulation *sim)
+{
+    // Apply phase evolution in k-space
+    for (int i = 0; i < sim->size; i++) {
+        for (int j = 0; j < sim->size; j++) {
+            int idx = i * sim->size + j;
+            double omega = sim->wave_speed * sim->K[idx];
+            double phase = -omega * sim->dt;
+            
+            Complex phase_factor = {cos(phase), sin(phase)};
+            sim->wave_k[idx] = complex_mul(sim->wave_k[idx], phase_factor);
+        }
+    }
+    
+    // Transform back to real space
+    memcpy(sim->wave, sim->wave_k, sim->size * sim->size * sizeof(Complex));
+    fft2d(sim->wave, sim->size, sim->size, 1);
+}
+
+static PyObject *wave_sim_get_intensity(WaveSimulation *sim)
+{
+    PyObject *result = PyList_New(sim->size);
+    for (int i = 0; i < sim->size; i++) {
+        PyObject *row = PyList_New(sim->size);
+        for (int j = 0; j < sim->size; j++) {
+            int idx = i * sim->size + j;
+            Complex val = sim->wave[idx];
+            double intensity = val.real * val.real + val.imag * val.imag;
+            PyList_SetItem(row, j, PyFloat_FromDouble(intensity));
         }
         PyList_SetItem(result, i, row);
     }
-
-    free(data);
     return result;
 }
 
-static PyObject *c_real_array(PyObject *self, PyObject *args)
+static PyObject *wave_sim_get_real_part(WaveSimulation *sim)
 {
-    PyObject *input_obj;
-    if (!PyArg_ParseTuple(args, "O", &input_obj))
-    {
-        return NULL;
-    }
-
-    int rows, cols;
-    Complex *data = python_to_c_array(input_obj, &rows, &cols);
-    if (data == NULL)
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected list of lists");
-        return NULL;
-    }
-
-    PyObject *result = PyList_New(rows);
-    for (int i = 0; i < rows; i++)
-    {
-        PyObject *row = PyList_New(cols);
-        for (int j = 0; j < cols; j++)
-        {
-            Complex val = data[i * cols + j];
-            PyList_SetItem(row, j, PyFloat_FromDouble(val.real));
+    PyObject *result = PyList_New(sim->size);
+    for (int i = 0; i < sim->size; i++) {
+        PyObject *row = PyList_New(sim->size);
+        for (int j = 0; j < sim->size; j++) {
+            int idx = i * sim->size + j;
+            PyList_SetItem(row, j, PyFloat_FromDouble(sim->wave[idx].real));
         }
         PyList_SetItem(result, i, row);
     }
-
-    free(data);
     return result;
 }
+
+// Python interface functions
+static PyObject *c_create_simulation(PyObject *self, PyObject *args)
+{
+    int size;
+    double domain_size, wave_speed, dt;
+    if (!PyArg_ParseTuple(args, "iddd", &size, &domain_size, &wave_speed, &dt)) {
+        return NULL;
+    }
+    
+    WaveSimulation *sim = create_wave_simulation(size, domain_size, wave_speed, dt);
+    if (!sim) {
+        PyErr_SetString(PyExc_MemoryError, "Failed to create simulation");
+        return NULL;
+    }
+    
+    return PyLong_FromVoidPtr(sim);
+}
+
+// static PyObject *c_destroy_simulation(PyObject *self, PyObject *args)
+// {
+//     PyObject *ptr_obj;
+//     if (!PyArg_ParseTuple(args, "O", &ptr_obj)) {
+//         return NULL;
+//     }
+    
+//     WaveSimulation *sim = (WaveSimulation*)PyLong_AsVoidPtr(ptr_obj);
+//     destroy_wave_simulation(sim);
+    
+//     Py_RETURN_NONE;
+// }
+
+static PyObject *c_add_wave_source(PyObject *self, PyObject *args)
+{
+    PyObject *ptr_obj;
+    double x_pos, y_pos, amplitude, frequency, width;
+    if (!PyArg_ParseTuple(args, "Oddddd", &ptr_obj, &x_pos, &y_pos, &amplitude, &frequency, &width)) {
+        return NULL;
+    }
+    
+    WaveSimulation *sim = (WaveSimulation*)PyLong_AsVoidPtr(ptr_obj);
+    wave_sim_add_source(sim, x_pos, y_pos, amplitude, frequency, width);
+    
+    Py_RETURN_NONE;
+}
+
+static PyObject *c_step_simulation(PyObject *self, PyObject *args)
+{
+    PyObject *ptr_obj;
+    if (!PyArg_ParseTuple(args, "O", &ptr_obj)) {
+        return NULL;
+    }
+    
+    WaveSimulation *sim = (WaveSimulation*)PyLong_AsVoidPtr(ptr_obj);
+    wave_sim_step(sim);
+    
+    Py_RETURN_NONE;
+}
+
+static PyObject *c_get_intensity(PyObject *self, PyObject *args)
+{
+    PyObject *ptr_obj;
+    if (!PyArg_ParseTuple(args, "O", &ptr_obj)) {
+        return NULL;
+    }
+    
+    WaveSimulation *sim = (WaveSimulation*)PyLong_AsVoidPtr(ptr_obj);
+    return wave_sim_get_intensity(sim);
+}
+
+static PyObject *c_get_real_part(PyObject *self, PyObject *args)
+{
+    PyObject *ptr_obj;
+    if (!PyArg_ParseTuple(args, "O", &ptr_obj)) {
+        return NULL;
+    }
+    
+    WaveSimulation *sim = (WaveSimulation*)PyLong_AsVoidPtr(ptr_obj);
+    return wave_sim_get_real_part(sim);
+}
+
 
 // Method definitions
 static PyMethodDef PureCBackendMethods[] = {
-    {"fft2", c_fft2, METH_VARARGS, "2D FFT"},
-    {"ifft2", c_ifft2, METH_VARARGS, "2D IFFT"},
-    {"fftfreq", c_fftfreq, METH_VARARGS, "FFT frequency array"},
-    {"abs_array", c_abs_array, METH_VARARGS, "Absolute value of array"},
-    {"real_array", c_real_array, METH_VARARGS, "Real part of array"},
+    {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
+    // {"destroy_simulation", c_destroy_simulation, METH_VARARGS, "Destroy wave simulation"},
+    {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
+    {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
+    {"get_intensity", c_get_intensity, METH_VARARGS, "Get wave intensity"},
+    {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
     {NULL, NULL, 0, NULL}};
 
 // Module definition

@@ -84,7 +84,7 @@ print("Wave Simulation Backend Performance Benchmark")
 print("=" * 50)
 
 backends = ['numpy', 'python', 'c'] #, 'asm']
-sizes = [64, 128]
+sizes = [64, 128, 256]
 steps = 50
 
 results = {}
