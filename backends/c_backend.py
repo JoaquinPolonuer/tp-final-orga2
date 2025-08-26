@@ -1,3 +1,4 @@
+import numpy as np
 import math
 import cmath
 from backends.backend import Backend
@@ -21,10 +22,10 @@ class CBackend(Backend):
         return self.c_core.zeros(shape[0], shape[1])
 
     def linspace(self, start, stop, num):
-        return self.c_core.linspace(start, stop, num)
+        return np.linspace(start, stop, num)
 
     def meshgrid(self, x, y):
-        return self.c_core.meshgrid(x, y)
+        return np.meshgrid(x, y)
 
     def sqrt(self, x):
         # Pure Python implementation

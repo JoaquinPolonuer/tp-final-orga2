@@ -236,78 +236,6 @@ static PyObject *pure_c_zeros(PyObject *self, PyObject *args)
     return py_list;
 }
 
-static PyObject *pure_c_linspace(PyObject *self, PyObject *args)
-{
-    double start, stop;
-    int num;
-    if (!PyArg_ParseTuple(args, "ddi", &start, &stop, &num))
-    {
-        return NULL;
-    }
-
-    PyObject *py_list = PyList_New(num);
-
-    if (num == 1)
-    {
-        PyList_SetItem(py_list, 0, PyFloat_FromDouble(start));
-    }
-    else
-    {
-        double step = (stop - start) / (num - 1);
-        for (int i = 0; i < num; i++)
-        {
-            double val = start + i * step;
-            PyList_SetItem(py_list, i, PyFloat_FromDouble(val));
-        }
-    }
-
-    return py_list;
-}
-
-static PyObject *pure_c_meshgrid(PyObject *self, PyObject *args)
-{
-    PyObject *x_obj, *y_obj;
-    if (!PyArg_ParseTuple(args, "OO", &x_obj, &y_obj))
-    {
-        return NULL;
-    }
-
-    if (!PyList_Check(x_obj) || !PyList_Check(y_obj))
-    {
-        PyErr_SetString(PyExc_TypeError, "Expected lists");
-        return NULL;
-    }
-
-    int x_len = (int)PyList_Size(x_obj);
-    int y_len = (int)PyList_Size(y_obj);
-
-    PyObject *X = PyList_New(y_len);
-    PyObject *Y = PyList_New(y_len);
-
-    for (int i = 0; i < y_len; i++)
-    {
-        PyObject *X_row = PyList_New(x_len);
-        PyObject *Y_row = PyList_New(x_len);
-
-        for (int j = 0; j < x_len; j++)
-        {
-            PyObject *x_val = PyList_GetItem(x_obj, j);
-            PyObject *y_val = PyList_GetItem(y_obj, i);
-
-            Py_INCREF(x_val);
-            Py_INCREF(y_val);
-
-            PyList_SetItem(X_row, j, x_val);
-            PyList_SetItem(Y_row, j, y_val);
-        }
-
-        PyList_SetItem(X, i, X_row);
-        PyList_SetItem(Y, i, Y_row);
-    }
-
-    return Py_BuildValue("OO", X, Y);
-}
-
 static PyObject *pure_c_fft2(PyObject *self, PyObject *args)
 {
     PyObject *input_obj;
@@ -317,7 +245,7 @@ static PyObject *pure_c_fft2(PyObject *self, PyObject *args)
     }
 
     clock_t start_total = clock();
-    
+
     clock_t start_conversion = clock();
     int rows, cols;
     Complex *data = python_to_c_array(input_obj, &rows, &cols);
@@ -338,7 +266,7 @@ static PyObject *pure_c_fft2(PyObject *self, PyObject *args)
     PyObject *result = c_to_python_array(data, rows, cols);
     clock_t end_back_conversion = clock();
     double c_to_python_time = ((double)(end_back_conversion - start_back_conversion)) / CLOCKS_PER_SEC;
-    
+
     clock_t end_total = clock();
     double total_time = ((double)(end_total - start_total)) / CLOCKS_PER_SEC;
 
@@ -362,7 +290,7 @@ static PyObject *pure_c_ifft2(PyObject *self, PyObject *args)
     }
 
     clock_t start_total = clock();
-    
+
     clock_t start_conversion = clock();
     int rows, cols;
     Complex *data = python_to_c_array(input_obj, &rows, &cols);
@@ -383,7 +311,7 @@ static PyObject *pure_c_ifft2(PyObject *self, PyObject *args)
     PyObject *result = c_to_python_array(data, rows, cols);
     clock_t end_back_conversion = clock();
     double c_to_python_time = ((double)(end_back_conversion - start_back_conversion)) / CLOCKS_PER_SEC;
-    
+
     clock_t end_total = clock();
     double total_time = ((double)(end_total - start_total)) / CLOCKS_PER_SEC;
 
@@ -494,8 +422,6 @@ static PyObject *pure_c_real_array(PyObject *self, PyObject *args)
 // Method definitions
 static PyMethodDef PureCBackendMethods[] = {
     {"zeros", pure_c_zeros, METH_VARARGS, "Create zero array"},
-    {"linspace", pure_c_linspace, METH_VARARGS, "Create linearly spaced array"},
-    {"meshgrid", pure_c_meshgrid, METH_VARARGS, "Create coordinate arrays"},
     {"fft2", pure_c_fft2, METH_VARARGS, "2D FFT"},
     {"ifft2", pure_c_ifft2, METH_VARARGS, "2D IFFT"},
     {"fftfreq", pure_c_fftfreq, METH_VARARGS, "FFT frequency array"},

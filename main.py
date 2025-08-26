@@ -94,7 +94,7 @@ class WaveVisualizer:
 
 if __name__ == "__main__":
     # Choose backend: 'numpy', 'python', or 'c'
-    backend_name = "python"  # Change to 'python' to test pure Python backend, 'c' for C backend
+    backend_name = "c"  # Change to 'python' to test pure Python backend, 'c' for C backend
 
     sim = WaveSimulation2D(
         backend=backend_name,

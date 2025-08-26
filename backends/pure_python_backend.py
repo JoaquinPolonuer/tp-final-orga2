@@ -3,6 +3,7 @@ import math
 import cmath
 from backends.backend import Backend
 
+
 class PurePythonBackend(Backend):
     """Complete Pure Python backend implementation with proper FFT"""
 
@@ -17,56 +18,6 @@ class PurePythonBackend(Backend):
 
     def meshgrid(self, x, y):
         return np.meshgrid(x, y)
-
-    def sqrt(self, x: float | complex | list) -> float | list:
-        if isinstance(x, (list, tuple)):
-            result = []
-            for i in range(len(x)):
-                if isinstance(x[i], (list, tuple)):
-                    row = []
-                    for j in range(len(x[i])):
-                        val = x[i][j]
-                        if isinstance(val, complex):
-                            row.append(math.sqrt(val.real**2 + val.imag**2))
-                        else:
-                            row.append(math.sqrt(abs(val)))
-                    result.append(row)
-                else:
-                    val = x[i]
-                    if isinstance(val, complex):
-                        result.append(math.sqrt(val.real**2 + val.imag**2))
-                    else:
-                        result.append(math.sqrt(abs(val)))
-            return result
-
-        if isinstance(x, complex):
-            return math.sqrt(x.real**2 + x.imag**2)
-        return math.sqrt(abs(x))
-
-    def exp(self, x: float | complex | list) -> float | complex | list:
-        if isinstance(x, (list, tuple)):
-            result = []
-            for i in range(len(x)):
-                if isinstance(x[i], (list, tuple)):
-                    row = []
-                    for j in range(len(x[i])):
-                        val = x[i][j]
-                        if isinstance(val, complex):
-                            row.append(cmath.exp(val))
-                        else:
-                            row.append(math.exp(val))
-                    result.append(row)
-                else:
-                    val = x[i]
-                    if isinstance(val, complex):
-                        result.append(cmath.exp(val))
-                    else:
-                        result.append(math.exp(val))
-            return result
-
-        if isinstance(x, complex):
-            return cmath.exp(x)
-        return math.exp(x)
 
     def _fft_1d(self, x: list[complex]) -> list[complex]:
         """1D FFT using Cooley-Tukey algorithm"""

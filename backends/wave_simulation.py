@@ -81,7 +81,7 @@ class WaveSimulation2D:
     def _initialize_K(self, size):
         # Calculate K magnitude
         if isinstance(self.backend, NumpyBackend):
-            K = self.backend.sqrt(np.array(self.KX) ** 2 + np.array(self.KY) ** 2) * 2 * np.pi
+            K = np.sqrt(np.array(self.KX) ** 2 + np.array(self.KY) ** 2) * 2 * np.pi
             K[0, 0] = 1e-10
             return K
         else:

@@ -17,14 +17,6 @@ class Backend(ABC):
         pass
 
     @abstractmethod
-    def sqrt(self, x):
-        pass
-
-    @abstractmethod
-    def exp(self, x):
-        pass
-
-    @abstractmethod
     def fft2(self, x):
         pass
 
