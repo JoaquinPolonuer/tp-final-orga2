@@ -40,7 +40,7 @@ c_backend_extension = Extension(
 
 asm_backend_extension = Extension(
     "backends.asm_backend_core",
-    sources=["backends/asm_backend_core.c", "backends/complex_asm.asm"],
+    sources=["backends/asm_backend_core.c"],
     # libraries=["m"],  # Link math library
     # extra_compile_args=["-O3", "-ffast-math", "-march=native"],
     extra_link_args=["-lm"],

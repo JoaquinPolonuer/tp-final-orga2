@@ -10,10 +10,53 @@ typedef struct
     double imag;
 } Complex;
 
-// Assembly function declarations
-extern void asm_complex_add(Complex *a, Complex *b, Complex *result);
-extern void asm_complex_sub(Complex *a, Complex *b, Complex *result);
-extern void asm_complex_mul(Complex *a, Complex *b, Complex *result);
+// Inline assembly macros for complex operations (Intel syntax)
+static inline void asm_complex_add(Complex *a, Complex *b, Complex *result) {
+    __asm__ volatile (
+        ".intel_syntax noprefix   \n\t"
+        "movupd  xmm0, [%1]       \n\t"  // Load a
+        "addpd   xmm0, [%2]       \n\t"  // Add b
+        "movupd  [%0], xmm0       \n\t"  // Store result
+        ".att_syntax prefix       \n\t"
+        :
+        : "r" (result), "r" (a), "r" (b)
+        : "xmm0", "memory"
+    );
+}
+
+static inline void asm_complex_sub(Complex *a, Complex *b, Complex *result) {
+    __asm__ volatile (
+        ".intel_syntax noprefix   \n\t"
+        "movupd  xmm0, [%1]       \n\t"  // Load a
+        "subpd   xmm0, [%2]       \n\t"  // Subtract b
+        "movupd  [%0], xmm0       \n\t"  // Store result
+        ".att_syntax prefix       \n\t"
+        :
+        : "r" (result), "r" (a), "r" (b)
+        : "xmm0", "memory"
+    );
+}
+
+static inline void asm_complex_mul(Complex *a, Complex *b, Complex *result) {
+    __asm__ volatile (
+        ".intel_syntax noprefix   \n\t"
+        "movupd  xmm0, [%1]       \n\t"  // xmm0 = [ar, ai]
+        "movupd  xmm1, [%2]       \n\t"  // xmm1 = [br, bi]
+        "movapd  xmm2, xmm1       \n\t"  // xmm2 = [br, bi]
+        "movapd  xmm3, xmm0       \n\t"  // xmm3 = [ar, ai]
+        "unpcklpd xmm1, xmm1      \n\t"  // xmm1 = [br, br]
+        "unpckhpd xmm2, xmm2      \n\t"  // xmm2 = [bi, bi]
+        "mulpd   xmm0, xmm1       \n\t"  // xmm0 = [ar*br, ai*br]
+        "mulpd   xmm3, xmm2       \n\t"  // xmm3 = [ar*bi, ai*bi]
+        "shufpd  xmm3, xmm3, 0x1 \n\t"  // xmm3 = [ai*bi, ar*bi]
+        "addsubpd xmm0, xmm3      \n\t"  // xmm0 = [ar*br-ai*bi, ai*br+ar*bi]
+        "movupd  [%0], xmm0       \n\t"  // Store result
+        ".att_syntax prefix       \n\t"
+        :
+        : "r" (result), "r" (a), "r" (b)
+        : "xmm0", "xmm1", "xmm2", "xmm3", "memory"
+    );
+}
 
 // Convert Python list of lists to C array
 static Complex *python_to_c_array(PyObject *py_list, int *rows, int *cols)
@@ -105,7 +148,75 @@ static void bit_reverse(Complex *x, int n)
     }
 }
 
-// 1D FFT implementation (Cooley-Tukey)
+// Vectorized FFT butterfly operation using SIMD
+static inline void vectorized_butterfly(Complex *x, int i, int j, int len_half, 
+                                       double wr, double wi, double wr2, double wi2)
+{
+    __asm__ volatile (
+        // Load twiddle factors into registers
+        "movsd   %4, %%xmm4       \n\t"  // xmm4 = [0, wr]
+        "movsd   %5, %%xmm5       \n\t"  // xmm5 = [0, wi]  
+        "movsd   %6, %%xmm6       \n\t"  // xmm6 = [0, wr2]
+        "movsd   %7, %%xmm7       \n\t"  // xmm7 = [0, wi2]
+        "unpcklpd %%xmm5, %%xmm4  \n\t"  // xmm4 = [wi, wr]
+        "unpcklpd %%xmm7, %%xmm6  \n\t"  // xmm6 = [wi2, wr2]
+        
+        // Load x[i+j] and x[i+j+1] (2 complex numbers)
+        "movupd  (%0), %%xmm0     \n\t"  // xmm0 = [x[i+j].imag, x[i+j].real]
+        "movupd  16(%0), %%xmm1   \n\t"  // xmm1 = [x[i+j+1].imag, x[i+j+1].real]
+        
+        // Load x[i+j+len/2] and x[i+j+len/2+1] 
+        "movupd  (%1), %%xmm2     \n\t"  // xmm2 = [x[i+j+len/2].imag, x[i+j+len/2].real]
+        "movupd  16(%1), %%xmm3   \n\t"  // xmm3 = [x[i+j+len/2+1].imag, x[i+j+len/2+1].real]
+        
+        // Save copies for butterfly
+        "movapd  %%xmm0, %%xmm8   \n\t"  // Save x[i+j] 
+        "movapd  %%xmm1, %%xmm9   \n\t"  // Save x[i+j+1]
+        "movapd  %%xmm2, %%xmm10  \n\t"  // Copy for multiplication
+        "movapd  %%xmm3, %%xmm11  \n\t"  // Copy for multiplication
+        
+        // First complex multiplication: xmm2 * xmm4 (w)
+        "movapd  %%xmm4, %%xmm12  \n\t"  // Copy w
+        "movapd  %%xmm10, %%xmm13 \n\t"  // Copy x[i+j+len/2]
+        "unpcklpd %%xmm12, %%xmm12 \n\t"  // xmm12 = [wr, wr]
+        "unpckhpd %%xmm4, %%xmm4  \n\t"  // xmm4 = [wi, wi]
+        "mulpd   %%xmm12, %%xmm10 \n\t"  // [real*wr, imag*wr]
+        "mulpd   %%xmm4, %%xmm13  \n\t"  // [real*wi, imag*wi] 
+        "shufpd  $0x1, %%xmm13, %%xmm13 \n\t" // [imag*wi, real*wi]
+        "addsubpd %%xmm13, %%xmm10 \n\t"  // [real*wr-imag*wi, imag*wr+real*wi]
+        
+        // Second complex multiplication: xmm3 * xmm6 (w2)
+        "movapd  %%xmm6, %%xmm12  \n\t"  // Copy w2
+        "movapd  %%xmm11, %%xmm13 \n\t"  // Copy x[i+j+len/2+1]
+        "unpcklpd %%xmm12, %%xmm12 \n\t"  // xmm12 = [wr2, wr2]
+        "unpckhpd %%xmm6, %%xmm6  \n\t"  // xmm6 = [wi2, wi2]
+        "mulpd   %%xmm12, %%xmm11 \n\t"  // [real*wr2, imag*wr2]
+        "mulpd   %%xmm6, %%xmm13  \n\t"  // [real*wi2, imag*wi2]
+        "shufpd  $0x1, %%xmm13, %%xmm13 \n\t" // [imag*wi2, real*wi2]
+        "addsubpd %%xmm13, %%xmm11 \n\t"  // [real*wr2-imag*wi2, imag*wr2+real*wi2]
+        
+        // Butterfly operations
+        "addpd   %%xmm10, %%xmm0  \n\t"  // x[i+j] = x[i+j] + v1
+        "addpd   %%xmm11, %%xmm1  \n\t"  // x[i+j+1] = x[i+j+1] + v2
+        "subpd   %%xmm10, %%xmm8  \n\t"  // x[i+j+len/2] = x[i+j] - v1
+        "subpd   %%xmm11, %%xmm9  \n\t"  // x[i+j+len/2+1] = x[i+j+1] - v2
+        
+        // Store results
+        "movupd  %%xmm0, (%0)     \n\t"  // Store x[i+j]
+        "movupd  %%xmm1, 16(%0)   \n\t"  // Store x[i+j+1] 
+        "movupd  %%xmm8, (%1)     \n\t"  // Store x[i+j+len/2]
+        "movupd  %%xmm9, 16(%1)   \n\t"  // Store x[i+j+len/2+1]
+        
+        :
+        : "r" (&x[i + j]), "r" (&x[i + j + len_half]), 
+          "r" (i), "r" (j),
+          "m" (wr), "m" (wi), "m" (wr2), "m" (wi2)
+        : "xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7",
+          "xmm8", "xmm9", "xmm10", "xmm11", "xmm12", "xmm13", "memory"
+    );
+}
+
+// Vectorized 1D FFT implementation
 static void fft_1d(Complex *x, int n, int inverse)
 {
     // Ensure n is power of 2
@@ -126,33 +237,71 @@ static void fft_1d(Complex *x, int n, int inverse)
 
     bit_reverse(x, n);
 
-    Complex v, temp_result;
+    // Vectorized FFT loops - process 2 butterflies at once
     for (int len = 2; len <= n; len <<= 1)
     {
         double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
         Complex w = {cos(angle), sin(angle)};
+        int len_half = len / 2;
 
         for (int i = 0; i < n; i += len)
         {
             Complex wn = {1.0, 0.0};
-            for (int j = 0; j < len / 2; j++)
+            
+            // Process pairs of butterflies with SIMD
+            int j;
+            for (j = 0; j < len_half - 1; j += 2)
             {
-                asm_complex_mul(&x[i + j + len / 2], &wn, &v);
+                // Calculate two twiddle factors at once
+                double wr1 = wn.real;
+                double wi1 = wn.imag;
+                
+                // wn2 = wn * w
+                double wr2 = wr1 * w.real - wi1 * w.imag;
+                double wi2 = wr1 * w.imag + wi1 * w.real;
+                
+                // Vectorized butterfly for j and j+1
+                vectorized_butterfly(x, i, j, len_half, wr1, wi1, wr2, wi2);
+                
+                // Update wn for next iteration: wn *= w^2
+                Complex w_squared = {w.real * w.real - w.imag * w.imag,
+                                   2.0 * w.real * w.imag};
+                Complex temp = {wn.real * w_squared.real - wn.imag * w_squared.imag,
+                              wn.real * w_squared.imag + wn.imag * w_squared.real};
+                wn = temp;
+            }
+            
+            // Handle remaining butterfly if len_half is odd
+            if (j < len_half)
+            {
+                Complex v;
+                asm_complex_mul(&x[i + j + len_half], &wn, &v);
                 asm_complex_add(&x[i + j], &v, &x[i + j]);
-                asm_complex_sub(&x[i + j], &v, &x[i + j + len / 2]);
-                asm_complex_mul(&wn, &w, &temp_result);
-                wn = temp_result;
+                asm_complex_sub(&x[i + j], &v, &x[i + j + len_half]);
             }
         }
     }
 
     if (inverse)
     {
-        for (int i = 0; i < n; i++)
-        {
-            x[i].real /= n;
-            x[i].imag /= n;
-        }
+        // Vectorized normalization
+        double inv_n = 1.0 / n;
+        size_t byte_count = n * 16;
+        __asm__ volatile (
+            "movsd   %1, %%xmm0       \n\t"
+            "unpcklpd %%xmm0, %%xmm0  \n\t"  // xmm0 = [1/n, 1/n]
+            "movq    $0, %%rax        \n\t"
+            "1:                       \n\t"
+            "movupd  (%%rax,%0), %%xmm1 \n\t"
+            "mulpd   %%xmm0, %%xmm1   \n\t"
+            "movupd  %%xmm1, (%%rax,%0) \n\t"
+            "addq    $16, %%rax       \n\t"
+            "cmpq    %2, %%rax        \n\t"
+            "jl      1b               \n\t"
+            :
+            : "r" (x), "m" (inv_n), "r" (byte_count)
+            : "rax", "xmm0", "xmm1", "memory"
+        );
     }
 }
 
