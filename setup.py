@@ -5,15 +5,21 @@ import os
 
 class CustomBuildExt(build_ext):
     def run(self):
-        # Pre-assemble .s files to .o files
+        # Pre-assemble .s and .asm files to .o files
         for ext in self.extensions:
             new_sources = []
             for source in ext.sources:
-                if source.endswith('.s'):
-                    obj_file = source.replace('.s', '.o')
+                if source.endswith('.s') or source.endswith('.asm'):
+                    if source.endswith('.s'):
+                        obj_file = source.replace('.s', '.o')
+                        assembler_cmd = ['as', '-64', source, '-o', obj_file]
+                    else:  # .asm file
+                        obj_file = source.replace('.asm', '.o')
+                        assembler_cmd = ['nasm', '-f', 'elf64', source, '-o', obj_file]
+                    
                     if not os.path.exists(obj_file) or os.path.getmtime(source) > os.path.getmtime(obj_file):
                         print(f"Assembling {source} to {obj_file}")
-                        subprocess.run(['as', '-64', source, '-o', obj_file], check=True)
+                        subprocess.run(assembler_cmd, check=True)
                     new_sources.append(obj_file)
                 else:
                     new_sources.append(source)
@@ -34,7 +40,7 @@ c_backend_extension = Extension(
 
 asm_backend_extension = Extension(
     "backends.asm_backend_core",
-    sources=["backends/asm_backend_core.c", "backends/complex_asm.s"],
+    sources=["backends/asm_backend_core.c", "backends/complex_asm.asm"],
     # libraries=["m"],  # Link math library
     # extra_compile_args=["-O3", "-ffast-math", "-march=native"],
     extra_link_args=["-lm"],
