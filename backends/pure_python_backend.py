@@ -1,8 +1,9 @@
+import numpy as np
 import math
 import cmath
+from backends.backend import Backend
 
-
-class PurePythonBackend:
+class PurePythonBackend(Backend):
     """Complete Pure Python backend implementation with proper FFT"""
 
     def zeros(self, shape: int | tuple[int, int], dtype=complex) -> list | list[list]:
@@ -11,18 +12,11 @@ class PurePythonBackend:
         rows, cols = shape
         return [[0 + 0j if dtype == complex else 0 for _ in range(cols)] for _ in range(rows)]
 
-    def linspace(self, start: float, stop: float, num: int) -> list[float]:
-        if num == 1:
-            return [start]
-        step = (stop - start) / (num - 1)
-        return [start + i * step for i in range(num)]
+    def linspace(self, start, stop, num):
+        return np.linspace(start, stop, num)
 
-    def meshgrid(
-        self, x: list[float], y: list[float]
-    ) -> tuple[list[list[float]], list[list[float]]]:
-        X = [[x[j] for j in range(len(x))] for i in range(len(y))]
-        Y = [[y[i] for j in range(len(x))] for i in range(len(y))]
-        return X, Y
+    def meshgrid(self, x, y):
+        return np.meshgrid(x, y)
 
     def sqrt(self, x: float | complex | list) -> float | list:
         if isinstance(x, (list, tuple)):
