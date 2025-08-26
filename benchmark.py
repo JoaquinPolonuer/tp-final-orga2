@@ -77,7 +77,7 @@ print("Wave Simulation Backend Performance Benchmark")
 print("=" * 50)
 
 backends = ["numpy", "c", "optimized_c"]
-sizes = [64, 128, 256, 512, 1024, 2048, 4096]
+sizes = [16, 32, 64, 128, 256, 512]
 steps = 20
 
 results = {}
@@ -133,7 +133,9 @@ for size in sizes:
         plot_sizes.append(size)
         for backend in backends:
             if backend in results[size]:
-                plot_data[backend]["steps_per_sec"].append(results[size][backend]["steps_per_second"])
+                plot_data[backend]["steps_per_sec"].append(
+                    results[size][backend]["steps_per_second"]
+                )
                 plot_data[backend]["ms_per_step"].append(results[size][backend]["time_per_step"])
             else:
                 # Use NaN for failed backends to maintain array alignment
@@ -142,8 +144,8 @@ for size in sizes:
 
 # Plot 1: Steps per second
 plt.figure(figsize=(12, 8))
-colors = ['blue', 'orange', 'green', 'red']
-markers = ['o', 's', '^', 'D']
+colors = ["blue", "orange", "green", "red"]
+markers = ["o", "s", "^", "D"]
 
 for i, backend in enumerate(backends):
     steps_data = plot_data[backend]["steps_per_sec"]
@@ -152,19 +154,30 @@ for i, backend in enumerate(backends):
     if np.any(valid_indices):
         valid_sizes = np.array(plot_sizes)[valid_indices]
         valid_steps = np.array(steps_data)[valid_indices]
-        plt.plot(valid_sizes, valid_steps, marker=markers[i], color=colors[i], 
-                linewidth=2, markersize=8, label=backend)
+        plt.plot(
+            valid_sizes,
+            valid_steps,
+            marker=markers[i],
+            color=colors[i],
+            linewidth=2,
+            markersize=8,
+            label=backend,
+        )
 
-plt.xlabel('Grid Size (N×N)', fontsize=12)
-plt.ylabel('Steps per Second', fontsize=12)
-plt.title('Performance Comparison: Steps per Second vs Grid Size', fontsize=14, fontweight='bold')
+plt.xlabel("Grid Size (N×N)", fontsize=12)
+plt.ylabel("Steps per Second", fontsize=12)
+plt.title("Performance Comparison: Steps per Second vs Grid Size", fontsize=14, fontweight="bold")
 plt.legend(fontsize=10)
 plt.grid(True, alpha=0.3)
-plt.yscale('log')
-plt.xscale('log')
-plt.xticks(plot_sizes, [f'{s}×{s}' for s in plot_sizes])
+plt.yscale("log")
+plt.xscale("log")
+plt.xticks(plot_sizes, [f"{s}×{s}" for s in plot_sizes])
 plt.tight_layout()
-plt.savefig('/home/joacopolo/Documents/tp-final-orga2/results/steps_per_second.png', dpi=300, bbox_inches='tight')
+plt.savefig(
+    "/home/joacopolo/Documents/tp-final-orga2/results/steps_per_second.png",
+    dpi=300,
+    bbox_inches="tight",
+)
 plt.close()
 
 # Plot 2: Milliseconds per step
@@ -177,19 +190,30 @@ for i, backend in enumerate(backends):
     if np.any(valid_indices):
         valid_sizes = np.array(plot_sizes)[valid_indices]
         valid_ms = np.array(ms_data)[valid_indices]
-        plt.plot(valid_sizes, valid_ms, marker=markers[i], color=colors[i], 
-                linewidth=2, markersize=8, label=backend)
+        plt.plot(
+            valid_sizes,
+            valid_ms,
+            marker=markers[i],
+            color=colors[i],
+            linewidth=2,
+            markersize=8,
+            label=backend,
+        )
 
-plt.xlabel('Grid Size (N×N)', fontsize=12)
-plt.ylabel('Milliseconds per Step', fontsize=12)
-plt.title('Performance Comparison: Time per Step vs Grid Size', fontsize=14, fontweight='bold')
+plt.xlabel("Grid Size (N×N)", fontsize=12)
+plt.ylabel("Milliseconds per Step", fontsize=12)
+plt.title("Performance Comparison: Time per Step vs Grid Size", fontsize=14, fontweight="bold")
 plt.legend(fontsize=10)
 plt.grid(True, alpha=0.3)
-plt.yscale('log')
-plt.xscale('log')
-plt.xticks(plot_sizes, [f'{s}×{s}' for s in plot_sizes])
+plt.yscale("log")
+plt.xscale("log")
+plt.xticks(plot_sizes, [f"{s}×{s}" for s in plot_sizes])
 plt.tight_layout()
-plt.savefig('/home/joacopolo/Documents/tp-final-orga2/results/milliseconds_per_step.png', dpi=300, bbox_inches='tight')
+plt.savefig(
+    "/home/joacopolo/Documents/tp-final-orga2/results/milliseconds_per_step.png",
+    dpi=300,
+    bbox_inches="tight",
+)
 plt.close()
 
 # Combined plot
@@ -202,18 +226,25 @@ for i, backend in enumerate(backends):
     if np.any(valid_indices):
         valid_sizes = np.array(plot_sizes)[valid_indices]
         valid_steps = np.array(steps_data)[valid_indices]
-        ax1.plot(valid_sizes, valid_steps, marker=markers[i], color=colors[i], 
-                linewidth=2, markersize=8, label=backend)
+        ax1.plot(
+            valid_sizes,
+            valid_steps,
+            marker=markers[i],
+            color=colors[i],
+            linewidth=2,
+            markersize=8,
+            label=backend,
+        )
 
-ax1.set_xlabel('Grid Size (N×N)', fontsize=12)
-ax1.set_ylabel('Steps per Second', fontsize=12)
-ax1.set_title('Steps per Second vs Grid Size', fontsize=12, fontweight='bold')
+ax1.set_xlabel("Grid Size (N×N)", fontsize=12)
+ax1.set_ylabel("Steps per Second", fontsize=12)
+ax1.set_title("Steps per Second vs Grid Size", fontsize=12, fontweight="bold")
 ax1.legend(fontsize=10)
 ax1.grid(True, alpha=0.3)
-ax1.set_yscale('log')
-ax1.set_xscale('log')
+ax1.set_yscale("log")
+ax1.set_xscale("log")
 ax1.set_xticks(plot_sizes)
-ax1.set_xticklabels([f'{s}×{s}' for s in plot_sizes])
+ax1.set_xticklabels([f"{s}×{s}" for s in plot_sizes])
 
 # Milliseconds per step subplot
 for i, backend in enumerate(backends):
@@ -222,24 +253,35 @@ for i, backend in enumerate(backends):
     if np.any(valid_indices):
         valid_sizes = np.array(plot_sizes)[valid_indices]
         valid_ms = np.array(ms_data)[valid_indices]
-        ax2.plot(valid_sizes, valid_ms, marker=markers[i], color=colors[i], 
-                linewidth=2, markersize=8, label=backend)
+        ax2.plot(
+            valid_sizes,
+            valid_ms,
+            marker=markers[i],
+            color=colors[i],
+            linewidth=2,
+            markersize=8,
+            label=backend,
+        )
 
-ax2.set_xlabel('Grid Size (N×N)', fontsize=12)
-ax2.set_ylabel('Milliseconds per Step', fontsize=12)
-ax2.set_title('Time per Step vs Grid Size', fontsize=12, fontweight='bold')
+ax2.set_xlabel("Grid Size (N×N)", fontsize=12)
+ax2.set_ylabel("Milliseconds per Step", fontsize=12)
+ax2.set_title("Time per Step vs Grid Size", fontsize=12, fontweight="bold")
 ax2.legend(fontsize=10)
 ax2.grid(True, alpha=0.3)
-ax2.set_yscale('log')
-ax2.set_xscale('log')
+ax2.set_yscale("log")
+ax2.set_xscale("log")
 ax2.set_xticks(plot_sizes)
-ax2.set_xticklabels([f'{s}×{s}' for s in plot_sizes])
+ax2.set_xticklabels([f"{s}×{s}" for s in plot_sizes])
 
 plt.tight_layout()
-plt.savefig('/home/joacopolo/Documents/tp-final-orga2/results/combined_performance.png', dpi=300, bbox_inches='tight')
+plt.savefig(
+    "/home/joacopolo/Documents/tp-final-orga2/results/combined_performance.png",
+    dpi=300,
+    bbox_inches="tight",
+)
 plt.close()
 
 print("Plots saved to results/ directory:")
 print("- steps_per_second.png")
-print("- milliseconds_per_step.png") 
+print("- milliseconds_per_step.png")
 print("- combined_performance.png")
