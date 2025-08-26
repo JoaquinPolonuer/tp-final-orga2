@@ -16,7 +16,7 @@ global asm_complex_mul
 ; void asm_complex_add(Complex *a, Complex *b, Complex *result)
 ; Parameters: a=rdi, b=rsi, result=rdx
 asm_complex_add:
-    movupd  [rdi], xmm0       ; xmm0 = [a.real, a.imag]
+    movupd  xmm0, [rdi]       ; xmm0 = [a.real, a.imag]
     addpd   xmm0, [rsi]       ; xmm0 += [b.real, b.imag]
     movupd  [rdx], xmm0       ; store result
     ret
@@ -24,7 +24,7 @@ asm_complex_add:
 ; void asm_complex_sub(Complex *a, Complex *b, Complex *result)
 ; Parameters: a=rdi, b=rsi, result=rdx
 asm_complex_sub:
-    movupd  [rdi], xmm0       ; xmm0 = [a.real, a.imag]
+    movupd  xmm0, [rdi]       ; xmm0 = [a.real, a.imag]
     subpd   xmm0, [rsi]       ; xmm0 -= [b.real, b.imag]
     movupd  [rdx], xmm0
     ret
@@ -32,8 +32,8 @@ asm_complex_sub:
 ; void asm_complex_mul(Complex *a, Complex *b, Complex *result)
 ; a=rdi, b=rsi, result=rdx
 asm_complex_mul:
-    movupd  [rdi], xmm0        ; xmm0 = [ar, ai]
-    movupd  [rsi], xmm1        ; xmm1 = [br, bi]
+    movupd  xmm0, [rdi]        ; xmm0 = [ar, ai]
+    movupd  xmm1, [rsi]        ; xmm1 = [br, bi]
 
     movapd  xmm2, xmm1         ; xmm2 = [br, bi]
     movapd  xmm3, xmm0         ; xmm3 = [ar, ai]
