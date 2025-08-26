@@ -202,30 +202,6 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
     free(temp);
 }
 
-// Python wrapper functions
-static PyObject *c_zeros(PyObject *self, PyObject *args)
-{
-    int rows, cols;
-    if (!PyArg_ParseTuple(args, "ii", &rows, &cols))
-    {
-        return NULL;
-    }
-
-    PyObject *py_list = PyList_New(rows);
-    for (int i = 0; i < rows; i++)
-    {
-        PyObject *row = PyList_New(cols);
-        for (int j = 0; j < cols; j++)
-        {
-            PyObject *zero = PyComplex_FromDoubles(0.0, 0.0);
-            PyList_SetItem(row, j, zero);
-        }
-        PyList_SetItem(py_list, i, row);
-    }
-
-    return py_list;
-}
-
 static PyObject *c_fft2(PyObject *self, PyObject *args)
 {
     PyObject *input_obj;
@@ -371,7 +347,6 @@ static PyObject *c_real_array(PyObject *self, PyObject *args)
 
 // Method definitions
 static PyMethodDef PureCBackendMethods[] = {
-    {"zeros", c_zeros, METH_VARARGS, "Create zero array"},
     {"fft2", c_fft2, METH_VARARGS, "2D FFT"},
     {"ifft2", c_ifft2, METH_VARARGS, "2D IFFT"},
     {"fftfreq", c_fftfreq, METH_VARARGS, "FFT frequency array"},
