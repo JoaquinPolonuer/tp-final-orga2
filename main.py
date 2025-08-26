@@ -8,12 +8,14 @@ import time
 from backends.numpy_backend import NumpyBackend
 from backends.pure_python_backend import PurePythonBackend
 from backends.c_backend import CBackend
+from backends.asm_backend import ASMBackend
 from backends.wave_simulation import WaveSimulation2D
 
 backends = {
     "numpy": NumpyBackend,
     "python": PurePythonBackend,
     "c": CBackend,
+    "asm": ASMBackend,
 }
 
 

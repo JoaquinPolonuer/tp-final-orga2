@@ -17,7 +17,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
         # Create simulation
         start_time = time.time()
         sim = WaveSimulation2D(
-            backend=backend_name,
+            backend_name=backend_name,
             size=size,
             domain_size=8.0,
             wave_speed=2.0,
@@ -66,7 +66,7 @@ def main():
     print("Wave Simulation Backend Performance Benchmark")
     print("=" * 50)
     
-    backends = ['numpy', 'python', 'c']
+    backends = ['numpy', 'python', 'c', 'asm']
     sizes = [64, 128]
     steps = 50
     

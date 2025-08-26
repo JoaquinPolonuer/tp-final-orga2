@@ -4,7 +4,7 @@ import cmath
 from backends.backend import Backend
 
 try:
-    from backends import c_backend_core
+    from backends import asm_backend_core
 except ImportError:
     raise ImportError(
         "Pure C backend core module not available. "
@@ -12,9 +12,9 @@ except ImportError:
     )
 
 
-class CBackend(Backend):
+class ASMBackend(Backend):
     def __init__(self):
-        self.c_core = c_backend_core
+        self.c_core = asm_backend_core
 
     def fft2(self, x):
         return self.c_core.fft2([list(row) for row in x])

@@ -8,19 +8,21 @@ import time
 from backends.numpy_backend import NumpyBackend
 from backends.pure_python_backend import PurePythonBackend
 from backends.c_backend import CBackend
+from backends.asm_backend import ASMBackend
 from utils import to_array
 
 backends = {
     "numpy": NumpyBackend,
     "python": PurePythonBackend,
     "c": CBackend,
+    'asm': ASMBackend,
 }
 
 
 class WaveSimulation2D:
-    def __init__(self, backend="numpy", size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
+    def __init__(self, backend_name="numpy", size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
 
-        self.backend = backends.get(backend, NumpyBackend)()
+        self.backend = backends[backend_name]()
 
         self.size = size
         self.domain_size = domain_size

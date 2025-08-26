@@ -213,7 +213,7 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
 }
 
 // Python wrapper functions
-static PyObject *pure_c_zeros(PyObject *self, PyObject *args)
+static PyObject *c_zeros(PyObject *self, PyObject *args)
 {
     int rows, cols;
     if (!PyArg_ParseTuple(args, "ii", &rows, &cols))
@@ -236,7 +236,7 @@ static PyObject *pure_c_zeros(PyObject *self, PyObject *args)
     return py_list;
 }
 
-static PyObject *pure_c_fft2(PyObject *self, PyObject *args)
+static PyObject *c_fft2(PyObject *self, PyObject *args)
 {
     PyObject *input_obj;
     if (!PyArg_ParseTuple(args, "O", &input_obj))
@@ -281,7 +281,7 @@ static PyObject *pure_c_fft2(PyObject *self, PyObject *args)
     return result;
 }
 
-static PyObject *pure_c_ifft2(PyObject *self, PyObject *args)
+static PyObject *c_ifft2(PyObject *self, PyObject *args)
 {
     PyObject *input_obj;
     if (!PyArg_ParseTuple(args, "O", &input_obj))
@@ -326,7 +326,7 @@ static PyObject *pure_c_ifft2(PyObject *self, PyObject *args)
     return result;
 }
 
-static PyObject *pure_c_fftfreq(PyObject *self, PyObject *args)
+static PyObject *c_fftfreq(PyObject *self, PyObject *args)
 {
     int n;
     double d = 1.0;
@@ -354,7 +354,7 @@ static PyObject *pure_c_fftfreq(PyObject *self, PyObject *args)
     return py_list;
 }
 
-static PyObject *pure_c_abs_array(PyObject *self, PyObject *args)
+static PyObject *c_abs_array(PyObject *self, PyObject *args)
 {
     PyObject *input_obj;
     if (!PyArg_ParseTuple(args, "O", &input_obj))
@@ -387,7 +387,7 @@ static PyObject *pure_c_abs_array(PyObject *self, PyObject *args)
     return result;
 }
 
-static PyObject *pure_c_real_array(PyObject *self, PyObject *args)
+static PyObject *c_real_array(PyObject *self, PyObject *args)
 {
     PyObject *input_obj;
     if (!PyArg_ParseTuple(args, "O", &input_obj))
@@ -421,23 +421,23 @@ static PyObject *pure_c_real_array(PyObject *self, PyObject *args)
 
 // Method definitions
 static PyMethodDef PureCBackendMethods[] = {
-    {"zeros", pure_c_zeros, METH_VARARGS, "Create zero array"},
-    {"fft2", pure_c_fft2, METH_VARARGS, "2D FFT"},
-    {"ifft2", pure_c_ifft2, METH_VARARGS, "2D IFFT"},
-    {"fftfreq", pure_c_fftfreq, METH_VARARGS, "FFT frequency array"},
-    {"abs_array", pure_c_abs_array, METH_VARARGS, "Absolute value of array"},
-    {"real_array", pure_c_real_array, METH_VARARGS, "Real part of array"},
+    {"zeros", c_zeros, METH_VARARGS, "Create zero array"},
+    {"fft2", c_fft2, METH_VARARGS, "2D FFT"},
+    {"ifft2", c_ifft2, METH_VARARGS, "2D IFFT"},
+    {"fftfreq", c_fftfreq, METH_VARARGS, "FFT frequency array"},
+    {"abs_array", c_abs_array, METH_VARARGS, "Absolute value of array"},
+    {"real_array", c_real_array, METH_VARARGS, "Real part of array"},
     {NULL, NULL, 0, NULL}};
 
 // Module definition
 static struct PyModuleDef purecbackendmodule = {
     PyModuleDef_HEAD_INIT,
-    "pure_c_backend_core",
+    "c_backend_core",
     "Pure C backend core functions without NumPy",
     -1,
     PureCBackendMethods};
 
-PyMODINIT_FUNC PyInit_pure_c_backend_core(void)
+PyMODINIT_FUNC PyInit_c_backend_core(void)
 {
     return PyModule_Create(&purecbackendmodule);
 }
