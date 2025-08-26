@@ -2,7 +2,7 @@ try:
     from backends import c_backend_optimized
 except ImportError:
     raise ImportError(
-        "Pure C backend core module not available. "
+        "Optimized C backend core module not available. "
         "Please compile it using: python setup.py build_ext --inplace"
     )
 
