@@ -1,5 +1,4 @@
 #include <Python.h>
-#include <math.h>
 #include <complex.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,15 +14,6 @@ typedef struct
 extern Complex asm_complex_add(Complex a, Complex b);
 extern Complex asm_complex_sub(Complex a, Complex b);
 extern Complex asm_complex_mul(Complex a, Complex b);
-
-static Complex complex_exp(Complex z)
-{
-    double exp_real = exp(z.real);
-    Complex result = {
-        exp_real * cos(z.imag),
-        exp_real * sin(z.imag)};
-    return result;
-}
 
 // Convert Python list of lists to C array
 static Complex *python_to_c_array(PyObject *py_list, int *rows, int *cols)

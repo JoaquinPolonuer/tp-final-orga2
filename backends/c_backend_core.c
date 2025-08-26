@@ -1,5 +1,4 @@
 #include <Python.h>
-#include <math.h>
 #include <complex.h>
 #include <stdlib.h>
 #include <string.h>
@@ -29,15 +28,6 @@ static Complex complex_mul(Complex a, Complex b)
     Complex result = {
         a.real * b.real - a.imag * b.imag,
         a.real * b.imag + a.imag * b.real};
-    return result;
-}
-
-static Complex complex_exp(Complex z)
-{
-    double exp_real = exp(z.real);
-    Complex result = {
-        exp_real * cos(z.imag),
-        exp_real * sin(z.imag)};
     return result;
 }
 
