@@ -38,19 +38,19 @@ c_backend_extension = Extension(
     # extra_link_args=["-lm"],
 )
 
-asm_backend_extension = Extension(
-    "backends.asm_backend_core",
-    sources=["backends/asm_backend_core.c", "backends/complex_asm.asm"],
-    # libraries=["m"],  # Link math library
-    # extra_compile_args=["-O3", "-ffast-math", "-march=native"],
-    # extra_link_args=["-lm"],
-)
+# asm_backend_extension = Extension(
+#     "backends.asm_backend_core",
+#     sources=["backends/asm_backend_core.c", "backends/complex_asm.asm"],
+#     # libraries=["m"],  # Link math library
+#     # extra_compile_args=["-O3", "-ffast-math", "-march=native"],
+#     # extra_link_args=["-lm"],
+# )
 
 setup(
     name="wave_simulation_backends",
     version="1.0",
     description="C backends for wave simulation (NumPy-based and Pure C)",
-    ext_modules=[c_backend_extension, asm_backend_extension],
-    cmdclass={'build_ext': CustomBuildExt},
+    ext_modules=[c_backend_extension], #, asm_backend_extension],
+    # cmdclass={'build_ext': CustomBuildExt},
     zip_safe=False,
 )

@@ -6,7 +6,9 @@ Performance benchmark for different wave simulation backends
 import time
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
-from main import WaveSimulation2D
+from backends.wave_simulation_numpy import NumpyWaveSimulation2D
+from backends.wave_simulation_python import PythonWaveSimulation2D
+from backends.wave_simulation_c import CWaveSimulation2D
 
 def benchmark_backend(backend_name, size=64, steps=100):
     """Benchmark a specific backend"""
@@ -16,13 +18,29 @@ def benchmark_backend(backend_name, size=64, steps=100):
     try:
         # Create simulation
         start_time = time.time()
-        sim = WaveSimulation2D(
-            backend_name=backend_name,
-            size=size,
-            domain_size=8.0,
-            wave_speed=2.0,
-            dt=0.02
-        )
+        if backend_name == 'numpy':
+            sim = NumpyWaveSimulation2D(
+                size=size,
+                domain_size=8.0,
+                wave_speed=2.0,
+                dt=0.02
+            )
+        elif backend_name == 'python':
+            sim = PythonWaveSimulation2D(
+                size=size,
+                domain_size=8.0,
+                wave_speed=2.0,
+                dt=0.02
+            )
+        elif backend_name == 'c':
+            sim = CWaveSimulation2D(
+                size=size,
+                domain_size=8.0,
+                wave_speed=2.0,
+                dt=0.02
+            )
+        else:
+            raise ImportError(f"Unknown backend: {backend_name}")
         init_time = time.time() - start_time
         
         # Add a wave source
@@ -62,54 +80,50 @@ def benchmark_backend(backend_name, size=64, steps=100):
         print(f"  ERROR: Failed to benchmark {backend_name} - {e}")
         return None
 
-def main():
-    print("Wave Simulation Backend Performance Benchmark")
-    print("=" * 50)
-    
-    backends = ['numpy', 'python', 'c', 'asm']
-    sizes = [64, 128]
-    steps = 50
-    
-    results = {}
-    
-    for size in sizes:
-        print(f"\n{'='*20} GRID SIZE {size}x{size} {'='*20}")
-        results[size] = {}
-        
-        for backend in backends:
-            result = benchmark_backend(backend, size=size, steps=steps)
-            if result:
-                results[size][backend] = result
-    
-    # Print summary
-    print(f"\n{'='*20} PERFORMANCE SUMMARY {'='*20}")
-    
-    for size in sizes:
-        print(f"\nGrid Size {size}x{size}:")
-        print(f"{'Backend':<10} {'Steps/sec':<12} {'ms/step':<10} {'Speedup':<8}")
-        print("-" * 45)
-        
-        if 'numpy' in results[size]:
-            numpy_sps = results[size]['numpy']['steps_per_second']
-        else:
-            numpy_sps = None
-            
-        for backend in backends:
-            if backend in results[size]:
-                result = results[size][backend]
-                sps = result['steps_per_second']
-                ms_per_step = result['time_per_step']
-                
-                if numpy_sps and backend != 'numpy':
-                    speedup = f"{sps/numpy_sps:.1f}x"
-                elif backend == 'numpy':
-                    speedup = "baseline"
-                else:
-                    speedup = "N/A"
-                
-                print(f"{backend:<10} {sps:<12.1f} {ms_per_step:<10.2f} {speedup:<8}")
-            else:
-                print(f"{backend:<10} {'FAILED':<12} {'FAILED':<10} {'N/A':<8}")
+print("Wave Simulation Backend Performance Benchmark")
+print("=" * 50)
 
-if __name__ == "__main__":
-    main()
+backends = ['numpy', 'python', 'c'] #, 'asm']
+sizes = [64, 128]
+steps = 50
+
+results = {}
+
+for size in sizes:
+    print(f"\n{'='*20} GRID SIZE {size}x{size} {'='*20}")
+    results[size] = {}
+    
+    for backend in backends:
+        result = benchmark_backend(backend, size=size, steps=steps)
+        if result:
+            results[size][backend] = result
+
+# Print summary
+print(f"\n{'='*20} PERFORMANCE SUMMARY {'='*20}")
+
+for size in sizes:
+    print(f"\nGrid Size {size}x{size}:")
+    print(f"{'Backend':<10} {'Steps/sec':<12} {'ms/step':<10} {'Speedup':<8}")
+    print("-" * 45)
+    
+    if 'numpy' in results[size]:
+        numpy_sps = results[size]['numpy']['steps_per_second']
+    else:
+        numpy_sps = None
+        
+    for backend in backends:
+        if backend in results[size]:
+            result = results[size][backend]
+            sps = result['steps_per_second']
+            ms_per_step = result['time_per_step']
+            
+            if numpy_sps and backend != 'numpy':
+                speedup = f"{sps/numpy_sps:.1f}x"
+            elif backend == 'numpy':
+                speedup = "baseline"
+            else:
+                speedup = "N/A"
+            
+            print(f"{backend:<10} {sps:<12.1f} {ms_per_step:<10.2f} {speedup:<8}")
+        else:
+            print(f"{backend:<10} {'FAILED':<12} {'FAILED':<10} {'N/A':<8}")

@@ -1,7 +1,9 @@
 import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from backends.wave_simulation import WaveSimulation2D
+from backends.wave_simulation_numpy import NumpyWaveSimulation2D
+from backends.wave_simulation_python import PythonWaveSimulation2D
+from backends.wave_simulation_c import CWaveSimulation2D
 
 class WaveVisualizer:
     def __init__(self, simulation, backend_name):
@@ -81,8 +83,7 @@ class WaveVisualizer:
 if __name__ == "__main__":
     backend_name = "c"  # Change to 'python' to test pure Python backend, 'c' for C backend
 
-    sim = WaveSimulation2D(
-        backend_name=backend_name,
+    sim = CWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,
