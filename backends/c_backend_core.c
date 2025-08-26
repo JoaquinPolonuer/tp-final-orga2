@@ -149,8 +149,6 @@ static void fft_1d(Complex *x, int n, int inverse)
 // 1D FFT implementation (Cooley-Tukey)
 static void fft_1d_vectorized(Complex *x, int n, int inverse)
 {
-    // // clock_t start, end;
-    // // start = clock();
 
     // Ensure n is power of 2
     int power = 1;
@@ -168,15 +166,9 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
         n = power;
     }
 
-    // // end = clock();
-    // // printf("Part 1: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
-    // // start = clock();
     bit_reverse(x, n);
-    // // end = clock();
-    // // printf("Bit reverse: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
-    // // start = clock();
     for (int len = 2; len <= n; len <<= 1)
     {
         double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
@@ -224,8 +216,6 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
             }
         }
     }
-    // // end = clock();
-    // // printf("Loop: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
     if (inverse)
     {
@@ -240,23 +230,18 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
 // 2D FFT implementation
 static void fft2d(Complex *data, int rows, int cols, int inverse)
 {
-    // // clock_t start, end;
 
     Complex *temp = (Complex *)malloc(cols * sizeof(Complex));
     // FFT on rows
-    // // start = clock();
     for (int i = 0; i < rows; i++)
     {
         memcpy(temp, &data[i * cols], cols * sizeof(Complex));
-        fft_1d(temp, cols, inverse);
+        fft_1d_vectorized(temp, cols, inverse);
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
-    // // end = clock();
-    // // printf("FFT on rows: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
     
     // FFT on columns
-    // // start = clock();
     temp = (Complex *)realloc(temp, rows * sizeof(Complex));
     for (int j = 0; j < cols; j++)
     {
@@ -264,14 +249,12 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         {
             temp[i] = data[i * cols + j];
         }
-        fft_1d(temp, rows, inverse);
+        fft_1d_vectorized(temp, rows, inverse);
         for (int i = 0; i < rows; i++)
         {
             data[i * cols + j] = temp[i];
         }
     }
-    // // end = clock();
-    // // printf("FFT on columns: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
 
     free(temp);
@@ -418,10 +401,8 @@ static void wave_sim_add_source(WaveSimulation *sim, double x_pos, double y_pos,
 static void wave_sim_step(WaveSimulation *sim)
 {
     // Apply phase evolution in k-space
-    // // clock_t start, end;
 
     // Time phase evolution
-    // // start = clock();
     for (int i = 0; i < sim->size; i++)
     {
         for (int j = 0; j < sim->size; j++)
@@ -434,19 +415,11 @@ static void wave_sim_step(WaveSimulation *sim)
             sim->wave_k[idx] = complex_mul(sim->wave_k[idx], phase_factor);
         }
     }
-    // // end = clock();
-    // // printf("Phase evolution: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
-    // // start = clock();
     // Transform back to real space
     memcpy(sim->wave, sim->wave_k, sim->size * sim->size * sizeof(Complex));
-    // // end = clock();
-    // // printf("Memory copy: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 
-    // // start = clock();
     fft2d(sim->wave, sim->size, sim->size, 1);
-    // // end = clock();
-    // // printf("FFT: %.4f ms\n", ((double)(end - start)) / CLOCKS_PER_SEC * 1000);
 }
 
 static PyObject *wave_sim_get_intensity(WaveSimulation *sim)
