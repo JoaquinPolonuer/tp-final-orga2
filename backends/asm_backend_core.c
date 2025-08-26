@@ -126,7 +126,7 @@ static void fft_1d(Complex *x, int n, int inverse)
 
     bit_reverse(x, n);
 
-    Complex v, temp_result;
+    Complex v, temp_result, wn;
     for (int len = 2; len <= n; len <<= 1)
     {
         double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
@@ -134,7 +134,8 @@ static void fft_1d(Complex *x, int n, int inverse)
 
         for (int i = 0; i < n; i += len)
         {
-            Complex wn = {1.0, 0.0};
+            wn.real = 1.0;
+            wn.imag = 0.0;
             for (int j = 0; j < len / 2; j++)
             {
                 asm_complex_mul(&x[i + j + len / 2], &wn, &v);
