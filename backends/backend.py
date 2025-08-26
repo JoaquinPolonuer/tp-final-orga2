@@ -1,20 +1,16 @@
+import numpy as np
 from abc import ABC, abstractmethod
 
 
-class Backend(ABC):
-    """Abstract backend interface"""
-
-    @abstractmethod
+class Backend:
     def zeros(self, shape, dtype=complex):
-        pass
+        return np.zeros(shape, dtype=dtype)
 
-    @abstractmethod
     def linspace(self, start, stop, num):
-        pass
+        return np.linspace(start, stop, num)
 
-    @abstractmethod
     def meshgrid(self, x, y):
-        pass
+        return np.meshgrid(x, y)
 
     @abstractmethod
     def fft2(self, x):
@@ -28,22 +24,17 @@ class Backend(ABC):
     def fftfreq(self, n, d):
         pass
 
-    @abstractmethod
     def abs(self, x):
-        pass
+        return np.abs(x)
 
-    @abstractmethod
     def real(self, x):
-        pass
+        return np.real(x)
 
-    @abstractmethod
     def max(self, x):
-        pass
+        return np.max(x)
 
-    @abstractmethod
     def sum(self, x):
-        pass
+        return np.sum(x)
 
-    @abstractmethod
     def clip(self, x, min_val, max_val):
-        pass
+        return np.clip(x, min_val, max_val)
