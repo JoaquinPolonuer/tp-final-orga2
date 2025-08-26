@@ -228,9 +228,6 @@ static PyObject *c_fft2(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    clock_t start_total = clock();
-
-    clock_t start_conversion = clock();
     int rows, cols;
     Complex *data = python_to_c_array(input_obj, &rows, &cols);
     if (data == NULL)
@@ -238,27 +235,10 @@ static PyObject *c_fft2(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "Expected list of lists");
         return NULL;
     }
-    clock_t end_conversion = clock();
-    double python_to_c_time = ((double)(end_conversion - start_conversion)) / CLOCKS_PER_SEC;
 
-    clock_t start_fft = clock();
     fft2d(data, rows, cols, 0);
-    clock_t end_fft = clock();
-    double fft_time = ((double)(end_fft - start_fft)) / CLOCKS_PER_SEC;
 
-    clock_t start_back_conversion = clock();
     PyObject *result = c_to_python_array(data, rows, cols);
-    clock_t end_back_conversion = clock();
-    double c_to_python_time = ((double)(end_back_conversion - start_back_conversion)) / CLOCKS_PER_SEC;
-
-    clock_t end_total = clock();
-    double total_time = ((double)(end_total - start_total)) / CLOCKS_PER_SEC;
-
-    printf("FFT2D Timing:\n");
-    printf("  Python->C conversion: %.6f seconds\n", python_to_c_time);
-    printf("  FFT computation:      %.6f seconds\n", fft_time);
-    printf("  C->Python conversion: %.6f seconds\n", c_to_python_time);
-    printf("  Total time:           %.6f seconds\n", total_time);
 
     free(data);
 
@@ -273,9 +253,6 @@ static PyObject *c_ifft2(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    clock_t start_total = clock();
-
-    clock_t start_conversion = clock();
     int rows, cols;
     Complex *data = python_to_c_array(input_obj, &rows, &cols);
     if (data == NULL)
@@ -283,27 +260,10 @@ static PyObject *c_ifft2(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "Expected list of lists");
         return NULL;
     }
-    clock_t end_conversion = clock();
-    double python_to_c_time = ((double)(end_conversion - start_conversion)) / CLOCKS_PER_SEC;
 
-    clock_t start_ifft = clock();
     fft2d(data, rows, cols, 1);
-    clock_t end_ifft = clock();
-    double ifft_time = ((double)(end_ifft - start_ifft)) / CLOCKS_PER_SEC;
 
-    clock_t start_back_conversion = clock();
     PyObject *result = c_to_python_array(data, rows, cols);
-    clock_t end_back_conversion = clock();
-    double c_to_python_time = ((double)(end_back_conversion - start_back_conversion)) / CLOCKS_PER_SEC;
-
-    clock_t end_total = clock();
-    double total_time = ((double)(end_total - start_total)) / CLOCKS_PER_SEC;
-
-    printf("IFFT2D Timing:\n");
-    printf("  Python->C conversion: %.6f seconds\n", python_to_c_time);
-    printf("  IFFT computation:     %.6f seconds\n", ifft_time);
-    printf("  C->Python conversion: %.6f seconds\n", c_to_python_time);
-    printf("  Total time:           %.6f seconds\n", total_time);
 
     free(data);
 
