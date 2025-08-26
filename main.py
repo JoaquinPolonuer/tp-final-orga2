@@ -1,23 +1,7 @@
-import numpy as np
+import time
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from abc import ABC, abstractmethod
-import math
-import cmath
-import time
-from backends.numpy_backend import NumpyBackend
-from backends.pure_python_backend import PurePythonBackend
-from backends.c_backend import CBackend
-from backends.asm_backend import ASMBackend
 from backends.wave_simulation import WaveSimulation2D
-
-backends = {
-    "numpy": NumpyBackend,
-    "python": PurePythonBackend,
-    "c": CBackend,
-    "asm": ASMBackend,
-}
-
 
 class WaveVisualizer:
     def __init__(self, simulation, backend_name):
@@ -95,11 +79,10 @@ class WaveVisualizer:
 
 
 if __name__ == "__main__":
-    # Choose backend: 'numpy', 'python', or 'c'
     backend_name = "c"  # Change to 'python' to test pure Python backend, 'c' for C backend
 
     sim = WaveSimulation2D(
-        backend=backend_name,
+        backend_name=backend_name,
         size=128,
         domain_size=8.0,
         wave_speed=2.0,
