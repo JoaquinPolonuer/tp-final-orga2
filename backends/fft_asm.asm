@@ -54,12 +54,12 @@ bit_reverse_asm:
         shl     rdx, 4                   ; rdx = j * 16
 
         ; temp = x[i]
-        movsd   xmm0, [rbx + rax]        ; temp.real
-        movsd   xmm1, [rbx + rax + 8]    ; temp.imag
+        movsd   xmm0, [rbx + rax]        ; temp_r
+        movsd   xmm1, [rbx + rax + 8]    ; temp_i
 
         ; x[i] = x[j]
-        movsd   xmm2, [rbx + rdx]        ; x[j].real
-        movsd   xmm3, [rbx + rdx + 8]    ; x[j].imag
+        movsd   xmm2, [rbx + rdx]        ; x[j]_r
+        movsd   xmm3, [rbx + rdx + 8]    ; x[j]_i
         movsd   [rbx + rax],     xmm2
         movsd   [rbx + rax + 8], xmm3
 
@@ -127,10 +127,10 @@ fft_1d_asm:
         fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
         fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
         fstp    qword [rsp]                     ; guardar sin en memoria
-        movsd   xmm7, [rsp]                     ; w.imag = sin(ang)
+        movsd   xmm7, [rsp]                     ; w_i = sin(ang)
         fcos                                    ; st0 = cos(ang)
         fstp    qword [rsp]                     ; guardar cos
-        movsd   xmm6, [rsp]                     ; w.real = cos(ang)
+        movsd   xmm6, [rsp]                     ; w_r = cos(ang)
         ; (pila x87 vacía)
 
         ; -------- Calculitos que voy a usar en el in_loop ---------
@@ -143,10 +143,10 @@ fft_1d_asm:
         xor     r15, r15                        ; i = 0
         .mid_loop:
             ; ------- wn = 1 + 0i -------
-            pxor    xmm9, xmm9                      ; wn.imag = 0.0
+            pxor    xmm9, xmm9                      ; xmm9 = wn_i = 0.0
             fld1
             fstp    qword [rsp]
-            movsd   xmm8, [rsp]                     ; wn.real = 1.0
+            movsd   xmm8, [rsp]                     ; xmm8 = wn_r = 1.0
             ; ------- Fin wn = 1 + 0i -------
 
             ; base del bloque i
@@ -169,50 +169,50 @@ fft_1d_asm:
                 movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
 
                 ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
-                movapd  xmm4, xmm2
-                mulsd   xmm4, xmm8                      ; t_r * wn_r
-                movapd  xmm5, xmm3
+                movapd  xmm4, xmm2                      ; xmm4 = t_r
+                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
+                movapd  xmm5, xmm3                      ; xmm5 = t_i
                 mulsd   xmm5, xmm9                      ; t_i * wn_i
-                subsd   xmm4, xmm5                      ; v_r
+                subsd   xmm4, xmm5                      ; xmm4 = v_r
 
-                movapd  xmm5, xmm2
-                mulsd   xmm5, xmm9                      ; t_r * wn_i
-                movapd  xmm11, xmm3
-                mulsd   xmm11, xmm8                     ; t_i * wn_r
-                addsd   xmm5, xmm11                     ; v_i
+                movapd  xmm5, xmm2                      ; xmm5 = t_r
+                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
+                movapd  xmm11, xmm3                     ; xmm11 = t_i
+                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
+                addsd   xmm5, xmm11                     ; xmm5 = v_i
                 ; -----------------------------------------------------------
 
                 ; --------------- x[i + j] = complex_add(u, v) --------------
-                movapd  xmm11, xmm0
-                addsd   xmm11, xmm4                     ; u_r + v_r
-                movapd  xmm12, xmm1
-                addsd   xmm12, xmm5                     ; u_i + v_i
+                movapd  xmm11, xmm0                     ; xmm11 = u_r
+                addsd   xmm11, xmm4                     ; xmm11 = u_r + v_r
+                movapd  xmm12, xmm1                     ; xmm12 = u_i
+                addsd   xmm12, xmm5                     ; xmm12 = u_i + v_i
                 movsd   [rdi],   xmm11
                 movsd   [rdi+8], xmm12
                 ; -----------------------------------------------------------
 
                 ; --------- x[i + j + len / 2] = complex_sub(u, v) ----------
-                subsd   xmm0, xmm4                      ; u_r - v_r
-                subsd   xmm1, xmm5                      ; u_i - v_i
+                subsd   xmm0, xmm4                      ; xmm0 = u_r - v_r
+                subsd   xmm1, xmm5                      ; xmm1 = u_i - v_i
                 movsd   [rsi],   xmm0
                 movsd   [rsi+8], xmm1
                 ; -----------------------------------------------------------
 
                 ; ------------------ wn = complex_mul(wn, w) ----------------
-                movapd  xmm11, xmm8
-                mulsd   xmm11, xmm6                     ; wn_r * w_r
-                movapd  xmm12, xmm9
-                mulsd   xmm12, xmm7                     ; wn_i * w_i
-                subsd   xmm11, xmm12                    ; new_r
+                movapd  xmm11, xmm8                     ; xmm11 = wn_r
+                mulsd   xmm11, xmm6                     ; xmm11 = wn_r * w_r
+                movapd  xmm12, xmm9                     ; xmm12 = wn_i
+                mulsd   xmm12, xmm7                     ; xmm12 = wn_i * w_i
+                subsd   xmm11, xmm12                    ; xmm11 = new_r
 
-                movapd  xmm13, xmm8
-                mulsd   xmm13, xmm7                     ; wn_r * w_i
-                movapd  xmm14, xmm9
-                mulsd   xmm14, xmm6                     ; wn_i * w_r
-                addsd   xmm13, xmm14                    ; new_i
+                movapd  xmm13, xmm8                     ; xmm13 = wn_r
+                mulsd   xmm13, xmm7                     ; xmm13 = wn_r * w_i
+                movapd  xmm14, xmm9                     ; xmm14 = wn_i
+                mulsd   xmm14, xmm6                     ; xmm14 = wn_i * w_r
+                addsd   xmm13, xmm14                    ; xmm14 = new_i
 
-                movapd  xmm8, xmm11                     ; wn.real = new_r
-                movapd  xmm9, xmm13                     ; wn.imag = new_i
+                movapd  xmm8, xmm11                     ; xmm8 = wn_r = new_r
+                movapd  xmm9, xmm13                     ; xmm9 = wn_i = new_i
                 ; -----------------------------------------------------------
 
                 ; Guarda de in_loop
@@ -248,7 +248,7 @@ fft_1d_asm:
         mov     rax, r15
         shl     rax, 4                      ; i * 16
 
-        ; cargar x[i].real e imag
+        ; cargar x[i]_r e imag
         movsd   xmm0, [rbx + rax]           ; real
         movsd   xmm1, [rbx + rax + 8]       ; imag
 
