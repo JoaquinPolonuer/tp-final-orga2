@@ -50,28 +50,6 @@ static Complex complex_mul(Complex a, Complex b)
     return result;
 }
 
-// Bit reversal for FFT (called from assembly)
-void bit_reverse(Complex *x, int n)
-{
-    int j = 0;
-    for (int i = 1; i < n; i++)
-    {
-        int bit = n >> 1;
-        while (j & bit)
-        {
-            j ^= bit;
-            bit >>= 1;
-        }
-        j ^= bit;
-        if (i < j)
-        {
-            Complex temp = x[i];
-            x[i] = x[j];
-            x[j] = temp;
-        }
-    }
-}
-
 // 2D FFT implementation
 static void fft2d(Complex *data, int rows, int cols, int inverse)
 {

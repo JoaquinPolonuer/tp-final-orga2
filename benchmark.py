@@ -13,7 +13,7 @@ from backends.wave_simulation_numpy import NumpyWaveSimulation2D
 from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
 from backends.wave_simulation_c_optimized import OptimizedCWaveSimulation2D
-
+from backends.wave_simulation_asm import ASMWaveSimulation2D
 
 def benchmark_backend(backend_name, size=64, steps=100):
     """Benchmark a specific backend"""
@@ -31,8 +31,11 @@ def benchmark_backend(backend_name, size=64, steps=100):
             sim = CWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
         elif backend_name == "optimized_c":
             sim = OptimizedCWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
+        elif backend_name == "asm":
+            sim = ASMWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
         else:
             raise ImportError(f"Unknown backend: {backend_name}")
+        
         init_time = time.time() - start_time
 
         # Add a wave source
@@ -76,7 +79,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
 print("Wave Simulation Backend Performance Benchmark")
 print("=" * 50)
 
-backends = ["numpy", "c", "optimized_c"]
+backends = ["numpy", "c", "optimized_c", "asm"]
 sizes = [16, 32, 64, 128, 256, 512]
 steps = 20
 
@@ -133,9 +136,7 @@ for size in sizes:
         plot_sizes.append(size)
         for backend in backends:
             if backend in results[size]:
-                plot_data[backend]["steps_per_sec"].append(
-                    results[size][backend]["steps_per_second"]
-                )
+                plot_data[backend]["steps_per_sec"].append(results[size][backend]["steps_per_second"])
                 plot_data[backend]["ms_per_step"].append(results[size][backend]["time_per_step"])
             else:
                 # Use NaN for failed backends to maintain array alignment
