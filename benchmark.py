@@ -79,7 +79,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
 print("Wave Simulation Backend Performance Benchmark")
 print("=" * 50)
 
-backends = ["numpy", "c", "optimized_c", "asm"]
+backends = ["python", "numpy", "c", "optimized_c", "asm"]
 sizes = [16, 32, 64, 128, 256, 512]
 steps = 20
 
@@ -145,8 +145,8 @@ for size in sizes:
 
 # Plot 1: Steps per second
 plt.figure(figsize=(12, 8))
-colors = ["blue", "orange", "green", "red"]
-markers = ["o", "s", "^", "D"]
+colors = ["blue", "orange", "green", "red", "purple"]
+markers = ["o", "s", "^", "D", "x"]
 
 for i, backend in enumerate(backends):
     steps_data = plot_data[backend]["steps_per_sec"]
