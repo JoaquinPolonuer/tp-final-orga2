@@ -119,33 +119,35 @@ fft_1d_asm:
         fdivp   st1, st0                        ; st0 = 2π/len
 
         test    r13, r13
-        jnz     .declarar_w                       ; Si inverse es 1, seguimos
+        jnz     .declarar_w                     ; Si inverse es 1, seguimos
         fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
         
         ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
         .declarar_w:
-            fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
-            fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
-            fstp    qword [rsp]                     ; guardar sin en memoria
-            movsd   xmm7, [rsp]                     ; w.imag = sin(ang)
-            fcos                                    ; st0 = cos(ang)
-            fstp    qword [rsp]                     ; guardar cos
-            movsd   xmm6, [rsp]                     ; w.real = cos(ang)
-            ; (pila x87 vacía)
+        fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
+        fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
+        fstp    qword [rsp]                     ; guardar sin en memoria
+        movsd   xmm7, [rsp]                     ; w.imag = sin(ang)
+        fcos                                    ; st0 = cos(ang)
+        fstp    qword [rsp]                     ; guardar cos
+        movsd   xmm6, [rsp]                     ; w.real = cos(ang)
+        ; (pila x87 vacía)
 
-        ; Pre-cálculos para el doble bucle
+        ; -------- Calculitos que voy a usar en el in_loop ---------
         mov     r9, r14                         ; r9  = len
         shr     r9, 1                           ; r9  = len/2 (contador j max)
-        mov     r11, r9
-        shl     r11, 4                          ; r11 = (len/2) * sizeof(Complex) = (len/2)*16 bytes
+        mov     r11, r9                         ; r11 = len/2
+        shl     r11, 4                          ; r11 = (len/2)*16 bytes = (len/2) * sizeof(Complex) 
+        ; --------------------- Fin calculitos ---------------------
 
         xor     r15, r15                        ; i = 0
         .mid_loop:
-            ; wn = 1 + 0i
+            ; ------- wn = 1 + 0i -------
             pxor    xmm9, xmm9                      ; wn.imag = 0.0
             fld1
             fstp    qword [rsp]
             movsd   xmm8, [rsp]                     ; wn.real = 1.0
+            ; ------- Fin wn = 1 + 0i -------
 
             ; base del bloque i
             mov     rax, r15
@@ -216,10 +218,10 @@ fft_1d_asm:
                 cmp     rcx, r9
                 jl      .inner_loop
 
-        ; i += len
-        add     r15, r14
-        cmp     r15, r12
-        jl      .mid_loop
+            ; i += len
+            add     r15, r14
+            cmp     r15, r12
+            jl      .mid_loop
 
         ; len <<= 1 y siguiente etapa
         shl     r14, 1
