@@ -4,11 +4,14 @@ import matplotlib.animation as animation
 from backends.wave_simulation_numpy import NumpyWaveSimulation2D
 from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
+from backends.wave_simulation_c_optimized import OptimizedCWaveSimulation2D
+from backends.wave_simulation_asm import ASMWaveSimulation2D
+
 
 class WaveVisualizer:
-    def __init__(self, simulation, backend_name):
+    def __init__(self, simulation):
         self.sim = simulation
-        self.backend_name = backend_name
+        self.backend_name = self.sim.__class__.__name__.replace("WaveSimulation2D", "").lower()
         self.fps_counter = {"frame_count": 0, "start_time": time.time(), "last_fps": 0.0}
 
         self.fig, (self.ax1, self.ax2) = plt.subplots(1, 2, figsize=(12, 5))
@@ -56,9 +59,7 @@ class WaveVisualizer:
             self.fps_counter["last_fps"] = self.fps_counter["frame_count"] / elapsed
             self.fps_counter["frame_count"] = 0
             self.fps_counter["start_time"] = current_time
-            self.ax1.set_title(
-                f"Wave Intensity |ψ|² ({self.backend_name} backend) - FPS: {self.fps_counter['last_fps']:.1f}"
-            )
+            self.ax1.set_title(f"Wave Intensity |ψ|² ({self.backend_name} backend) - FPS: {self.fps_counter['last_fps']:.1f}")
 
     def animate(self, frame):
         self.sim.step()
@@ -81,14 +82,12 @@ class WaveVisualizer:
 
 
 if __name__ == "__main__":
-    backend_name = "c"  # Change to 'python' to test pure Python backend, 'c' for C backend
-
-    sim = CWaveSimulation2D(
+    sim = ASMWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,
         dt=0.02,
     )
 
-    visualizer = WaveVisualizer(sim, backend_name)
+    visualizer = WaveVisualizer(sim)
     ani = visualizer.run()
