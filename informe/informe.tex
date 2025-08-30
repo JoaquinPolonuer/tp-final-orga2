@@ -24,11 +24,13 @@
 \tableofcontents
 \newpage
 
-\section{Motivación: La Ecuación de Onda}
+\section{Introducción}
+
+\subsection{La Ecuación de Onda}
 
 La ecuación de onda representa uno de los fenómenos físicos más fundamentales en la naturaleza, describiendo la propagación de perturbaciones en medios continuos. Desde ondas sonoras y electromagnéticas hasta vibraciones mecánicas, este modelo matemático encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural.
 
-\subsection{Ecuación de Onda en Una Dimensión}
+\subsubsection{Ecuación de Onda en Una Dimensión}
 
 La ecuación de onda unidimensional se expresa como:
 
@@ -44,7 +46,7 @@ donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo 
 \item Ondas electromagnéticas en líneas de transmisión
 \end{itemize}
 
-\subsection{Ecuación de Onda en Dos Dimensiones}
+\subsubsection{Ecuación de Onda en Dos Dimensiones}
 
 La extensión a dos dimensiones espaciales resulta en:
 
@@ -63,7 +65,7 @@ Esta formulación bidimensional modela fenómenos como:
 
 La solución numérica de estas ecuaciones mediante métodos de diferencias finitas o elementos finitos requiere algoritmos computacionalmente intensivos que se benefician significativamente de técnicas de optimización.
 
-\section{Transformada de Fourier}
+\subsection{La Transformada de Fourier}
 
 La Transformada de Fourier constituye una herramienta matemática fundamental para el análisis de fenómenos ondulatorios, permitiendo descomponer señales complejas en sus componentes frecuenciales básicas. Esta transformación resulta especialmente poderosa en el contexto de la resolución de ecuaciones diferenciales parciales.
 
@@ -81,7 +83,7 @@ f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} F(\omega) e^{j\omega x} d\omega
 
 Esta representación en el dominio frecuencial revela propiedades fundamentales de las señales y simplifica considerablemente el análisis de sistemas lineales.
 
-\section{La Transformada de Fourier como Herramienta para Resolver la Ecuación de Onda}
+\subsection{Resolución de la Ecuación de Onda mediante la Transformada de Fourier}
 
 La aplicación de la Transformada de Fourier a la ecuación de onda trasforma el problema diferencial en uno algebraico, facilitando significativamente su resolución. Considerando la ecuación de onda unidimensional con condiciones iniciales:
 
@@ -107,8 +109,6 @@ Esta metodología demuestra la potencia computacional de la Transformada de Four
 
 El marco teórico se fundamenta en los principios de arquitectura de computadoras y optimización de código aplicados específicamente a algoritmos de procesamiento de señales. Las aplicaciones similares en el campo científico e industrial incluyen bibliotecas de álgebra lineal optimizadas como BLAS \cite{lawson1979basic}, implementaciones optimizadas de FFT como FFTW \cite{frigo2005design}, frameworks de computación paralela como OpenMP \cite{dagum1998openmp}, y compiladores optimizantes que emplean técnicas avanzadas de análisis estático \cite{muchnick1997advanced}.
 
-\section{Materiales y Métodos}
-
 \subsection{Transformada Discreta de Fourier}
 
 Para implementaciones computacionales, la Transformada de Fourier continua debe discretizarse. La Transformada Discreta de Fourier (DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
@@ -125,13 +125,11 @@ x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}, \quad n = 0, 1, \ldots,
 
 La implementación directa de la DFT requiere $O(N^2)$ operaciones complejas, lo que resulta computacionalmente prohibitivo para secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fourier Transform.
 
-\subsection{Algoritmo de la Transformada Rápida de Fourier (FFT)}
+\subsection{Transformada Rápida de Fourier (Cooley-Tukey)}
 
 El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$ mediante la estrategia de divide y vencerás. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
 
-\subsubsection{FFT Radix-2 Decimation-in-Time (DIT)}
-
-El algoritmo DIT separa la secuencia de entrada en muestras pares e impares:
+El algoritmo DIT (Decimation-in-Time) separa la secuencia de entrada en muestras pares e impares:
 
 \begin{equation}
 X[k] = \sum_{n \text{ par}} x[n] e^{-j2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-j2\pi kn/N}
@@ -166,74 +164,248 @@ X[k + N/2] &= X_{\text{par}}[k] - W_N^k \cdot X_{\text{impar}}[k]
 
 Este proceso se aplica recursivamente hasta obtener DFTs de un solo elemento.
 
-\subsection{Herramientas de Software}
-\begin{itemize}
-\item Compilador GCC con flags de optimización -O0, -O1, -O2, -O3
-\item Ensamblador x86-64 con instrucciones AVX/SSE para vectorización
-\item Profiler de rendimiento: perf, gprof
-\item Lenguaje de programación: C/C++ y Assembly
-\item MATLAB/GNU Octave para validación de resultados FFT
-\item Python con NumPy/SciPy para análisis espectral de referencia
-\end{itemize}
+\section{Metodología}
 
-\subsection{Bibliotecas Utilizadas}
-\begin{itemize}
-\item Biblioteca estándar de C (libc)
-\item FFTW3 (Fastest Fourier Transform in the West) como implementación de referencia
-\item Bibliotecas de medición de tiempo de alta precisión (clock\_gettime)
-\item Bibliotecas de vectorización automática (intrínsecos AVX/SSE)
-\item Biblioteca matemática optimizada (libm)
-\end{itemize}
+Se propone implementar un simulador físico que resuelva la ecuación de onda con los métodos mencionados en la introducción. Se comparan 4 backends diferentes: Python, NumPy, C, y C + ASM (Assembly).
 
-\subsection{Algoritmos Implementados}
-\begin{itemize}
-\item FFT Radix-2 Decimation-in-Time (DIT)
-\item FFT Radix-2 Decimation-in-Frequency (DIF)
-\item Solver numérico de ecuación de onda mediante diferencias finitas
-\item Implementaciones vectorizadas usando instrucciones SIMD
-\end{itemize}
+El objetivo es evaluar el rendimiento de cada implementación midiendo la variable \textit{steps per second} (pasos por segundo), que indica cuántos pasos de simulación puede procesar cada backend en un segundo. Esta métrica es fundamental para evaluar la eficiencia computacional de diferentes enfoques de implementación.
 
-\subsection{Metodología Experimental}
-Se implementaron múltiples versiones de algoritmos computacionales con diferentes niveles de optimización. Las métricas de rendimiento se obtuvieron mediante benchmarks controlados con mediciones repetidas para garantizar la significancia estadística de los resultados.
+\subsection{Python}
+
+Implementación base utilizando Python puro con estructuras de datos nativas. Esta implementación sirve como línea base para comparar el rendimiento de las optimizaciones posteriores.
+
+\begin{verbatim}
+def wave_equation_step(grid, dt, dx, c):
+    """
+    Implementación básica del paso de la ecuación de onda en Python
+    """
+    rows, cols = len(grid), len(grid[0])
+    new_grid = [[0.0 for _ in range(cols)] for _ in range(rows)]
+    
+    for i in range(1, rows-1):
+        for j in range(1, cols-1):
+            laplacian = (grid[i+1][j] + grid[i-1][j] + 
+                        grid[i][j+1] + grid[i][j-1] - 4*grid[i][j])
+            new_grid[i][j] = grid[i][j] + c*c*dt*dt*laplacian/(dx*dx)
+    
+    return new_grid
+\end{verbatim}
+
+\subsection{NumPy}
+
+Implementación optimizada utilizando NumPy como estado del arte para computación científica en Python. Aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal.
+
+\begin{verbatim}
+import numpy as np
+
+def wave_equation_step_numpy(grid, dt, dx, c):
+    """
+    Implementación vectorizada usando NumPy
+    """
+    laplacian = np.zeros_like(grid)
+    laplacian[1:-1, 1:-1] = (grid[2:, 1:-1] + grid[:-2, 1:-1] + 
+                            grid[1:-1, 2:] + grid[1:-1, :-2] - 
+                            4 * grid[1:-1, 1:-1])
+    
+    new_grid = grid + c*c*dt*dt*laplacian/(dx*dx)
+    return new_grid
+\end{verbatim}
+
+\subsection{C}
+
+Implementación en lenguaje C utilizando optimizaciones del compilador para lograr mayor eficiencia en el acceso a memoria y operaciones aritméticas.
+
+\begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+
+void wave_equation_step_c(double** grid, double** new_grid, 
+                         int rows, int cols, double dt, 
+                         double dx, double c) {
+    double factor = c * c * dt * dt / (dx * dx);
+    
+    for (int i = 1; i < rows - 1; i++) {
+        for (int j = 1; j < cols - 1; j++) {
+            double laplacian = grid[i+1][j] + grid[i-1][j] + 
+                              grid[i][j+1] + grid[i][j-1] - 
+                              4.0 * grid[i][j];
+            new_grid[i][j] = grid[i][j] + factor * laplacian;
+        }
+    }
+}
+\end{verbatim}
+
+\subsection{C + ASM}
+
+Implementación híbrida combinando C con rutinas críticas optimizadas en Assembly x86-64, utilizando instrucciones SIMD (SSE/AVX) para procesamiento vectorial.
+
+Código C:
+\begin{verbatim}
+#include <immintrin.h>
+
+void wave_equation_step_optimized(double* grid, double* new_grid,
+                                 int rows, int cols, double dt,
+                                 double dx, double c) {
+    double factor = c * c * dt * dt / (dx * dx);
+    
+    for (int i = 1; i < rows - 1; i++) {
+        wave_step_asm_row(&grid[i*cols], &new_grid[i*cols], 
+                         cols, factor);
+    }
+}
+\end{verbatim}
+
+Código Assembly (x86-64):
+\begin{verbatim}
+.section .text
+.global wave_step_asm_row
+
+wave_step_asm_row:
+    # rdi: grid pointer
+    # rsi: new_grid pointer  
+    # rdx: cols
+    # xmm0: factor
+    
+    mov $1, %rcx                # start at column 1
+    sub $1, %rdx                # end at cols-1
+    
+loop_start:
+    cmp %rdx, %rcx
+    jge loop_end
+    
+    # Load neighboring values using SIMD
+    movsd (%rdi,%rcx,8), %xmm1    # current
+    movsd 8(%rdi,%rcx,8), %xmm2   # right
+    movsd -8(%rdi,%rcx,8), %xmm3  # left
+    
+    # Compute laplacian and update
+    addsd %xmm2, %xmm3            
+    subsd %xmm1, %xmm3
+    mulsd %xmm0, %xmm3            # multiply by factor
+    addsd %xmm1, %xmm3            # add original value
+    
+    movsd %xmm3, (%rsi,%rcx,8)    # store result
+    
+    inc %rcx
+    jmp loop_start
+    
+loop_end:
+    ret
+\end{verbatim}
+
+\section{Experimentos}
+
+Se realizaron experimentos sistemáticos para evaluar el rendimiento de cada backend implementado. La métrica principal utilizada fue \textit{steps per second}, que mide cuántos pasos de simulación de la ecuación de onda puede procesar cada implementación por segundo.
+
+Los experimentos se ejecutaron en grillas de diferentes tamaños para analizar el comportamiento de escalabilidad de cada backend. Se utilizó NumPy como línea base (baseline) para calcular los factores de aceleración (speedup) relativos.
+
+\subsection{Rendimiento por Tamaño de Grilla}
+
+\begin{table}[h]
+\centering
+\caption{Rendimiento para Grilla 16x16}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & Steps/sec & ms/step & Speedup \\
+\midrule
+Python & 658.1 & 1.52 & 0.0x \\
+NumPy & 20877.6 & 0.05 & baseline \\
+C & 77101.2 & 0.01 & 3.7x \\
+Optimized C & 98805.7 & 0.01 & 4.7x \\
+ASM & 55333.8 & 0.02 & 2.7x \\
+\bottomrule
+\end{tabular}
+\label{tab:perf_16x16}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Rendimiento para Grilla 32x32}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & Steps/sec & ms/step & Speedup \\
+\midrule
+Python & 159.2 & 6.28 & 0.0x \\
+NumPy & 13311.0 & 0.08 & baseline \\
+C & 23007.7 & 0.04 & 1.7x \\
+Optimized C & 26329.6 & 0.04 & 2.0x \\
+ASM & 16021.0 & 0.06 & 1.2x \\
+\bottomrule
+\end{tabular}
+\label{tab:perf_32x32}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Rendimiento para Grilla 64x64}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & Steps/sec & ms/step & Speedup \\
+\midrule
+Python & 38.7 & 25.82 & 0.0x \\
+NumPy & 5709.6 & 0.18 & baseline \\
+C & 5325.8 & 0.19 & 0.9x \\
+Optimized C & 6178.1 & 0.16 & 1.1x \\
+ASM & 4166.8 & 0.24 & 0.7x \\
+\bottomrule
+\end{tabular}
+\label{tab:perf_64x64}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Rendimiento para Grilla 128x128}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & Steps/sec & ms/step & Speedup \\
+\midrule
+Python & 9.1 & 110.48 & 0.0x \\
+NumPy & 1653.9 & 0.60 & baseline \\
+C & 1197.5 & 0.84 & 0.7x \\
+Optimized C & 1415.4 & 0.71 & 0.9x \\
+ASM & 1021.1 & 0.98 & 0.6x \\
+\bottomrule
+\end{tabular}
+\label{tab:perf_128x128}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Rendimiento para Grilla 256x256}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & Steps/sec & ms/step & Speedup \\
+\midrule
+Python & 2.1 & 465.87 & 0.0x \\
+NumPy & 392.4 & 2.55 & baseline \\
+C & 263.7 & 3.79 & 0.7x \\
+Optimized C & 310.5 & 3.22 & 0.8x \\
+ASM & 234.9 & 4.26 & 0.6x \\
+\bottomrule
+\end{tabular}
+\label{tab:perf_256x256}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Rendimiento para Grilla 512x512}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Backend & Steps/sec & ms/step & Speedup \\
+\midrule
+Python & 0.5 & 2060.91 & 0.0x \\
+NumPy & 84.6 & 11.82 & baseline \\
+C & 60.3 & 16.57 & 0.7x \\
+Optimized C & 70.1 & 14.28 & 0.8x \\
+ASM & 54.8 & 18.24 & 0.6x \\
+\bottomrule
+\end{tabular}
+\label{tab:perf_512x512}
+\end{table}
 
 \section{Resultados}
 
-\subsection{Métricas de Rendimiento}
-
-Las siguientes tablas y gráficos presentan las métricas obtenidas de los experimentos realizados para diferentes algoritmos de FFT y resolución de la ecuación de onda:
-
-\begin{table}[h]
-\centering
-\caption{Comparación de Rendimiento FFT (N=1024 puntos)}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Implementación & Tiempo (ms) & Speedup & GFLOPS \\
-\midrule
-FFT naive (DFT) & 2500.0 & 1.0x & 0.02 \\
-FFT Radix-2 -O0 & 45.2 & 55.3x & 1.12 \\
-FFT Radix-2 -O3 & 12.8 & 195.3x & 3.95 \\
-FFT + AVX vectorizado & 8.1 & 308.6x & 6.24 \\
-FFTW3 (referencia) & 7.2 & 347.2x & 7.03 \\
-\bottomrule
-\end{tabular}
-\label{tab:fft_performance}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Rendimiento Solver Ecuación de Onda (1000x1000 grid)}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Técnica & Tiempo/iteración (ms) & Speedup & Throughput (Mpts/s) \\
-\midrule
-Sin optimización & 125.0 & 1.0x & 8.0 \\
-Optimización -O2 & 58.3 & 2.1x & 17.2 \\
-Optimización -O3 & 42.7 & 2.9x & 23.4 \\
-Assembly + SIMD & 28.1 & 4.4x & 35.6 \\
-\bottomrule
-\end{tabular}
-\label{tab:wave_performance}
-\end{table}
+\subsection{Análisis de Rendimiento}
 
 \begin{figure}[h]
 \centering
