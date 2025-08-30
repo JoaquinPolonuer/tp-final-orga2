@@ -117,10 +117,10 @@ fft_1d_asm:
         mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
         fild    qword [rsp]                     ; ST0 = (double)len, ST1 = 2π
         fdivp   st1, st0                        ; ST0 = 2π/len
-        
+
         test    r13, r13
-        jnz     .angle_ok                       ; inverse != 0 => ángulo positivo
-        fchs                                   ; inverse == 0 => ángulo negativo
+        jnz     .angle_ok                       ; Si inverse es 1, seguimos
+        fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
         .angle_ok:
             fld     st0                             ; duplico ángulo
             fsin                                    ; ST0 = sin(ang)   (ángulo sigue en ST1)
