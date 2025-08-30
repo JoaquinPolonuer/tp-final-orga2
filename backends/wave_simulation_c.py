@@ -23,7 +23,3 @@ class CWaveSimulation2D:
 
     def get_real_part(self):
         return self.c_core.get_real_part(self._sim_ptr)
-
-    # def __del__(self):
-    #     if hasattr(self, "_sim_ptr") and self._sim_ptr is not None:
-    #         self.c_core.destroy_simulation(self._sim_ptr)

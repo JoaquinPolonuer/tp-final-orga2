@@ -234,19 +234,6 @@ static WaveSimulation *create_wave_simulation(int size, double domain_size, doub
     return sim;
 }
 
-static void destroy_wave_simulation(WaveSimulation *sim)
-{
-    if (sim)
-    {
-        free(sim->wave);
-        free(sim->wave_k);
-        free(sim->grid_coords);
-        free(sim->k_grid_coords);
-        free(sim->K);
-        free(sim);
-    }
-}
-
 static void wave_sim_add_source(WaveSimulation *sim, double x_pos, double y_pos,
                                 double amplitude, double frequency, double width)
 {
@@ -352,19 +339,6 @@ static PyObject *c_create_simulation(PyObject *self, PyObject *args)
     return PyLong_FromVoidPtr(sim);
 }
 
-// static PyObject *c_destroy_simulation(PyObject *self, PyObject *args)
-// {
-//     PyObject *ptr_obj;
-//     if (!PyArg_ParseTuple(args, "O", &ptr_obj)) {
-//         return NULL;
-//     }
-
-//     WaveSimulation *sim = (WaveSimulation*)PyLong_AsVoidPtr(ptr_obj);
-//     destroy_wave_simulation(sim);
-
-//     Py_RETURN_NONE;
-// }
-
 static PyObject *c_add_wave_source(PyObject *self, PyObject *args)
 {
     PyObject *ptr_obj;
@@ -421,7 +395,6 @@ static PyObject *c_get_real_part(PyObject *self, PyObject *args)
 // Method definitions
 static PyMethodDef PureCBackendMethods[] = {
     {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
-    // {"destroy_simulation", c_destroy_simulation, METH_VARARGS, "Destroy wave simulation"},
     {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
     {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
     {"get_intensity", c_get_intensity, METH_VARARGS, "Get wave intensity"},
