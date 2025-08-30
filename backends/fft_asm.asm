@@ -4,6 +4,7 @@ global bit_reverse_asm
 ; void bit_reverse_asm(Complex *x, int n)
 ; rdi = x, rsi = n
 bit_reverse_asm:
+    ;--------------- PROLOGO ---------------
     push    rbp
     mov     rbp, rsp
     push    rbx
@@ -11,7 +12,8 @@ bit_reverse_asm:
     push    r13
     push    r14
     push    r15
-    sub     rsp, 8                  ; alinear stack a 16B
+    sub     rsp, 8
+    ;--------------- PROLOGO ---------------
 
     mov     rbx, rdi                ; rbx = base x
     mov     r12, rsi                ; r12 = n
@@ -79,12 +81,10 @@ bit_reverse_asm:
         pop     rbp
         ret
 
-
+; void fft_1d_asm(Complex *x, int n, int inverse)
+; rdi = *x, rsi = n, rdx = inverse
 fft_1d_asm:
-	; rdi = *x
-	; rsi = n
-	; rdx = inverse
-
+    ;--------------- PROLOGO ---------------
     push rbp
 	mov rbp, rsp
 	push rbx
@@ -93,7 +93,8 @@ fft_1d_asm:
 	push r14
 	push r15
 	sub rsp, 8
-    
+    ;--------------- PROLOGO ---------------
+
     mov rbx, rdi 	; rbx = *x
 	mov r12, rsi 	; r12 = n
 	mov r13, rdx 	; r13 = inverse
@@ -101,19 +102,22 @@ fft_1d_asm:
     ; Ya estan bien puestos los parametros rdi = *x y rsi = n
     call bit_reverse_asm    ; como hace todo in-place, no hay que hacer nada
 
-
     mov     r14, 2                         ; len = 2
     .outer_loop:
-        cmp     r14, r12
-        jg      .inverse                       ; si len > n, terminar etapas
+        cmp     r14, r12                       ; Chequeo si len > n
+        jg      .inverse                       ; si la respuesta es si, termina el ciclo
 
         ; angle = 2π/len * (inverse ? +1 : -1)
         ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
+        
+        ; st0 = 2pi
         fldpi                                   ; ST0 = π
         fadd    st0, st0                        ; ST0 = 2π
+
         mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
         fild    qword [rsp]                     ; ST0 = (double)len, ST1 = 2π
         fdivp   st1, st0                        ; ST0 = 2π/len
+        
         test    r13, r13
         jnz     .angle_ok                       ; inverse != 0 => ángulo positivo
         fchs                                   ; inverse == 0 => ángulo negativo
