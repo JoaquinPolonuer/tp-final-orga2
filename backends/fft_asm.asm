@@ -111,22 +111,24 @@ fft_1d_asm:
         ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
         
         ; st0 = 2pi
-        fldpi                                   ; ST0 = π
-        fadd    st0, st0                        ; ST0 = 2π
+        fldpi                                   ; st0 = π
+        fadd    st0, st0                        ; st0 = 2π
 
         mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
-        fild    qword [rsp]                     ; ST0 = (double)len, ST1 = 2π
-        fdivp   st1, st0                        ; ST0 = 2π/len
+        fild    qword [rsp]                     ; st0 = (double)len, st1 = 2π
+        fdivp   st1, st0                        ; st0 = 2π/len
 
         test    r13, r13
-        jnz     .angle_ok                       ; Si inverse es 1, seguimos
+        jnz     .declarar_w                       ; Si inverse es 1, seguimos
         fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
-        .angle_ok:
-            fld     st0                             ; duplico ángulo
-            fsin                                    ; ST0 = sin(ang)   (ángulo sigue en ST1)
-            fstp    qword [rsp]                     ; guardar sin
+        
+        ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
+        .declarar_w:
+            fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
+            fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
+            fstp    qword [rsp]                     ; guardar sin en memoria
             movsd   xmm7, [rsp]                     ; w.imag = sin(ang)
-            fcos                                    ; ST0 = cos(ang)
+            fcos                                    ; st0 = cos(ang)
             fstp    qword [rsp]                     ; guardar cos
             movsd   xmm6, [rsp]                     ; w.real = cos(ang)
             ; (pila x87 vacía)
