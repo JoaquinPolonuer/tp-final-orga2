@@ -72,45 +72,6 @@ void bit_reverse(Complex *x, int n)
     }
 }
 
-// 1D FFT implementation (Cooley-Tukey). Requires n to be a power of 2.
-void fft_1d(Complex *x, int n, int inverse)
-{
-    // Precondition: n must be a power of 2
-    if (n <= 0 || (n & (n - 1)) != 0) {
-        return; // Silent fail for invalid input
-    }
-
-    bit_reverse(x, n);
-
-    for (int len = 2; len <= n; len <<= 1)
-    {
-        double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
-        Complex w = {cos(angle), sin(angle)};
-
-        for (int i = 0; i < n; i += len)
-        {
-            Complex wn = {1.0, 0.0};
-            for (int j = 0; j < len / 2; j++)
-            {
-                Complex u = x[i + j];
-                Complex v = complex_mul(x[i + j + len / 2], wn);
-                x[i + j] = complex_add(u, v);
-                x[i + j + len / 2] = complex_sub(u, v);
-                wn = complex_mul(wn, w);
-            }
-        }
-    }
-
-    if (inverse)
-    {
-        for (int i = 0; i < n; i++)
-        {
-            x[i].real /= n;
-            x[i].imag /= n;
-        }
-    }
-}
-
 // 2D FFT implementation
 static void fft2d(Complex *data, int rows, int cols, int inverse)
 {
