@@ -1,0 +1,714 @@
+\documentclass[a4paper]{article}
+
+\setlength{\parskip}{2mm}
+\newcommand{\tab}{~ \qquad}
+\input{Macros}
+\usepackage{caratula} % Version modificada para usar las macros de algo1 de ~> https://github.com/bcardiff/dc-tex
+
+\begin{document}
+
+\titulo{TP de Especificación}
+\subtitulo{Esperando el Bondi}
+\fecha{30 de Marzo de 2022}
+\materia{Algoritmos y Estructuras de Datos I}
+\grupo{Grupo 1}
+
+\newcommand{\dato}{\textit{Dato}}
+\newcommand{\individuo}{\textit{Individuo}}
+
+\newcommand{\tiempo}{\textit{Tiempo}}
+\newcommand{\dist}{\textit{Dist}}
+\newcommand{\gps}{\textit{GPS}}
+\newcommand{\recorrido}{\textit{Recorrido}}
+\newcommand{\viaje}{\textit{Viaje}}
+\newcommand{\nombr}{\textit{Nombre}}
+\newcommand{\grilla}{\textit{Grilla}}
+\newcommand{\celda}{\textit{Celda}}
+
+
+% Pongan cuantos integrantes quieran
+\integrante{Polonuer, Joaquin}{1612/21}{jtpolonuer@gmail.com}
+\integrante{González, Facundo}{1440/21}{facundo2gonzalez2@gmail.com}
+\integrante{Jaime, Brian David}{411/18}{brian.d.jaime97@gmail.com}
+\integrante{Guberman, Diego}{469/17}{diego98g@hotmail.com}
+
+\maketitle
+
+
+\section{Definición de Tipos}
+\begin{description}
+    \item type $\tiempo = \float$
+    \item type $\dist = \float$
+    \item type $\gps = \float \times \float$
+    \item type $\recorrido = \TLista{\gps}$
+    \item type $\viaje = \TLista{\tiempo \times \gps}$
+    \item type $\nombr = \ent \times \ent$
+    \item type $\grilla = \TLista{\gps \times \gps \times \nombr}$
+    \item type $\celda = \gps \times \gps \times \nombr$
+\end{description}
+
+
+\section{Constantes}
+% \aux{MIN}{}{\ent}{1}
+% \aux{MAX}{}{\ent}{10}
+
+
+\section{Problemas}
+
+\subsection{Ejercicio 1}
+
+Devolver verdadero si los puntos GPS del viaje y los tiempos están en rango.
+
+\begin{proc}{viajeValido}{\In v: \viaje, \Out res: $\bool$}{}
+    \pre{True}
+    \post{res = \True \leftrightarrow esViajeValido(v)}
+
+    \pred{esViajeValido}{v: \viaje}{
+        \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{v} 
+            \implicaLuego (esTiempoValido(v[i]_0) 
+            \y sonCoordenadasValidas(v[i]_1))
+        } \\
+        \text{/* no hay dos tiempos iguales en los registros*/} \\
+        \y \neg \existe{i, j}{\ent}{
+            0 \leq i < j < \longitud{v}
+            \yLuego
+            v[i]_0 = v[j]_0
+        }
+    }
+
+    \pred{esTiempoValido}{t: \tiempo}{
+        t \geq 0
+    }
+
+    \pred{sonCoordenadasValidas}{c: \gps}{
+        -90.0 \leq c_0 \leq 90.0 \y -180.0 \leq c_1 \leq 180.0
+    }
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 2}
+
+Devolver verdadero si los puntos GPS del recorrido están en rango.
+
+\begin{proc}{recorridoValido}{\In v: \recorrido, \Out res: $\bool$}{}
+    \pre{True}
+    \post{res = \True \leftrightarrow esRecorridoValido(v)}
+
+    \pred{esRecorridoValido}{v: \recorrido}{
+        (\forall i:\ent) (0 \leq i < \longitud{v} \implicaLuego sonCoordenadasValidas(v[i]))
+    }
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 3}
+
+Chequear que todos los puntos registrados en un viaje válido se encuentren dentro de un círculo de radio r kilómetros.
+
+\begin{proc}{enTerritorio}{\In v: \viaje, \In r: \dist, \Out res: $\bool$}{}
+    \pre{esViajeValido(v)}
+    \post{res = \True \leftrightarrow estaEnTerritorio(v,r)}
+
+    \pred{estaEnTerritorio}{v: \viaje, r: \dist}{
+    (\exists c: \gps)(sonCoordenadasValidas(c) \yLuego (\forall i: \ent)(0 \leq i < \longitud{v} \implicaLuego dist(c,v[i]_1) \leq 1000 \cdot r)) \\
+    \text{/* Multiplico r por 1000 dado que r está dado en kilómetros y la función auxiliar $dist(p1,p2)$} \\
+    \text{devuelve su resultado en metros */}
+    }
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 4}
+
+Dado un viaje válido, determinar el tiempo total que tardó el colectivo. Este valor debe ser calculado como el tiempo transcurrido desde el primer punto registrado y hasta el último.
+
+\begin{proc}{tiempoTotal}{\In v: \viaje, \Out t: \tiempo}{}
+    \pre{esViajeValido(v)}
+    \post{esMaximaDiferenciaTiempo(v,t)}
+
+    \pred{esMaximaDiferenciaTiempo}{v: \viaje, t: \tiempo}{
+        \comentario{t es la diferencia entre dos tiempos del v} \\
+        (\exists i,j: \ent)(0 \leq i,j < \longitud{v} \yLuego v[i]_0 - v[j]_0 = t) \y \\
+        \comentario{t es la mayor diferencia posible entre dos tiempos del viaje} \\
+        \neg(\exists n,m: \ent)(0 \leq n,m < \longitud{v} \yLuego v[n]_0 - v[m]_0 > t)
+    }
+
+    %Se me ocurrió lo siguiente para este. Qué les parece? - Diego
+    %esta copada la idea 
+    %igual dejaria la que hablamos en el labo, por simplicidad - Polo
+    %Revisando me parece mejor la anterior - Diego
+
+    % \pred{maximaDiferenciaTiempo}{v: \viaje, t: \tiempo}{
+    %     (\exists ti,t_{f}: \tiempo)((esTiempoValido(ti) \y esTiempoValido(t_{f})) \yLuego (esMinimoTiempo(v, ti) \y \\ esMaximoTiempo(v, t_{f})) \y t = t_{f} - ti)
+    % }
+
+    % \pred{esMinimoTiempo}{v: \viaje, t: \tiempo}{
+    %     (\exists i: \ent)(0 \leq i < \longitud{v} \yLuego (\forall j: \ent)(0 \leq j < \longitud{v} \implicaLuego v[i]_0 \leq v[j]_0) \y t = v[i]_0)
+    % }
+
+    % \pred{esMaximoTiempo}{v: \viaje, t: \tiempo}{
+    %     (\exists i: \ent)(0 \leq i < \longitud{v} \yLuego (\forall j: \ent)(0 \leq j < \longitud{v} \implicaLuego v[i]_0 \geq v[j]_0) \y t = v[i]_0)
+    % }
+
+\end{proc}
+%Ojo que dice que "no necesariamente están ordenados" en las mediciones de los viajes
+
+\pagebreak
+
+\subsection{Ejercicio 5}
+
+Dado un viaje válido, determinar la distancia recorrida en kilómetros aproximada utilizando toda la información registrada en el viaje, es decir, utilizando la información registrada de todos los tramos.
+
+\begin{proc}{distanciaTotal}{\In v: \viaje, \Out d: \dist}{}
+    \pre{esViajeValido(v)}
+    \post{distanciaViajeOrdenado(v,d)}
+
+    \pred{distanciaViajeOrdenado}{v: \viaje, d: \dist}{
+        (\exists v': \viaje)(esElViajeOrdenado(v,v') \y d = sumaDistanciasSucesivas(v'))
+    }
+
+    \pred{esElViajeOrdenado}{v,v': \viaje}{
+        estaOrdenadoTemporalmente(v') \y esPermutacion(v,v')
+    }
+
+    \pred{estaOrdenadoTemporalmente}{v: \viaje}{
+        (\forall i:\ent)(0 \leq i < \longitud{v}-1 \implicaLuego v[i]_0 < v[i+1]_0)
+    }
+
+    \pred{esPermutacion}{v1,v2: \viaje}{
+    \text{/*Esto funciona porque no hay repetidos en los viajes*/}\\
+        (\forall e: \tiempo \times \gps)(\#apariciones(v1,e) = \#apariciones(v2,e))
+    }
+
+    \aux{\#apariciones}{v: \viaje, e: $\tiempo \times \gps$}{\ent}{\sum \limits_{i=0}^{\longitud{v}-1} \IfThenElse{v[i] = e}{1}{0}
+    }
+
+    \aux{sumaDistanciasSucesivas}{v: \viaje}{\dist}{
+    \frac{1}{1000} \cdot \sum\limits_{i=0}^{\longitud{v}-2} dist(v[i]_1,v[i+1]_1) \\
+    \text{/* Divido la sumatoria por 1000 dado que se pide el resultado en kilómetros y la función auxiliar} \\
+    \text{$dist(p1,p2)$ devuelve su resultado en metros */}
+    }
+
+\end{proc}
+
+% \subsection{Ejercicio 5, Alternativa}
+
+% \begin{proc}{distanciaTotal}{\In v: \viaje, \Out d: \dist}{}
+%     \pre{esViajeValido(v)}
+%     \post{esDistanciaTotal(v,d)}
+
+%     \pred{esDistanciaTotal}{v: \viaje, d: \dist}{
+%          (\exists v': \viaje)(esPermutacion(v,v') \y estaOrdenadoTemporalmente(v') \y d = sumaDistanciasSucesivas(v'))
+%      }
+
+%      \pred{estaOrdenadoTemporalmente}{v: \viaje}{
+%          (\forall i:\ent)(0 \leq i < \longitud{v}-1 \implicaLuego v[i]_0 < v[i+1]_0)
+%      }
+
+%     \pred{esPermutacion}{v1,v2: \viaje}{
+%     (\forall e: \tiempo \times \gps)(\# apariciones(v1,e) = \# apariciones (v2,e))
+%      }
+
+%      \aux{apariciones}{v: \viaje, e: $\tiempo \times \gps$}{\ent}{\sum\limits_{i=0}^{\longitud{v}-1} \IfThenElse{v[i] = e}{1}{0}
+%      }
+
+%     \aux{sumaDistanciasSucesivas}{v: \viaje}{\dist}{
+%     \frac{1}{1000} \cdot \sum\limits_{i=0}^{\longitud{v}-2} dist(v[i]_1,v[i+1]_1)}
+
+% \end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 6}
+
+Dado un viaje válido devolver verdadero si el colectivo superó los 80 km/h en algún momento del viaje.
+
+\begin{proc}{excesoDeVelocidad}{\In v: \viaje, \Out res: $\bool$}{}
+    \pre{esViajeValido(v)}
+    \post{res = \True \leftrightarrow superaVelocidad(v)}
+
+    \pred{superaVelocidad}{v: \viaje}{
+    (\exists i,j: \ent)(0 \leq i,j < \longitud{v} \yLuego i \neq j \y esTramo(v, v[i],v[j]) \y velocidadTramo(v[i],v[j]) > 80)
+    }
+
+    \pred{esTramo}{v: \viaje, e1,e2: $\tiempo \times \gps$}{
+        e1_0 < e2_0 \y \neg(\exists e: \tiempo \times \gps)(e \in v \y e1_0 < e_0 < e2_0)
+    }
+
+    \aux{velocidadTramo}{e1,e2 : $\tiempo \times \gps$}{\float}{
+        \frac{dist(e1_1,e2_1)}{e2_0 - e1_0} \cdot 3.6 \\
+        \text{/* Multiplico por 3,6 dado que se pide el resultado en kilómetros por hora y la función auxiliar} \\
+        \text{$dist(p1,p2)$ devuelve su resultado en metros mientras que los tiempos están en segundos */}
+    }
+
+\end{proc}
+
+% Hice otra forma donde usamos predicados que hicimos en el ejercicio 5 - Diego
+
+%\begin{proc}{excesoDeVelocidad}{\In v: \viaje, \Out res: $\bool$}{}
+%    \pre{esViajeValido(v)}
+%    \post{res = \True \leftrightarrow superaVelocidad(v)}
+%
+%    \pred{superaVelocidad}{v: \viaje}{
+%        (\exists v': \viaje)(esElViajeOrdenado(v,v') \y viajeOrdenadoSuperaVelocidad(v'))
+%    }
+%
+%    \pred{viajeOrdenadoSuperaVelocidad}{v: \viaje}{
+%    (\exists i: \ent)(0 \leq i < \longitud{v}-1 \yLuego velocidadTramo(v[i],v[i+1]) > 80)
+%    }
+%
+%    \aux{velocidadTramo}{e1,e2 : $\tiempo \times \gps$}{\float}{
+%        \frac{dist(e1_1,e2_1)}{e2_0 - e1_0} \cdot 3.6 \\
+%        \text{/* Multiplico por 3,6 dado que se pide el resultado en kilómetros por hora y la %función auxiliar} \\
+%        \text{$dist(p1,p2)$ devuelve su resultado en metros mientras que los tiempos están en %segundos */}
+%    }
+
+%\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 7}
+
+Dada una lista de viajes válidos, calcular la cantidad de viajes que se encontraban en ruta en cualquier momento entre $\mathrm{t_0}$ y $\mathrm{t_f}$ inclusives. Por ejemplo, si un viaje comenzó a las 13:30 y terminó a las 14:30 y la franja es de 14:00 a 15:00, el viaje debería estar considerado. Lo mismo ocurre si el viaje comenzó a las 14:10 y terminó a las 14:15 o si comenzó a las 13:30 y terminó a las 16:00.
+
+\begin{proc}{flota}{\In vs: \TLista{\viaje}, \In $\mathrm{t_0}$: \tiempo, \In $\mathrm{t_f}$: \tiempo, \Out res: \ent}{}
+    \pre{sonTodosViajesValidos(vs) \y t_0 \leq t_f \y esTiempoValido(t_0) \y esTiempoValido(t_f)}
+    \post{esCantidadEnRuta(vs, t_0, t_f, res)}
+
+    \pred{sonTodosViajesValidos}{vs: \TLista{\viaje}}{
+        (\forall v:\viaje)(v \in vs \implica esViajeValido(v))
+    }
+
+    \pred{esCantidadEnRuta}{vs: \TLista{\viaje}, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo, res: \ent}{
+    res = \sum\limits_{i=0}^{\longitud{vs}-1} (\IfThenElse{estaEnRuta(v[i], t_0, t_f)}{1}{0})
+    }
+
+    \pred{esCantidadEnRuta}{vs: \TLista{\viaje}, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo, res: \ent}{
+        \existe{vs'}{\TLista{\viaje}}{
+            \paraTodo{v}{\viaje}{
+                (v \in vs \y estaEnRuta(v, t_0, t_f))
+                \implicaLuego
+                \#aparicionesViajes(v, vs') = \#aparicionesViajes(v, vs)
+            } \\
+            \y \longitud{vs'} = res
+        }
+    }
+
+    \pred{estaEnRuta}{v: \viaje, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo}{
+        \existe{i, j}{\ent}{
+            0 \leq i, j < \longitud{v}
+            \yLuego
+            v[i]_0 \leq t_0 < t_{f} \leq v[j]_0
+        }\\
+        \oo
+        \existe{i}{\ent}{
+            0 \leq i < \longitud{v}
+            \yLuego
+            t_0 \leq v[i]_0 \leq t_{f}
+        }
+    }
+
+    \pred{estaEnRuta}{v: \viaje, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo}{
+        \existe{i,j}{\ent}{
+            0 \leq i \leq j < \longitud{v} \yLuego (v[i]_0 \leq t_f \y v[j]_0 \geq t_0)
+        }
+    }
+    
+    \aux{\#aparicionesViajes}{v: \viaje, vs: \TLista{\viaje}}{\ent}{
+    \sum\limits_{i=0}^{\longitud{vs}-1} (\IfThenElse{vs[i]=v}{1}{0})
+    }
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 8}
+
+Dado un viaje v válido, un recorrido r válido y un umbral u (en kilómetros), devolver todos los puntos del recorrido que no fueron
+cubiertos por ningún punto del viaje. Se considera que un punto p del recorrido está cubierto si al menos un punto del viaje
+está a menos de u kilómetros del punto p.
+
+\begin{proc}{recorridoCubierto}{\In v: \viaje, \In r: \recorrido, \In u: \dist, \Out res: \TLista{\gps}}{}
+    \pre{esViajeValido(v) \y u > 0 \y esRecorridoValido(r)}
+    \post{sonTodosLosPuntosNoCubiertos(res, v, r, u)}
+
+    \pred{sonTodosLosPuntosNoCubiertos}{res: \TLista{\gps}, v: \viaje, r: \recorrido, u: \dist}{
+        \text{/*Todos los puntos que están en res son puntos no cubiertos del recorrido*/}\\
+        \text{/*Todos los puntos no cubiertos del recorrido están en res*/}\\
+        \paraTodo{p}{\gps}{
+            p \in res
+            \leftrightarrow
+            (p \in r \y \neg{estaCubierto(p,v,u)})
+        }
+    }
+
+    \pred{estaCubierto}{p: \gps, v: \viaje, u: \dist}{
+        \existe{m}{\tiempo \times \gps}{
+            m \in v \y dist(m_1, p) < u \cdot 1000
+        }\\
+        \text{/*Multiplicamos por 1000 para pasar de km a metros*/}
+    }
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 9}
+
+Dados dos puntos GPS, construir una grilla de n × m. Estas grillas están conformadas por celdas contiguas rectangulares. Los
+lados latitudinales (respectivamente longitudinales) de todas las celdas miden la misma cantidad de grados. Cada celda está
+caracterizada por sus puntos superior izquierdo e inferior derecho (coordenadas GPS) y un nombre, que es un par ordenado
+de enteros que representa la posición de la celda en la grilla. Estos pares ordenados van desde (1, 1) en el punto que se
+encuentre en la celda que comienza en la posición esq1 y hasta (n, m) en la posición en donde se encuentra la celda con
+esquina esq2. La latitud de esq1 debe ser mayor a la latitud de esq2 y la longitud de esq1 debe ser menor a la longitud de
+esq2.
+
+\begin{proc}{construirGrilla}{\In esq1: \gps, \In esq2: \gps, \In n: \ent, \In m: \ent, \Out g: \grilla}{}{
+        \pre{sonEsquinasValidas(esq1, esq2) \y n > 0 \y m > 0}
+        \post{esGrillaCorrecta(esq1, esq2, n, m, g)}
+
+        \pred{sonEsquinasValidas}{esq1,esq2: \gps}{
+            sonCoordenadasValidas(esq1) \y sonCoordenadasValidas(esq2) \y esq1_0 > esq2_0 \y esq1_1 < esq2_1
+        }
+
+        \pred{esGrillaCorrecta}{esq1,esq2: \gps, n,m: \ent, g: \grilla}{
+            \longitud{g} = m \cdot n \y
+            esquinasSonCombLineales(esq1, esq2, n, m, g)
+        }
+
+        % \pred{infDerechaCorrecta}{g: \grilla}{
+        % \text{/*Toda coordenada inferior derecha tiene que ser 
+        %         la inferior izquierda más el tamaño de la celda */}\\
+        %     \paraTodo{i}{\ent}{
+        %         0 \leq i < \longitud{g} \\
+        %         \implicaLuego 
+        %         esqInfDer(g[i]) = \\ 
+        %         (esqSupDer(g[i])_0 - tamanoCelda(esq1, esq2, n, m)_0, \\ esqSupDer(g[i])_0 + tamanoCelda(esq1, esq2, n, m)_1)
+        %     }    
+        % }
+
+        \pred{esquinasSonCombLineales}{esq1,esq2: \gps, n,m: \ent, g: \grilla}{
+            \paraTodo{a,b}{\ent}{
+                (1 \leq a \leq n \y 1 \leq b \leq m) \implicaLuego
+                \existe{i}{\ent}{
+                    0 \leq i < \longitud{g} \yLuego \\
+                    \text{/*Esquina superior izquierda*/} \\
+                    esqSupIzq(g[i]) = esqSupIzqCombinacion(a,b,n,m,esq1,esq2) \y \\
+                    \text{/*Esquina inferior derecha*/} \\
+                    esqInfDer(g[i]) = esqInfDerCombinacion(a,b,n,m,esq1,esq2) \y \\
+                    \text{/*Nombre*/} \\
+                    nombre(g[i]) = (a,b)
+                }
+            }
+        }
+
+        \aux{esqSupIzqCombinacion}{a,b,n,m: \ent, esq1,esq2: \gps}{\gps}{\\
+            (esq1_0 - (a-1) \cdot (tamanoCelda(esq1, esq2, n, m))_0,\
+            esq1_1 + (b-1) \cdot tamanoCelda(esq1, esq2, n, m)_1)
+        }
+
+        \aux{esqInfDerCombinacion}{a,b,n,m: \ent, esq1,esq2: \gps}{\gps}{\\
+            (esq1_0 - a \cdot (tamanoCelda(esq1, esq2, n, m))_0,\
+            esq1_1 + b \cdot tamanoCelda(esq1, esq2, n, m)_1)
+        }
+        
+        \aux{esqSupIzq}{c: \celda}{\gps}{c_0}
+        \aux{esqInfDer}{c: \celda}{\gps}{c_1}
+        \aux{nombre}{c: \celda}{\nombr}{c_2}
+
+        \aux{tamanoCelda}{esq1,esq2: \gps, n,m:\ent}{$\float \times \float$}{(\frac{esq1_0 - esq2_0}{n},\frac{esq2_1 - esq1_1}{m})}
+
+    }
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 10}
+
+Dado un recorrido, devolver la secuencia ordenada de regiones visitadas por el colectivo.
+
+\begin{proc}{regiones}{\In r: \recorrido, \In g: \grilla, \Out res: \TLista{\nombr}}{}
+
+    \pre{esRecorridoValido(r) \y esGrillaDelRecorrido(g,r)}
+    \post{esSecuenciaDelRecorrido(res,r,g)}
+
+    \pred{esSecuenciaDelRecorrido}{res: \TLista{\nombr}, r: \recorrido, g:\grilla}{
+    \longitud{res} = \longitud{r} \\
+    \y
+    \paraTodo{i}{\ent}{
+        0 \leq i < \longitud{res}
+        \implicaLuego
+            \existe{c}{\celda}{
+                c \in g
+                \y
+                (nombre(c) = res[i] 
+                \y 
+                estaEnCelda(r[i],c))
+            }
+        }
+    }
+    
+    \pred{estaEnCelda}{p: \gps, c: \celda}{
+        (esqInfDer(c)_0 \leq p_0 \leq esqSupIzq(c)_0)
+        \y
+        (esqSupIzq(c)_1 \leq p_1 \leq esqInfDer(c)_1)
+    }
+
+    \pred{esGrillaDelRecorrido}{g: \grilla, r: \recorrido}{
+        \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{r} \implicaLuego
+            \existe{c}{\celda}{c \in g \y estaEnCelda(r[i],c)}
+        } \\
+        \y 
+        \existe{esq1, esq2}{\gps}{
+        \existe{n, m}{\ent}{
+            esGrillaCorrecta(esq1, esq2, n, m, g)
+            }
+        }
+    }
+
+\end{proc}
+
+
+\pagebreak
+
+\subsection{Ejercicio 11}
+
+Dado un viaje válido y una grilla, determinar cuántos saltos hay en el viaje.
+
+\begin{proc}{cantidadDeSaltos}{\In g: \grilla, \In v: \viaje, \Out res: \TLista{\ent}}{}{
+    \pre{esViajeValido(v) \y esGrillaDelViaje(g, v)}
+    \post{esCantidadDeSaltos(g,v,res)}
+    
+    \pred{esCantidadDeSaltos}{g: \grilla, v: \viaje, res: \ent}{
+        \existe{v'}{\viaje}{
+            esElViajeOrdenado(v', v)\\
+            \y \existe{R}{\TLista{\nombr}}{
+                esSecuenciaDelViaje(R, v', g)
+                \y cantidadDeSaltos(R) = res
+            }
+        }
+    }
+    
+    \aux{cantidadDeSaltos}{R: \TLista{\nombr}}{\ent}{
+        \sum\limits_{i=0}^{\longitud{R}-2} (\IfThenElse{esCeldaContigua(R[i], R[i+1])}{0}{1})
+    }
+
+    \pred{esCeldaContigua}{n1,n2: \nombr}{
+            \longitud{n1_0 - n2_0} \leq 1 \y \longitud{n1_1 - n2_1} \leq 1
+    }
+
+    \pred{esSecuenciaDelViaje}{R: \TLista{\nombr}, v: \viaje, g: \grilla}{
+        \longitud{R} = \longitud{v} \\
+        \text{/*Esto funciona porque el viaje está ordenado*/}\\
+        \y 
+        \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{R}
+            \implicaLuego
+            \existe{c}{\celda}{
+                c \in g
+                \y
+                (nombre(c)=R[i] 
+                \y 
+                estaEnCelda(v_1[i],c))
+            }
+        }
+    }
+
+    \pred{esGrillaDelViaje}{g: \grilla, v: \viaje}{
+        \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{v} \implicaLuego
+            \existe{c}{\celda}{c \in g \y estaEnCelda(v[i]_1,c)}
+        }\\
+        \y
+        \existe{esq1, esq2}{\gps}{
+            \existe{n, m}{\ent}{
+                esGrillaCorrecta(esq1, esq2, n, m, g)
+            }
+        }
+%        \existe{i, j, n, m}{\ent}{
+%            0 \leq i,j < \longitud{v}
+%            \yLuego 
+%            esGrillaCorrecta(v[i]_1, v[j]_1, n, m, g)
+%        }
+    }
+}
+
+\end{proc}
+
+
+\pagebreak
+
+\subsection{Ejercicio 12}
+
+Se cuenta con un viaje válido de más de 5 puntos, y la lista errores que indica cada momento para el cual el valor registrado por el GPS fue erróneo y que debe ser corregido automáticamente. Para la corrección, se buscan los dos puntos más cercanos temporalmente (y correctos), que permiten calcular la velocidad media del vehículo en ese tramo del viaje. Luego, esos dos puntos definen una recta, sobre la cual se va a definir el punto GPS corregido, de acuerdo a la distancia recorrida, usando para ello la velocidad media.
+
+\begin{proc}{corregirViaje}{\Inout v: \viaje, \In errores: \TLista{\tiempo}}{}{
+    \text{/*Pedimos como precondición que el primero y el ultimo tiempo sean correctos*/}\\
+    \text{/*De no ser así, no podríamos corregirlos*/}\\
+    \pre{\\
+        \longitud{v} > 5
+        \y esViajeValido(v)
+        \y sonTiemposValidos(errores) \\
+        \y 10 \cdot \longitud{errores} \leq \longitud{v}\\
+        \y primeroYUltimoSinErrores(v, errores)\\
+        \y v = v_0 \\ 
+    }
+
+    \post{esViajeCorregido(v, v_0, errores)}
+
+    \pred{primeroYUltimoSinErrores}{v: \viaje, e: \TLista{\tiempo}}{
+        v[0]_0 \notin e
+        \y 
+        v[\longitud{v}-1]_0 \notin e
+    }
+
+    \pred{sonTiemposValidos}{e: \TLista{\tiempo}}{
+        \paraTodo{i}{\ent}{
+            0\leq i < |e| \implicaLuego esTiempoValido(e[i])
+        }
+    }
+
+    \pred{esViajeCorregido}{v,$\mathrm{v_0}$: \viaje, e: \TLista{\tiempo}}{
+        \longitud{v}=\longitud{v_0} \yLuego \\ \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{v_0} 
+            \implicaLuego
+            (
+                (v_0[i]_0 \notin e \implica v[i] = v_0[i])
+                \oo
+                (v_0[i]_0 \in e \implica esElPuntoCorregido(v_0, v, i, e))
+            )
+        }
+    }
+        
+    \pred{esElPuntoCorregido}{v,$\mathrm{v_0}$: \viaje, i: \ent, e: \TLista{\tiempo}}{
+        \text{/*Cada coordenada es la velocidad por el tiempo transcurrido desde el tiempo más}\\ \text{cercano sin errores, sumado a la posición inicial en esa coordenada*/}\\
+        \existe{k,j}{\ent}{
+        0 \leq k < j < \longitud{v} \\
+        \yLuego esMenorTiempoCorrectoMasCercano(v_0, i, k, e) \\
+        \y esMayorTiempoCorrectoMasCercano(v_0, i, j, e) \\
+        \y (v[i]_1)_0 = 
+        vectorVelocidad(v_0[k], v_0[j])_0 \cdot (v_0[i]_0 - v_0[k]_0) + (v_0[k]_1)_0 \\
+        \y (v[i]_1)_1 = 
+        vectorVelocidad(v_0[k], v_0[j])_1 \cdot (v_0[i]_0 - v_0[k]_0) + (v_0[k]_1)_1 \\
+        \y v[i]_0 = v_0[i]_0 
+        }
+    }
+        
+    \aux{vectorVelocidad}{m1,m2: $\tiempo \times \gps$}{$\float \times \float$}{
+        (\frac{(m2_1)_0 - (m1_1)_0}{m2_0 - m1_0},
+        \frac{(m2_1)_1 - (m1_1)_1}{m2_0 - m1_0}
+        )
+    }
+   % \pagebreak
+        
+    \pred{esMenorTiempoCorrectoMasCercano}{v: \viaje, i,k: \ent, e: \TLista{\tiempo}}{
+        v[k]_0 < v[i]_0 \y v[k]_0 \notin e \\
+        \y \neg \existe{h}{\ent}{
+            0 \leq h < \longitud{v} \yLuego
+            v[k]_0 < v[h]_0 < v[i]_0 \y v[h]_0 \notin e
+        }
+    }
+        
+    \pred{esMayorTiempoCorrectoMasCercano}{v: \viaje, i,j: \ent, e: \TLista{\tiempo}}{
+        v[i]_0 < v[j]_0 \y v[j]_0 \notin e \\
+        \y \neg \existe{h}{\ent}{
+            0 \leq h < \longitud{v} \yLuego
+            v[i]_0 < v[h]_0 < v[j]_0 \y v[h]_0 \notin e
+        }
+    }
+}
+
+\end{proc}
+
+\pagebreak
+
+\subsection{Ejercicio 13}
+
+Dada una lista de viajes válidos, calcular el histograma de velocidades máximas registradas entre todos los viajes.
+
+\begin{proc}{histograma}{\In xs: \TLista{\viaje}, \In bins: \ent, \Out cuentas: \TLista{\ent}, \Out limites: \TLista{\float}}{}{
+    \pre{sonViajesValidos(xs) \y bins>0}
+    \post{sonLimitesCorrectos(limites, xs, bins) \yLuego sonCuentasCorrectas(xs,bins,limites,cuentas)}
+
+    \pred{sonCuentasCorrectas}{xs: \TLista{\viaje}, bins: \ent, limites:  \TLista{\float}, cuentas: \TLista{\ent}}{
+        \longitud{cuentas}=bins \yLuego \\
+        \existe{vels}{\TLista{\float}}{
+            sonVelocidadesMaximas(vels,xs) \\
+            \y \paraTodo{i}{\ent}{
+                0 \leq i < \longitud{cuentas}-1
+                \implicaLuego 
+                cuentas[i] = cantEnIntervalo(vels, limites[i], limites[i+1])} \\
+            \y cuentas[\longitud{cuentas}-1] = 
+            cantEnIntervaloCerrado(vels,limites[\longitud{cuentas}-1],limites[\longitud{cuentas}])
+        }
+    }
+    
+    \pred{sonLimitesCorrectos}{limites: \TLista{\float}, xs: \TLista{\viaje}, bins: \ent}{
+        \longitud{limites}=bins+1 
+        \y estaOrdenado(limites) \\
+        \y \existe{vels}{\TLista{\float}}{
+            sonVelocidadesMaximas(vels,xs) \\
+            \y
+            esMinimo(vels, limites[0]) \y esMaximo(vels, limites[\longitud{limites}-1])\\
+            \y \paraTodo{i}{\ent}{
+                    0 \leq i < \longitud{limites}
+                    \implicaLuego
+                    limites[i] = limites[0] + i \cdot \frac{limites[\longitud{limites}-1]-limites[0]}{bins}
+                }
+        }
+    }
+
+    \pred{sonVelocidadesMaximas}{vels: \TLista{\float}, xs: \TLista{\viaje}}{
+        \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{xs} 
+            \implicaLuego
+            esVelocidadMaxima(vels[i], xs[i])
+            %\existe{v}{\float}{v \in vels \y esVelocidadMaxima(v,xs[i])} }
+        }
+    }
+    
+    \pred{esVelocidadMaxima}{vel: \float, v: \viaje}{
+        \existe{i,j}{\ent}{
+            (0 \leq i,j < \longitud{v}
+            \yLuego esTramo(v,v[i],v[j]))
+            \y velocidadTramo(v[i],v[j]) = vel 
+        }\\ 
+        \y
+        \paraTodo{i,j}{\ent}{
+            (0\leq i,j < \longitud{v}
+            \yLuego esTramo(v,v[i],v[j]))
+            \implicaLuego velocidadTramo(v[i],v[j]) \leq vel 
+        }
+    }
+    
+    \aux{cantEnIntervalo}{vels: \TLista{\float}, lim1,lim2: \float}{\float}{
+    \sum\limits_{i=0}^{\longitud{vels}-1} (\IfThenElse{lim1\leq vels[i] < lim2 }{1}{0})
+    }
+
+    \aux{cantEnIntervaloCerrado}{vels: \TLista{\float}, lim1,lim2: \float}{\float}{
+    \sum\limits_{i=0}^{\longitud{vels}-1} (\IfThenElse{lim1\leq vels[i] \leq lim2 }{1}{0})
+    }
+    
+    \pagebreak
+    
+    \pred{esMinimo}{vels: \TLista{\float}, min: \float}{
+        min \in vels \y \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{vels} \implicaLuego min \leq vels[i]}
+    }
+    
+    \pred{esMaximo}{vels: \TLista{\float}, max: \float}{
+        max \in vels \y \paraTodo{i}{\ent}{
+            0 \leq i < \longitud{vels} \implicaLuego vels[i] \leq max}
+    }
+}
+
+\end{proc}
+
+\end{document}
