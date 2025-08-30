@@ -150,27 +150,25 @@ fft_1d_asm:
             ; ------- Fin wn = 1 + 0i -------
 
             ; base del bloque i
-            mov     rax, r15
-            shl     rax, 4                          ; i * 16
+            mov     rax, r15                        ; rax = i
+            shl     rax, 4                          ; rax = i * 16
             lea     r10, [rbx + rax]                ; r10 = &x[i]
 
             xor     rcx, rcx                        ; j = 0
             .inner_loop:
-                ; Direcciones de u = x[i + j] y t = x[i + j + len/2]
-                mov     rdx, rcx
-                shl     rdx, 4                          ; j * 16
+                mov     rdx, rcx                        ; rdx = j
+                shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
                 lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
                 lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
 
-                ; Cargar u = (u_r, u_i)
-                movsd   xmm0, [rdi]                     ; u_r
-                movsd   xmm1, [rdi+8]                   ; u_i
+                ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
+                movsd   xmm0, [rdi]                     ; xmm0 = u_r
+                movsd   xmm1, [rdi+8]                   ; xmm1 = u_i
 
-                ; Cargar t = x[i + j + len/2] = (t_r, t_i)
-                movsd   xmm2, [rsi]                     ; t_r
-                movsd   xmm3, [rsi+8]                   ; t_i
+                movsd   xmm2, [rsi]                     ; xmm2 = t_r
+                movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
 
-                ; v = t * wn = (t_r*wn_r - t_i*wn_i, t_r*wn_i + t_i*wn_r)
+                ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
                 movapd  xmm4, xmm2
                 mulsd   xmm4, xmm8                      ; t_r * wn_r
                 movapd  xmm5, xmm3
@@ -182,22 +180,25 @@ fft_1d_asm:
                 movapd  xmm11, xmm3
                 mulsd   xmm11, xmm8                     ; t_i * wn_r
                 addsd   xmm5, xmm11                     ; v_i
+                ; -----------------------------------------------------------
 
-                ; x[i + j]         = u + v
+                ; --------------- x[i + j] = complex_add(u, v) --------------
                 movapd  xmm11, xmm0
                 addsd   xmm11, xmm4                     ; u_r + v_r
                 movapd  xmm12, xmm1
                 addsd   xmm12, xmm5                     ; u_i + v_i
                 movsd   [rdi],   xmm11
                 movsd   [rdi+8], xmm12
+                ; -----------------------------------------------------------
 
-                ; x[i + j + len/2] = u - v
+                ; --------- x[i + j + len / 2] = complex_sub(u, v) ----------
                 subsd   xmm0, xmm4                      ; u_r - v_r
                 subsd   xmm1, xmm5                      ; u_i - v_i
                 movsd   [rsi],   xmm0
                 movsd   [rsi+8], xmm1
+                ; -----------------------------------------------------------
 
-                ; wn *= w
+                ; ------------------ wn = complex_mul(wn, w) ----------------
                 movapd  xmm11, xmm8
                 mulsd   xmm11, xmm6                     ; wn_r * w_r
                 movapd  xmm12, xmm9
@@ -212,16 +213,17 @@ fft_1d_asm:
 
                 movapd  xmm8, xmm11                     ; wn.real = new_r
                 movapd  xmm9, xmm13                     ; wn.imag = new_i
+                ; -----------------------------------------------------------
 
-                ; j++
-                inc     rcx
-                cmp     rcx, r9
-                jl      .inner_loop
+                ; Guarda de in_loop
+                inc     rcx             ; j++
+                cmp     rcx, r9         ; Comparo j con len/2
+                jl      .inner_loop     ; si j < len/2 sigue el loop
 
-            ; i += len
-            add     r15, r14
-            cmp     r15, r12
-            jl      .mid_loop
+            ; Guarda de mid_loop
+            add     r15, r14        ; i += len
+            cmp     r15, r12        ; Comparo i con n
+            jl      .mid_loop       ; Si i < n sigue el loop
 
         ; len <<= 1 y siguiente etapa
         shl     r14, 1
