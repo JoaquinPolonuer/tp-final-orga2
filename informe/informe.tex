@@ -24,33 +24,147 @@
 \tableofcontents
 \newpage
 
-\section{Introducción}
+\section{Motivación: La Ecuación de Onda}
 
-La optimización del rendimiento en sistemas computacionales representa uno de los desafíos más críticos en el desarrollo de software moderno, particularmente en aplicaciones que involucran procesamiento de señales y análisis espectral. En el contexto actual de computación de alto rendimiento, las técnicas de optimización han evolucionado considerablemente, incorporando enfoques que van desde la vectorización automática hasta la implementación de algoritmos especializados en ensamblador.
+La ecuación de onda representa uno de los fenómenos físicos más fundamentales en la naturaleza, describiendo la propagación de perturbaciones en medios continuos. Desde ondas sonoras y electromagnéticas hasta vibraciones mecánicas, este modelo matemático encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural.
 
-\subsection{Transformada de Fourier y Marco Teórico}
+\subsection{Ecuación de Onda en Una Dimensión}
 
-La Transformada de Fourier constituye el fundamento matemático central de este estudio. La Transformada Discreta de Fourier (DFT) se define como:
-
-\begin{equation}
-X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}
-\end{equation}
-
-donde $x[n]$ representa la secuencia de entrada y $X[k]$ los coeficientes espectrales resultantes. La implementación eficiente de la FFT (Fast Fourier Transform) mediante el algoritmo de Cooley-Tukey ha sido fundamental en aplicaciones de procesamiento digital de señales \cite{cooley1965algorithm}.
-
-\subsection{Ecuación de Onda}
-
-El comportamiento ondulatorio se describe mediante la ecuación de onda unidimensional:
+La ecuación de onda unidimensional se expresa como:
 
 \begin{equation}
 \frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
 \end{equation}
 
-donde $u(x,t)$ representa el desplazamiento de la onda, $c$ la velocidad de propagación, y las derivadas parciales describen la evolución temporal y espacial. La solución numérica de esta ecuación mediante métodos de diferencias finitas requiere algoritmos computacionalmente intensivos que se benefician significativamente de técnicas de optimización.
+donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo $t$, y $c$ es la velocidad de propagación característica del medio. Esta ecuación diferencial parcial de segundo orden describe fenómenos como:
+
+\begin{itemize}
+\item Vibraciones de cuerdas tensadas
+\item Propagación de ondas sonoras en tubos
+\item Ondas electromagnéticas en líneas de transmisión
+\end{itemize}
+
+\subsection{Ecuación de Onda en Dos Dimensiones}
+
+La extensión a dos dimensiones espaciales resulta en:
+
+\begin{equation}
+\frac{\partial^2 u}{\partial t^2} = c^2 \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) = c^2 \nabla^2 u
+\end{equation}
+
+Esta formulación bidimensional modela fenómenos como:
+
+\begin{itemize}
+\item Vibraciones de membranas (tambores, diafragmas)
+\item Ondas superficiales en líquidos
+\item Propagación de ondas sísmicas en planos
+\item Ondas electromagnéticas en cavidades rectangulares
+\end{itemize}
+
+La solución numérica de estas ecuaciones mediante métodos de diferencias finitas o elementos finitos requiere algoritmos computacionalmente intensivos que se benefician significativamente de técnicas de optimización.
+
+\section{Transformada de Fourier}
+
+La Transformada de Fourier constituye una herramienta matemática fundamental para el análisis de fenómenos ondulatorios, permitiendo descomponer señales complejas en sus componentes frecuenciales básicas. Esta transformación resulta especialmente poderosa en el contexto de la resolución de ecuaciones diferenciales parciales.
+
+La Transformada de Fourier continua de una función $f(x)$ se define como:
+
+\begin{equation}
+F(\omega) = \int_{-\infty}^{\infty} f(x) e^{-j\omega x} dx
+\end{equation}
+
+y su transformada inversa:
+
+\begin{equation}
+f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} F(\omega) e^{j\omega x} d\omega
+\end{equation}
+
+Esta representación en el dominio frecuencial revela propiedades fundamentales de las señales y simplifica considerablemente el análisis de sistemas lineales.
+
+\section{La Transformada de Fourier como Herramienta para Resolver la Ecuación de Onda}
+
+La aplicación de la Transformada de Fourier a la ecuación de onda trasforma el problema diferencial en uno algebraico, facilitando significativamente su resolución. Considerando la ecuación de onda unidimensional con condiciones iniciales:
+
+\begin{equation}
+\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
+\end{equation}
+
+Al aplicar la Transformada de Fourier espacial, obtenemos:
+
+\begin{equation}
+\frac{\partial^2 \hat{u}}{\partial t^2} = -c^2 \omega^2 \hat{u}
+\end{equation}
+
+donde $\hat{u}(\omega, t)$ es la transformada de Fourier de $u(x,t)$ respecto a $x$. Esta ecuación diferencial ordinaria en el tiempo tiene solución analítica conocida:
+
+\begin{equation}
+\hat{u}(\omega, t) = A(\omega) e^{jc\omega t} + B(\omega) e^{-jc\omega t}
+\end{equation}
+
+Los coeficientes $A(\omega)$ y $B(\omega)$ se determinan a partir de las condiciones iniciales, y la solución final se obtiene aplicando la transformada inversa de Fourier.
+
+Esta metodología demuestra la potencia computacional de la Transformada de Fourier, convirtiendo operaciones de derivación en multiplicaciones algebraicas simples. En implementaciones numéricas, la eficiencia de algoritmos FFT (Fast Fourier Transform) resulta crítica para la viabilidad computacional de estos métodos espectrales.
 
 El marco teórico se fundamenta en los principios de arquitectura de computadoras y optimización de código aplicados específicamente a algoritmos de procesamiento de señales. Las aplicaciones similares en el campo científico e industrial incluyen bibliotecas de álgebra lineal optimizadas como BLAS \cite{lawson1979basic}, implementaciones optimizadas de FFT como FFTW \cite{frigo2005design}, frameworks de computación paralela como OpenMP \cite{dagum1998openmp}, y compiladores optimizantes que emplean técnicas avanzadas de análisis estático \cite{muchnick1997advanced}.
 
 \section{Materiales y Métodos}
+
+\subsection{Transformada Discreta de Fourier}
+
+Para implementaciones computacionales, la Transformada de Fourier continua debe discretizarse. La Transformada Discreta de Fourier (DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
+
+\begin{equation}
+X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
+\end{equation}
+
+donde $X[k]$ representa los coeficientes espectrales discretos. La transformada inversa se expresa como:
+
+\begin{equation}
+x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}, \quad n = 0, 1, \ldots, N-1
+\end{equation}
+
+La implementación directa de la DFT requiere $O(N^2)$ operaciones complejas, lo que resulta computacionalmente prohibitivo para secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fourier Transform.
+
+\subsection{Algoritmo de la Transformada Rápida de Fourier (FFT)}
+
+El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$ mediante la estrategia de divide y vencerás. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
+
+\subsubsection{FFT Radix-2 Decimation-in-Time (DIT)}
+
+El algoritmo DIT separa la secuencia de entrada en muestras pares e impares:
+
+\begin{equation}
+X[k] = \sum_{n \text{ par}} x[n] e^{-j2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-j2\pi kn/N}
+\end{equation}
+
+Sustituyendo $n = 2r$ para índices pares y $n = 2r+1$ para impares:
+
+\begin{equation}
+X[k] = \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)} + e^{-j2\pi k/N} \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
+\end{equation}
+
+Definiendo:
+\begin{align}
+X_{\text{par}}[k] &= \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)} \\
+X_{\text{impar}}[k] &= \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
+\end{align}
+
+La ecuación se simplifica a:
+
+\begin{equation}
+X[k] = X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k]
+\end{equation}
+
+donde $W_N^k = e^{-j2\pi k/N}$ es el factor de giro (twiddle factor).
+
+Aprovechando la periodicidad $X_{\text{par}}[k + N/2] = X_{\text{par}}[k]$ y la simetría $W_N^{k+N/2} = -W_N^k$:
+
+\begin{align}
+X[k] &= X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k] \\
+X[k + N/2] &= X_{\text{par}}[k] - W_N^k \cdot X_{\text{impar}}[k]
+\end{align}
+
+Este proceso se aplica recursivamente hasta obtener DFTs de un solo elemento.
 
 \subsection{Herramientas de Software}
 \begin{itemize}
