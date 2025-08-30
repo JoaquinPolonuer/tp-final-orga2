@@ -18,17 +18,17 @@ class CustomBuildExt(build_ext):
     def build_extension(self, ext):
         if ext.name == 'backends.c_backend_asm':
             # Compile assembly file to object file
-            asm_src = 'backends/fft_asm.s'
+            asm_src = 'backends/fft_asm.asm'
             asm_obj = 'backends/fft_asm.o'
             
             if not os.path.exists(asm_obj) or os.path.getmtime(asm_src) > os.path.getmtime(asm_obj):
-                subprocess.check_call(['as', '--64', asm_src, '-o', asm_obj])
+                subprocess.check_call(['nasm', '-f', 'elf64', asm_src, '-o', asm_obj])
             
             # Add the object file to extra link args
             if asm_obj not in ext.extra_objects:
                 ext.extra_objects.append(asm_obj)
             
-            # Remove the .s file from sources to avoid setuptools confusion
+            # Remove the .asm file from sources to avoid setuptools confusion
             if asm_src in ext.sources:
                 ext.sources.remove(asm_src)
         
@@ -36,7 +36,7 @@ class CustomBuildExt(build_ext):
 
 c_backend_asm_extension = Extension(
     "backends.c_backend_asm",
-    sources=["backends/c_backend_asm.c", "backends/fft_asm.s"],
+    sources=["backends/c_backend_asm.c", "backends/fft_asm.asm"],
     libraries=["m"],  # Link math library
     extra_compile_args=["-O3", "-ffast-math"],
     extra_link_args=["-lm"],
