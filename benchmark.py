@@ -35,7 +35,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
         elif backend_name == "asm":
             sim = ASMWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
         elif backend_name == "asm_avx":
-            sim = ASMAVXWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)        
+            sim = ASMAVXWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
         else:
             raise ImportError(f"Unknown backend: {backend_name}")
         
@@ -82,7 +82,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
 print("Wave Simulation Backend Performance Benchmark")
 print("=" * 50)
 
-backends = ["asm_avx", "asm"]
+backends = ["numpy", "c", "optimized_c", "asm_avx", "asm"]
 sizes = [16, 32, 64, 128, 256, 512]
 steps = 20
 

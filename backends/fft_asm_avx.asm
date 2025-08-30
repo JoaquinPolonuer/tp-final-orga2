@@ -1,8 +1,15 @@
+; fft_asm_avx.asm
+; Build with: nasm -f elf64 backends/fft_asm_avx.asm -o backends/fft_asm_avx.o
+
 global fft_1d_asm_avx
 global bit_reverse_asm_avx
 
-; void bit_reverse_asm(Complex *x, int n)
+section .text
+
+; ----------------------------------------------------------------------
+; void bit_reverse_asm_avx(Complex *x, int n)
 ; rdi = x, rsi = n
+; ----------------------------------------------------------------------
 bit_reverse_asm_avx:
     ;--------------- PROLOGO ---------------
     push    rbp
@@ -23,7 +30,7 @@ bit_reverse_asm_avx:
     mov     r14, 1                  ; r14 = i
 
     ; for (i = 1; i < n; ++i)
-    .i_loop:
+.i_loop:
         cmp     r14, r12
         jge     .done
 
@@ -32,14 +39,14 @@ bit_reverse_asm_avx:
         shr     r15, 1                  ; r15 = bit
 
     ; while (j & bit) { j ^= bit; bit >>= 1; }
-    .while_loop:
+.while_loop:
         test    r13, r15
         jz      .after_while
         xor     r13, r15                ; j ^= bit
         shr     r15, 1                  ; bit >>= 1
         jmp     .while_loop
 
-    .after_while:
+.after_while:
         ; j ^= bit;
         xor     r13, r15
 
@@ -54,222 +61,254 @@ bit_reverse_asm_avx:
         shl     rdx, 4                   ; rdx = j * 16
 
         ; temp = x[i]
-        movsd   xmm0, [rbx + rax]        ; temp_r
-        movsd   xmm1, [rbx + rax + 8]    ; temp_i
+        vmovsd  xmm0, [rbx + rax]        ; temp_r
+        vmovsd  xmm1, [rbx + rax + 8]    ; temp_i
 
         ; x[i] = x[j]
-        movsd   xmm2, [rbx + rdx]        ; x[j]_r
-        movsd   xmm3, [rbx + rdx + 8]    ; x[j]_i
-        movsd   [rbx + rax],     xmm2
-        movsd   [rbx + rax + 8], xmm3
+        vmovsd  xmm2, [rbx + rdx]        ; x[j]_r
+        vmovsd  xmm3, [rbx + rdx + 8]    ; x[j]_i
+        vmovsd  [rbx + rax],     xmm2
+        vmovsd  [rbx + rax + 8], xmm3
 
         ; x[j] = temp
-        movsd   [rbx + rdx],     xmm0
-        movsd   [rbx + rdx + 8], xmm1
+        vmovsd  [rbx + rdx],     xmm0
+        vmovsd  [rbx + rdx + 8], xmm1
 
-    .no_swap:
+.no_swap:
         inc     r14                      ; ++i
         jmp     .i_loop
 
-    .done:
-        add     rsp, 8
-        pop     r15
-        pop     r14
-        pop     r13
-        pop     r12
-        pop     rbx
-        pop     rbp
-        ret
+.done:
+    add     rsp, 8
+    pop     r15
+    pop     r14
+    pop     r13
+    pop     r12
+    pop     rbx
+    pop     rbp
+    vzeroupper
+    ret
 
-; void fft_1d_asm(Complex *x, int n, int inverse)
+
+; ----------------------------------------------------------------------
+; void fft_1d_asm_avx(Complex *x, int n, int inverse)
 ; rdi = *x, rsi = n, rdx = inverse
+; ----------------------------------------------------------------------
 fft_1d_asm_avx:
     ;--------------- PROLOGO ---------------
     push rbp
-	mov rbp, rsp
-	push rbx
-	push r12
-	push r13
-	push r14
-	push r15
-	sub rsp, 8
+    mov rbp, rsp
+    push rbx
+    push r12
+    push r13
+    push r14
+    push r15
+    sub rsp, 8                    ; 8-byte scratch for x87 <-> SSE moves
     ;--------------- PROLOGO ---------------
 
-    mov rbx, rdi 	; rbx = *x
-	mov r12, rsi 	; r12 = n
-	mov r13, rdx 	; r13 = inverse
+    mov rbx, rdi                  ; rbx = *x
+    mov r12, rsi                  ; r12 = n
+    mov r13, rdx                  ; r13 = inverse
 
-    ; Ya estan bien puestos los parametros rdi = *x y rsi = n
-    call bit_reverse_asm_avx    ; como hace todo in-place, no hay que hacer nada
+    ; In-place bit reversal
+    call bit_reverse_asm_avx
 
-    mov     r14, 2                         ; len = 2
-    .out_loop:
-        cmp     r14, r12                       ; Chequeo si len > n
-        jg      .inverse                       ; si la respuesta es si, termina el ciclo
+    mov     r14, 2                ; len = 2
+out_loop:
+        cmp     r14, r12          ; while (len <= n)
+        jg      inverse
 
+        ; ------------------- twiddle base: w = cos(angle) + i sin(angle) -------------------
         ; angle = 2π/len * (inverse ? +1 : -1)
-        ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
-        
-        ; st0 = 2pi
-        fldpi                                   ; st0 = π
-        fadd    st0, st0                        ; st0 = 2π
-
-        mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
-        fild    qword [rsp]                     ; st0 = (double)len, st1 = 2π
-        fdivp   st1, st0                        ; st0 = 2π/len
+        fldpi                           ; ST0 = π
+        fadd    st0, st0                ; ST0 = 2π
+        mov     [rsp], r14              ; save len (int64)
+        fild    qword [rsp]             ; ST0 = (double)len, ST1 = 2π
+        fdivp   st1, st0                ; ST0 = 2π/len
 
         test    r13, r13
-        jnz     .declarar_w                     ; Si inverse es 1, seguimos
-        fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
-        
-        ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
-        .declarar_w:
-        fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
-        fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
-        fstp    qword [rsp]                     ; guardar sin en memoria
-        movsd   xmm7, [rsp]                     ; w_i = sin(ang)
-        fcos                                    ; st0 = cos(ang)
-        fstp    qword [rsp]                     ; guardar cos
-        movsd   xmm6, [rsp]                     ; w_r = cos(ang)
-        ; (pila x87 vacía)
+        jnz     .declarar_w
+        fchs                           ; if (!inverse) angle = -angle
 
-        ; -------- Calculitos que voy a usar en el in_loop ---------
-        mov     r9, r14                         ; r9  = len
-        shr     r9, 1                           ; r9  = len/2 (contador j max)
-        mov     r11, r9                         ; r11 = len/2
-        shl     r11, 4                          ; r11 = (len/2)*16 bytes = (len/2) * sizeof(Complex) 
-        ; --------------------- Fin calculitos ---------------------
+.declarar_w:
+        fld     st0                     ; duplicate angle
+        fsin                            ; ST0 = sin(angle), ST1 still angle
+        fstp    qword [rsp]             ; spill sin
+        vmovsd  xmm7, [rsp]             ; w_i in xmm7.low
+        fcos                            ; ST0 = cos(angle)
+        fstp    qword [rsp]             ; spill cos
+        vmovsd  xmm6, [rsp]             ; w_r in xmm6.low
+        ; pack w = {w_r, w_i} in xmm6
+        unpcklpd xmm6, xmm7             ; xmm6 = [w_r, w_i]
+        ; ------------------- end twiddle base -------------------
 
-        xor     r15, r15                        ; i = 0
-        .mid_loop:
-            ; ------- wn = 1 + 0i -------
-            pxor    xmm9, xmm9                      ; xmm9 = wn_i = 0.0
-            fld1
-            fstp    qword [rsp]
-            movsd   xmm8, [rsp]                     ; xmm8 = wn_r = 1.0
-            ; ------- Fin wn = 1 + 0i -------
+        ; -------- per-stage constants --------
+        mov     r9, r14                 ; r9 = len
+        shr     r9, 1                   ; r9 = len/2 (j max)
+        mov     r11, r9
+        shl     r11, 4                  ; r11 = (len/2) * 16 bytes
+        ; -------------------------------------
 
-            ; base del bloque i
-            mov     rax, r15                        ; rax = i
-            shl     rax, 4                          ; rax = i * 16
-            lea     r10, [rbx + rax]                ; r10 = &x[i]
+        ; ---- compute w2 = w*w (complex square), broadcast to both lanes in ymm15 ----
+        vpermilpd xmm4,  xmm6, 0x0      ; [w_r, w_r]
+        vpermilpd xmm5,  xmm6, 0x3      ; [w_i, w_i]
+        vpermilpd xmm12, xmm6, 0x1      ; [w_i, w_r] (swap)
+        movapd   xmm10, xmm6            ; copy w
+        mulpd    xmm10, xmm4            ; a = w * [w_r,w_r] = [wr*wr, wi*wr]
+        mulpd    xmm12, xmm5            ; b = [wi*wi, wr*wi]
+        addsubpd xmm10, xmm12           ; w2 = [wr^2 - wi^2, 2*wr*wi]
+        vxorpd   ymm15, ymm15, ymm15
+        vinsertf128 ymm15, ymm15, xmm10, 0
+        vinsertf128 ymm15, ymm15, xmm10, 1
+        ; ------------------------------------------------------------------------------
 
-            xor     rcx, rcx                        ; j = 0
-            .in_loop:
-                mov     rdx, rcx                        ; rdx = j
-                shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
-                lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
-                lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
+        xor     r15, r15                ; i = 0
+mid_loop:
+        ; ------- initialize WN as two-lane vector: lane0=1+0i, lane1=w -------
+        vxorpd   xmm9,  xmm9,  xmm9         ; 0.0
+        fld1
+        fstp     qword [rsp]
+        vmovsd   xmm8,  [rsp]               ; xmm8.low = 1.0
+        unpcklpd xmm8,  xmm9                ; xmm8 = [1.0, 0.0]
+        vxorpd   ymm8,  ymm8,  ymm8
+        vinsertf128 ymm8, ymm8, xmm8, 0     ; lane0 = 1+0i
+        vinsertf128 ymm8, ymm8, xmm6, 1     ; lane1 = w
+        ; ----------------------------------------------------------------------
 
-                ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
-                movsd   xmm0, [rdi]                     ; xmm0 = u_r
-                movsd   xmm1, [rdi+8]                   ; xmm1 = u_i
-
-                movsd   xmm2, [rsi]                     ; xmm2 = t_r
-                movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
-
-                ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
-                movapd  xmm4, xmm2                      ; xmm4 = t_r
-                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
-                movapd  xmm5, xmm3                      ; xmm5 = t_i
-                mulsd   xmm5, xmm9                      ; t_i * wn_i
-                subsd   xmm4, xmm5                      ; xmm4 = v_r
-
-                movapd  xmm5, xmm2                      ; xmm5 = t_r
-                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
-                movapd  xmm11, xmm3                     ; xmm11 = t_i
-                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
-                addsd   xmm5, xmm11                     ; xmm5 = v_i
-                ; -----------------------------------------------------------
-
-                ; --------------- x[i + j] = complex_add(u, v) --------------
-                movapd  xmm11, xmm0                     ; xmm11 = u_r
-                addsd   xmm11, xmm4                     ; xmm11 = u_r + v_r
-                movapd  xmm12, xmm1                     ; xmm12 = u_i
-                addsd   xmm12, xmm5                     ; xmm12 = u_i + v_i
-                movsd   [rdi],   xmm11
-                movsd   [rdi+8], xmm12
-                ; -----------------------------------------------------------
-
-                ; --------- x[i + j + len / 2] = complex_sub(u, v) ----------
-                subsd   xmm0, xmm4                      ; xmm0 = u_r - v_r
-                subsd   xmm1, xmm5                      ; xmm1 = u_i - v_i
-                movsd   [rsi],   xmm0
-                movsd   [rsi+8], xmm1
-                ; -----------------------------------------------------------
-
-                ; ------------------ wn = complex_mul(wn, w) ----------------
-                movapd  xmm11, xmm8                     ; xmm11 = wn_r
-                mulsd   xmm11, xmm6                     ; xmm11 = wn_r * w_r
-                movapd  xmm12, xmm9                     ; xmm12 = wn_i
-                mulsd   xmm12, xmm7                     ; xmm12 = wn_i * w_i
-                subsd   xmm11, xmm12                    ; xmm11 = new_r
-
-                movapd  xmm13, xmm8                     ; xmm13 = wn_r
-                mulsd   xmm13, xmm7                     ; xmm13 = wn_r * w_i
-                movapd  xmm14, xmm9                     ; xmm14 = wn_i
-                mulsd   xmm14, xmm6                     ; xmm14 = wn_i * w_r
-                addsd   xmm13, xmm14                    ; xmm14 = new_i
-
-                movapd  xmm8, xmm11                     ; xmm8 = wn_r = new_r
-                movapd  xmm9, xmm13                     ; xmm9 = wn_i = new_i
-                ; -----------------------------------------------------------
-
-                ; Guarda de in_loop
-                inc     rcx             ; j++
-                cmp     rcx, r9         ; Comparo j con len/2
-                jl      .in_loop     ; si j < len/2 sigue el loop
-
-            ; Guarda de mid_loop
-            add     r15, r14        ; i += len
-            cmp     r15, r12        ; Comparo i con n
-            jl      .mid_loop       ; Si i < n sigue el loop
-
-        ; "Guarda" de out_loop
-        shl     r14, 1          ; len <<= 1
-        jmp     .out_loop     ; Sigue el loop, la condicion se chequea arriba
-    
-    .inverse:
-        ; Si no es inversa, saltar el escalado 1/n
-        test    r13, r13
-        jz      .end_fft
-
-        ; scale = (double)n  (usamos xmm10 como divisor)
-        cvtsi2sd xmm10, r12
-
-        ; i = 0
-        xor     r15, r15
-    .inverse_loop:
-        ; if (i >= n) break
-        cmp     r15, r12
-        jge     .end_fft
-
-        ; addr = &x[i]  (Complex ocupa 16 bytes: real, imag)
+        ; base del bloque i
         mov     rax, r15
-        shl     rax, 4                      ; i * 16
+        shl     rax, 4
+        lea     r10, [rbx + rax]            ; r10 = &x[i]
 
-        ; cargar x[i]_r e imag
-        movsd   xmm0, [rbx + rax]           ; real
-        movsd   xmm1, [rbx + rax + 8]       ; imag
+        ; Pair loop: handle 2 butterflies per iter.
+        mov     r8, r9
+        and     r8, -2                      ; j_end_even = (len/2) & ~1
+        xor     rcx, rcx                    ; j = 0
 
-        ; dividir por n
-        divsd   xmm0, xmm10
-        divsd   xmm1, xmm10
+in_loop:
+        cmp     rcx, r8
+        jge     .after_pairs
 
-        ; guardar de vuelta
-        movsd   [rbx + rax],     xmm0
-        movsd   [rbx + rax + 8], xmm1
+        ; rdi = &x[i+j], rsi = &x[i+j+len/2]
+        mov     rdx, rcx
+        shl     rdx, 4                      ; j * 16
+        lea     rdi, [r10 + rdx]
+        lea     rsi, [rdi + r11]
 
-        ; i++
-        inc     r15
-        jmp     .inverse_loop
+        ; Load two complexes at once (u0,u1) and (t0,t1)
+        vmovupd ymm0, [rdi]                 ; ymm0 = [u0_r,u0_i,u1_r,u1_i]
+        vmovupd ymm2, [rsi]                 ; ymm2 = [t0_r,t0_i,t1_r,t1_i]
 
-    .end_fft:
-        add rsp, 8
-        pop r15
-        pop r14
-        pop r13
-        pop r12
-        pop rbx
-        pop rbp
-        ret
+        ; ---------- v = t * WN (complex, lane-wise) ----------
+        vpermilpd ymm4,  ymm8,  0x0         ; wr per lane
+        vpermilpd ymm5,  ymm8,  0x3         ; wi per lane
+        vmulpd   ymm11, ymm2,  ymm4         ; a = t * wr
+        vpermilpd ymm12, ymm2,  0x1         ; swap(t): [t_i,t_r | t_i,t_r]
+        vmulpd   ymm12, ymm12, ymm5         ; b = swap(t) * wi
+        vaddsubpd ymm11, ymm11, ymm12       ; v = [real, imag | real, imag]
+        ; ------------------------------------------------------
+
+        ; x[i+j] = u + v   ;   x[i+j+len/2] = u - v
+        vmovapd  ymm13, ymm0
+        vaddpd   ymm13, ymm13, ymm11
+        vmovupd  [rdi], ymm13
+        vsubpd   ymm0,  ymm0,  ymm11
+        vmovupd  [rsi], ymm0
+
+        ; --------- advance WN by two: WN *= w2 (lane-wise) ---------
+        vpermilpd ymm4,  ymm15, 0x0         ; w2r
+        vpermilpd ymm5,  ymm15, 0x3         ; w2i
+        vmulpd   ymm13, ymm8,  ymm4         ; a = WN * w2r
+        vpermilpd ymm14, ymm8,  0x1         ; swap(WN)
+        vmulpd   ymm14, ymm14, ymm5         ; b = swap(WN) * w2i
+        vaddsubpd ymm8,  ymm13, ymm14       ; WN = a (+/-) b
+        ; -----------------------------------------------------------
+
+        add     rcx, 2
+        jmp     in_loop
+
+.after_pairs:
+        ; Tail if (len/2) is odd: one last butterfly (XMM)
+        cmp     rcx, r9
+        jge     .end_inner
+
+        mov     rdx, rcx
+        shl     rdx, 4
+        lea     rdi, [r10 + rdx]
+        lea     rsi, [rdi + r11]
+
+        vmovupd xmm0, [rdi]                 ; u
+        vmovupd xmm2, [rsi]                 ; t
+        vextractf128 xmm8, ymm8, 0          ; wn_j (lane0)
+
+        vpermilpd xmm4,  xmm8,  0x0         ; wr
+        vpermilpd xmm5,  xmm8,  0x3         ; wi
+        vmulpd    xmm11, xmm2,  xmm4        ; a = t*wr
+        vpermilpd xmm12, xmm2,  0x1         ; swap(t)
+        vmulpd    xmm12, xmm12, xmm5        ; b = swap(t)*wi
+        vaddsubpd xmm11, xmm11, xmm12       ; v
+
+        vmovapd  xmm13, xmm0
+        vaddpd   xmm13, xmm13, xmm11        ; u+v
+        vmovupd  [rdi], xmm13
+        vsubpd   xmm0,  xmm0,  xmm11        ; u-v
+        vmovupd  [rsi], xmm0
+
+.end_inner:
+        ; i += len
+        add     r15, r14
+        cmp     r15, r12
+        jl      mid_loop
+
+        ; len <<= 1 and next stage
+        shl     r14, 1
+        jmp     out_loop
+
+; --------------------------- inverse scaling ---------------------------
+inverse:
+        ; If not inverse, skip 1/n scaling
+        test    r13, r13
+        jz      end_fft
+
+        ; broadcast (double)n into ymm10
+        vcvtsi2sd xmm10, xmm10, r12
+        vbroadcastsd ymm10, xmm10          ; ymm10 = [n,n,n,n]
+
+        ; i = 0; process two complexes per iter (32 bytes)
+        xor     r15, r15
+.inv_loop_pairs:
+        ; if (i+1 >= n) goto tail
+        mov     rax, r15
+        add     rax, 1
+        cmp     rax, r12
+        jge     .inv_tail
+
+        ; addr = &x[i]
+        mov     rax, r15
+        shl     rax, 4                      ; i*16
+        vmovupd ymm0, [rbx + rax]           ; two complexes
+        vdivpd  ymm0, ymm0, ymm10
+        vmovupd [rbx + rax], ymm0
+        add     r15, 2
+        jmp     .inv_loop_pairs
+
+.inv_tail:
+        ; If i < n, scale the last complex (scalar XMM path)
+        cmp     r15, r12
+        jge     end_fft
+        mov     rax, r15
+        shl     rax, 4
+        vmovupd xmm0, [rbx + rax]
+        vdivpd  xmm0, xmm0, xmm10
+        vmovupd [rbx + rax], xmm0
+
+end_fft:
+    add rsp, 8
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbx
+    pop rbp
+    vzeroupper
+    ret
