@@ -103,7 +103,7 @@ fft_1d_asm:
     call bit_reverse_asm    ; como hace todo in-place, no hay que hacer nada
 
     mov     r14, 2                         ; len = 2
-    .outer_loop:
+    .out_loop:
         cmp     r14, r12                       ; Chequeo si len > n
         jg      .inverse                       ; si la respuesta es si, termina el ciclo
 
@@ -155,7 +155,7 @@ fft_1d_asm:
             lea     r10, [rbx + rax]                ; r10 = &x[i]
 
             xor     rcx, rcx                        ; j = 0
-            .inner_loop:
+            .in_loop:
                 mov     rdx, rcx                        ; rdx = j
                 shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
                 lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
@@ -218,16 +218,16 @@ fft_1d_asm:
                 ; Guarda de in_loop
                 inc     rcx             ; j++
                 cmp     rcx, r9         ; Comparo j con len/2
-                jl      .inner_loop     ; si j < len/2 sigue el loop
+                jl      .in_loop     ; si j < len/2 sigue el loop
 
             ; Guarda de mid_loop
             add     r15, r14        ; i += len
             cmp     r15, r12        ; Comparo i con n
             jl      .mid_loop       ; Si i < n sigue el loop
 
-        ; len <<= 1 y siguiente etapa
-        shl     r14, 1
-        jmp     .outer_loop
+        ; "Guarda" de out_loop
+        shl     r14, 1          ; len <<= 1
+        jmp     .out_loop     ; Sigue el loop, la condicion se chequea arriba
     
     .inverse:
         ; Si no es inversa, saltar el escalado 1/n
