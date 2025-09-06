@@ -260,21 +260,21 @@ la implementacion de uno de ellos:
 \begin{verbatim}
     
     class ASMWaveSimulation2D:
-    def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
-    self.c_core = c_backend_asm
-    self._sim_ptr = self.c_core.create_simulation(size, domain_size, wave_speed, dt)
-    
-    def add_wave_source(self, x_pos, y_pos, amplitude=1.0, frequency=3.0, width=0.5):
-    self.c_core.add_wave_source(self._sim_ptr, x_pos, y_pos, amplitude, frequency, width)
-    
-    def step(self):
-    self.c_core.step_simulation(self._sim_ptr)
-    
-    def get_intensity(self):
-    return self.c_core.get_intensity(self._sim_ptr)
-    
-    def get_real_part(self):
-    return self.c_core.get_real_part(self._sim_ptr)
+        def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
+            self.c_core = c_backend_asm
+            self._sim_ptr = self.c_core.create_simulation(size, domain_size, wave_speed, dt)
+        
+        def add_wave_source(self, x_pos, y_pos, amplitude=1.0, frequency=3.0, width=0.5):
+            self.c_core.add_wave_source(self._sim_ptr, x_pos, y_pos, amplitude, frequency, width)
+        
+        def step(self):
+            self.c_core.step_simulation(self._sim_ptr)
+        
+        def get_intensity(self):
+            return self.c_core.get_intensity(self._sim_ptr)
+        
+        def get_real_part(self):
+            return self.c_core.get_real_part(self._sim_ptr)
 \end{verbatim}
 
 La clase principal esta hecha en Python, porque facilita la visualización. Sin embargo, toda la logíca y el procesamiento se realiza
@@ -500,401 +500,33 @@ fft_1d_asm:
 
 \subsection{C + ASM + SIMD}
 
-Implementación híbrida que extiende la versión C + ASM utilizando instrucciones SIMD (Single Instruction, Multiple Data) más avanzadas para procesamiento vectorial optimizado. Esta implementación aprovecha los registros vectoriales para procesar múltiples elementos simultáneamente.
-
-Código C:
-\begin{verbatim}
-#include <immintrin.h>
-
-void wave_equation_step_simd(double* grid, double* new_grid,
-                            int rows, int cols, double dt,
-                            double dx, double c) {
-    double factor = c * c * dt * dt / (dx * dx);
-    
-    for (int i = 1; i < rows - 1; i++) {
-        wave_step_simd_row(&grid[i*cols], &new_grid[i*cols], 
-                          cols, factor);
-    }
-}
-\end{verbatim}
+Implementación híbrida que extiende la versión C + ASM utilizando instrucciones SIMD (Single Instruction, Multiple Data) más avanzadas para procesamiento vectorial optimizado.
+Esta implementación aprovecha los registros vectoriales para procesar múltiples elementos simultáneamente.
 
 Código Assembly optimizado con SIMD:
 \begin{verbatim}
-.section .text
-.global wave_step_simd_row
-
-wave_step_simd_row:
-    # rdi: grid pointer
-    # rsi: new_grid pointer  
-    # rdx: cols
-    # xmm0: factor (broadcasted)
-    
-    mov $1, %rcx                    # start at column 1
-    sub $3, %rdx                    # end at cols-3 for vectorization
-    
-    # Broadcast factor to all elements of xmm0
-    shufpd $0, %xmm0, %xmm0
-    
-simd_loop_start:
-    cmp %rdx, %rcx
-    jge simd_loop_end
-    
-    # Load 2 consecutive values using packed operations
-    movupd (%rdi,%rcx,8), %xmm1     # current and current+1
-    movupd 8(%rdi,%rcx,8), %xmm2    # right and right+1
-    movupd -8(%rdi,%rcx,8), %xmm3   # left and left+1
-    
-    # Vectorized laplacian computation
-    addpd %xmm2, %xmm3              # right + left
-    subpd %xmm1, %xmm3              # (right + left) - current
-    mulpd %xmm0, %xmm3              # multiply by factor
-    addpd %xmm1, %xmm3              # add original value
-    
-    # Store vectorized result
-    movupd %xmm3, (%rsi,%rcx,8)     # store 2 results
-    
-    add $2, %rcx                    # process 2 elements at once
-    jmp simd_loop_start
-    
-simd_loop_end:
-    # Handle remaining elements with scalar operations
-    add $2, %rdx                    # restore original end
-scalar_cleanup:
-    cmp %rdx, %rcx
-    jge cleanup_end
-    
-    # Scalar operations for remaining elements
-    movsd (%rdi,%rcx,8), %xmm1      # current
-    movsd 8(%rdi,%rcx,8), %xmm2     # right  
-    movsd -8(%rdi,%rcx,8), %xmm3    # left
-    
-    addsd %xmm2, %xmm3
-    subsd %xmm1, %xmm3
-    mulsd %xmm0, %xmm3
-    addsd %xmm1, %xmm3
-    
-    movsd %xmm3, (%rsi,%rcx,8)
-    
-    inc %rcx
-    jmp scalar_cleanup
-    
-cleanup_end:
-    ret
 \end{verbatim}
 
 \subsection{C + AVX}
-
-Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente, duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
+Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente,
+duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
 
 Código C:
 \begin{verbatim}
-#include <immintrin.h>
-
-void wave_equation_step_avx(double* grid, double* new_grid,
-                           int rows, int cols, double dt,
-                           double dx, double c) {
-    double factor = c * c * dt * dt / (dx * dx);
-    
-    for (int i = 1; i < rows - 1; i++) {
-        wave_step_avx_row(&grid[(i-1)*cols], &grid[i*cols], 
-                         &grid[(i+1)*cols], &new_grid[i*cols], 
-                         cols, factor);
-    }
-}
-\end{verbatim}
-
-Código Assembly con instrucciones AVX:
-\begin{verbatim}
-.section .text
-.global wave_step_avx_row
-
-wave_step_avx_row:
-    # rdi: grid_prev (i-1 row)
-    # rsi: grid_curr (i row)  
-    # rdx: grid_next (i+1 row)
-    # rcx: new_grid pointer
-    # r8:  cols
-    # xmm0: factor
-    
-    mov $1, %rax                    # start at column 1
-    sub $5, %r8                     # end at cols-5 for AVX alignment
-    
-    # Broadcast factor to all 4 elements of ymm0
-    vbroadcastsd %xmm0, %ymm0
-    
-avx_loop_start:
-    cmp %r8, %rax
-    jge avx_loop_end
-    
-    # Load 4 consecutive values from each direction using AVX
-    vmovupd (%rsi,%rax,8), %ymm1    # current row (4 elements)
-    vmovupd (%rdi,%rax,8), %ymm2    # upper row (4 elements)
-    vmovupd (%rdx,%rax,8), %ymm3    # lower row (4 elements)
-    vmovupd 8(%rsi,%rax,8), %ymm4   # right (4 elements)
-    vmovupd -8(%rsi,%rax,8), %ymm5  # left (4 elements)
-    
-    # Vectorized laplacian: upper + lower + right + left - 4*current
-    vaddpd %ymm2, %ymm3, %ymm6      # upper + lower
-    vaddpd %ymm4, %ymm5, %ymm7      # right + left  
-    vaddpd %ymm6, %ymm7, %ymm8      # sum all neighbors
-    
-    # Subtract 4*current
-    vmovapd %ymm1, %ymm9
-    vaddpd %ymm1, %ymm1, %ymm10     # 2*current
-    vaddpd %ymm10, %ymm10, %ymm11   # 4*current
-    vsubpd %ymm11, %ymm8, %ymm12    # laplacian
-    
-    # Apply wave equation: current + factor * laplacian
-    vfmadd213pd %ymm1, %ymm0, %ymm12 # ymm12 = ymm0*ymm12 + ymm1
-    
-    # Store vectorized result (4 elements at once)
-    vmovupd %ymm12, (%rcx,%rax,8)
-    
-    add $4, %rax                    # process 4 elements at once
-    jmp avx_loop_start
-    
-avx_loop_end:
-    # Handle remaining elements with scalar operations
-    add $3, %r8                     # restore for scalar cleanup
-scalar_avx_cleanup:
-    cmp %r8, %rax
-    jge avx_cleanup_end
-    
-    # Scalar operations for boundary elements
-    vmovsd (%rsi,%rax,8), %xmm1     # current
-    vmovsd (%rdi,%rax,8), %xmm2     # upper
-    vmovsd (%rdx,%rax,8), %xmm3     # lower
-    vmovsd 8(%rsi,%rax,8), %xmm4    # right
-    vmovsd -8(%rsi,%rax,8), %xmm5   # left
-    
-    vaddsd %xmm2, %xmm3, %xmm6      # upper + lower
-    vaddsd %xmm4, %xmm5, %xmm7      # right + left
-    vaddsd %xmm6, %xmm7, %xmm8      # sum neighbors
-    vsubsd %xmm1, %xmm8, %xmm9      # neighbors - current
-    vsubsd %xmm1, %xmm9, %xmm10     # neighbors - 2*current
-    vsubsd %xmm1, %xmm10, %xmm11    # neighbors - 3*current
-    vsubsd %xmm1, %xmm11, %xmm12    # laplacian = neighbors - 4*current
-    
-    vfmadd213sd %xmm1, %xmm0, %xmm12 # result = factor*laplacian + current
-    vmovsd %xmm12, (%rcx,%rax,8)
-    
-    inc %rax
-    jmp scalar_avx_cleanup
-    
-avx_cleanup_end:
-    vzeroupper                      # Clean upper 128 bits of YMM registers
-    ret
 \end{verbatim}
 
 \section{Experimentos}
 
-Se realizaron experimentos sistemáticos para evaluar el rendimiento de cada backend implementado. La métrica principal utilizada fue \textit{steps per second}, que mide cuántos pasos de simulación de la ecuación de onda puede procesar cada implementación por segundo.
+Se realizaron experimentos sistemáticos para evaluar el rendimiento de cada backend implementado. La métrica principal utilizada fue \textit{steps per second}, que mide cuántos
+pasos de simulación de la ecuación de onda puede procesar cada implementación por segundo.
 
-Los experimentos se ejecutaron en grillas de diferentes tamaños para analizar el comportamiento de escalabilidad de cada backend. Se utilizó NumPy como línea base (baseline) para calcular los factores de aceleración (speedup) relativos.
-
-\subsection{Rendimiento por Tamaño de Grilla}
-
-\begin{table}[h]
-    \centering
-    \caption{Rendimiento para Grilla 16x16}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Backend     & Steps/sec & ms/step & Speedup  \\
-        \midrule
-        Python      & 658.1     & 1.52    & 0.0x     \\
-        NumPy       & 20877.6   & 0.05    & baseline \\
-        C           & 77101.2   & 0.01    & 3.7x     \\
-        Optimized C & 98805.7   & 0.01    & 4.7x     \\
-        ASM         & 55333.8   & 0.02    & 2.7x     \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:perf_16x16}
-\end{table}
-
-\begin{table}[h]
-    \centering
-    \caption{Rendimiento para Grilla 32x32}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Backend     & Steps/sec & ms/step & Speedup  \\
-        \midrule
-        Python      & 159.2     & 6.28    & 0.0x     \\
-        NumPy       & 13311.0   & 0.08    & baseline \\
-        C           & 23007.7   & 0.04    & 1.7x     \\
-        Optimized C & 26329.6   & 0.04    & 2.0x     \\
-        ASM         & 16021.0   & 0.06    & 1.2x     \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:perf_32x32}
-\end{table}
-
-\begin{table}[h]
-    \centering
-    \caption{Rendimiento para Grilla 64x64}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Backend     & Steps/sec & ms/step & Speedup  \\
-        \midrule
-        Python      & 38.7      & 25.82   & 0.0x     \\
-        NumPy       & 5709.6    & 0.18    & baseline \\
-        C           & 5325.8    & 0.19    & 0.9x     \\
-        Optimized C & 6178.1    & 0.16    & 1.1x     \\
-        ASM         & 4166.8    & 0.24    & 0.7x     \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:perf_64x64}
-\end{table}
-
-\begin{table}[h]
-    \centering
-    \caption{Rendimiento para Grilla 128x128}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Backend     & Steps/sec & ms/step & Speedup  \\
-        \midrule
-        Python      & 9.1       & 110.48  & 0.0x     \\
-        NumPy       & 1653.9    & 0.60    & baseline \\
-        C           & 1197.5    & 0.84    & 0.7x     \\
-        Optimized C & 1415.4    & 0.71    & 0.9x     \\
-        ASM         & 1021.1    & 0.98    & 0.6x     \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:perf_128x128}
-\end{table}
-
-\begin{table}[h]
-    \centering
-    \caption{Rendimiento para Grilla 256x256}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Backend     & Steps/sec & ms/step & Speedup  \\
-        \midrule
-        Python      & 2.1       & 465.87  & 0.0x     \\
-        NumPy       & 392.4     & 2.55    & baseline \\
-        C           & 263.7     & 3.79    & 0.7x     \\
-        Optimized C & 310.5     & 3.22    & 0.8x     \\
-        ASM         & 234.9     & 4.26    & 0.6x     \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:perf_256x256}
-\end{table}
-
-\begin{table}[h]
-    \centering
-    \caption{Rendimiento para Grilla 512x512}
-    \begin{tabular}{@{}lccc@{}}
-        \toprule
-        Backend     & Steps/sec & ms/step & Speedup  \\
-        \midrule
-        Python      & 0.5       & 2060.91 & 0.0x     \\
-        NumPy       & 84.6      & 11.82   & baseline \\
-        C           & 60.3      & 16.57   & 0.7x     \\
-        Optimized C & 70.1      & 14.28   & 0.8x     \\
-        ASM         & 54.8      & 18.24   & 0.6x     \\
-        \bottomrule
-    \end{tabular}
-    \label{tab:perf_512x512}
-\end{table}
+Los experimentos se ejecutaron en grillas de diferentes tamaños para analizar el comportamiento de escalabilidad de cada backend. Se utilizó NumPy como línea base (baseline) para
+calcular los factores de aceleración (speedup) relativos.
 
 \subsection{Visualización Interactiva}
-
-Se implementó una visualización interactiva en tiempo real para evaluar el comportamiento dinámico de la simulación de ondas y comparar visualmente el rendimiento entre diferentes backends. Esta herramienta permite observar la propagación de ondas bidimensionales mientras se monitorizan métricas de rendimiento en tiempo real.
-
-\subsubsection{Configuración del Experimento}
-
-La visualización interactiva utiliza una grilla de 128x128 elementos con las siguientes características:
-
-\begin{itemize}
-    \item Velocidad de onda: c = 0.5
-    \item Paso temporal: dt = 0.01
-    \item Espaciado de grilla: dx = dy = 1.0
-    \item Condición inicial: pulso gaussiano centrado
-    \item Condiciones de frontera: absorbentes (Perfectly Matched Layer)
-\end{itemize}
-
-\subsubsection{Interfaz de Usuario}
-
-La interfaz permite:
-
-\begin{enumerate}
-    \item \textbf{Selección de Backend}: Cambio dinámico entre los 7 backends implementados durante la simulación
-    \item \textbf{Control de Simulación}: Pausa, reanudación y reinicio de la simulación
-    \item \textbf{Métricas en Tiempo Real}: Visualización de FPS, steps per second, y uso de CPU
-    \item \textbf{Configuración de Parámetros}: Ajuste dinámico de velocidad de onda y condiciones iniciales
-    \item \textbf{Modos de Visualización}:
-          \begin{itemize}
-              \item Mapa de calor 2D con interpolación bicúbica
-              \item Gráfico 3D de superficie con sombreado
-              \item Cortes transversales en tiempo real
-              \item Análisis espectral FFT 2D
-          \end{itemize}
-\end{enumerate}
-
-\subsubsection{Implementación Técnica}
-
-La visualización se desarrolló utilizando:
-
-\begin{verbatim}
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from matplotlib.widgets import Button, Slider
-import numpy as np
-from backends import *
-
-class WaveSimulationVisualizer:
-    def __init__(self, size=128):
-        self.size = size
-        self.backends = {
-            'Implementación Propuesta': ProposedBackend(),
-            'Python': PythonBackend(),
-            'NumPy': NumpyBackend(), 
-            'C': CBackend(),
-            'C+ASM': CAsmBackend(),
-            'C+ASM+SIMD': CAsmSimdBackend(),
-            'C+AVX': CAvxBackend()
-        }
-        self.current_backend = 'NumPy'
-        self.setup_visualization()
-    
-    def setup_visualization(self):
-        self.fig, self.axes = plt.subplots(2, 2, figsize=(12, 10))
-        self.heatmap = self.axes[0,0].imshow(
-            np.zeros((self.size, self.size)), 
-            cmap='RdBu', vmin=-1, vmax=1, animated=True
-        )
-        self.setup_controls()
-        
-    def animate(self, frame):
-        # Ejecutar un paso de simulación
-        start_time = time.perf_counter()
-        self.grid = self.backends[self.current_backend].step(
-            self.grid, self.dt, self.dx, self.c
-        )
-        end_time = time.perf_counter()
-        
-        # Actualizar métricas
-        self.update_metrics(end_time - start_time)
-        
-        # Actualizar visualizaciones
-        self.heatmap.set_array(self.grid)
-        return [self.heatmap]
-\end{verbatim}
-
-\subsubsection{Resultados de Visualización Interactiva}
-
-La visualización interactiva reveló diferencias cualitativas importantes entre backends:
-
-\begin{itemize}
-    \item \textbf{Estabilidad Numérica}: Los backends optimizados mantienen mejor estabilidad en simulaciones largas
-    \item \textbf{Calidad Visual}: Las implementaciones SIMD y AVX producen propagaciones más suaves debido a menor error numérico acumulativo
-    \item \textbf{Latencia Perceptual}: Los backends más rápidos permiten visualización fluida a 60 FPS, mientras que Python requiere reducir la resolución temporal
-    \item \textbf{Precisión de Patrones de Interferencia}: Las implementaciones vectorizadas preservan mejor los patrones de interferencia complejos
-\end{itemize}
-
-El experimento de visualización interactiva demostró que las mejoras de rendimiento no solo se traducen en velocidad computacional, sino también en mejor calidad de simulación y experiencia de usuario más fluida para aplicaciones de visualización científica en tiempo real.
+\subsection{Rendimiento por Tamaño de Grilla}
 
 \section{Resultados}
-
 \subsection{Análisis de Rendimiento}
 
 \begin{figure}[h]
