@@ -90,7 +90,7 @@ if __name__ == "__main__":
     #     dt=0.02,
     # )
 
-    sim = ASMWaveSimulation2D(
+    sim = OptimizedCWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,

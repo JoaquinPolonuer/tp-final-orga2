@@ -102,7 +102,6 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
     // Precondition: n must be a power of 2
     assert(n > 0 && (n & (n - 1)) == 0 && "Input length must be a power of 2");
 
-
     bit_reverse(x, n);
 
     for (int len = 2; len <= n; len <<= 1)
@@ -176,7 +175,6 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
 
-    
     // FFT on columns
     temp = (Complex *)realloc(temp, rows * sizeof(Complex));
     for (int j = 0; j < cols; j++)
@@ -191,7 +189,6 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
             data[i * cols + j] = temp[i];
         }
     }
-
 
     free(temp);
 }
