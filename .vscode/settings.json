@@ -2,5 +2,11 @@
     "files.associations": {
         "*.rmd": "markdown",
         "math.h": "c"
+    },
+    "latex-workshop.formatting.latex": "latexindent",
+    "latex-workshop.latexindent.path": "/Library/TeX/texbin/latexindent",
+    "[latex]": {
+        "editor.defaultFormatter": "James-Yu.latex-workshop",
+        "editor.formatOnSave": true
     }
 }

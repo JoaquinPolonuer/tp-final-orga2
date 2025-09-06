@@ -75,15 +75,13 @@ class PythonWaveSimulation2D:
         return np.real(self.wave)
 
     def _fft_1d(self, x: list[complex]) -> list[complex]:
-        """1D FFT using Cooley-Tukey algorithm. Requires len(x) to be a power of 2."""
         n = len(x)
         if n <= 1:
             return x[:]
 
-        # Precondition: n must be a power of 2
-        assert n & (n - 1) == 0, f"Input length {n} must be a power of 2"
+        assert n & (n - 1) == 0, f"La longitud {n} debe ser potencia de 2"
 
-        # Bit-reversal permutation
+        # Bit-reversal
         j = 0
         for i in range(1, n):
             bit = n >> 1
@@ -94,7 +92,7 @@ class PythonWaveSimulation2D:
             if i < j:
                 x[i], x[j] = x[j], x[i]
 
-        # Cooley-Tukey FFT
+        # FFT
         length = 2
         while length <= n:
             w = cmath.exp(-2j * math.pi / length)
