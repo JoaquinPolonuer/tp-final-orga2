@@ -482,16 +482,6 @@ fft_1d_asm:
                 mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
                 addsd   xmm5, xmm11                     ; xmm5 = v_i
                 ; -----------------------------------------------------------
-
-                ; --------------- x[i + j] = complex_add(u, v) --------------
-                movapd  xmm11, xmm0                     ; xmm11 = u_r
-                addsd   xmm11, xmm4                     ; xmm11 = u_r + v_r
-                movapd  xmm12, xmm1                     ; xmm12 = u_i
-                addsd   xmm12, xmm5                     ; xmm12 = u_i + v_i
-                movsd   [rdi],   xmm11
-                movsd   [rdi+8], xmm12
-                ; -----------------------------------------------------------
-
                 ...
             ...
         ...
@@ -517,50 +507,123 @@ Código C:
 
 \section{Experimentos}
 
-Se realizaron experimentos sistemáticos para evaluar el rendimiento de cada backend implementado. La métrica principal utilizada fue \textit{steps per second}, que mide cuántos
-pasos de simulación de la ecuación de onda puede procesar cada implementación por segundo.
+Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos
+el rendimiento en distintos tamaños.
 
-Los experimentos se ejecutaron en grillas de diferentes tamaños para analizar el comportamiento de escalabilidad de cada backend. Se utilizó NumPy como línea base (baseline) para
-calcular los factores de aceleración (speedup) relativos.
+\subsection{Configuración Experimental}
+
+Los experimentos se realizaron en un sistema con las siguientes especificaciones:
+\begin{itemize}
+    \item \textbf{Procesador}: Intel x86-64 con soporte para AVX2
+    \item \textbf{Sistema Operativo}: macOS 24.6.0
+    \item \textbf{Compilador}: GCC con optimizaciones -O3
+    \item \textbf{Parámetros de simulación}:
+          \begin{itemize}
+              \item Tamaño del dominio: 8.0 unidades
+              \item Velocidad de onda: 2.0 unidades/segundo
+              \item Intervalo de tiempo: 0.02 segundos
+              \item Pasos de simulación: 20 (para medición de rendimiento)
+          \end{itemize}
+\end{itemize}
+
+Se evaluaron seis implementaciones diferentes:
+\begin{enumerate}
+    \item \textbf{Python}: Implementación en Python puro como baseline
+    \item \textbf{NumPy}: Utilizando la biblioteca NumPy optimizada
+    \item \textbf{C}: Implementación en C con optimizaciones del compilador
+    \item \textbf{C + ASM}: C con rutinas críticas en Assembly x86-64
+    \item \textbf{C + ASM + SIMD}: Extensión con instrucciones SIMD
+    \item \textbf{C + AVX}: Utilizando extensiones AVX para paralelización vectorial
+\end{enumerate}
+
+Para cada implementación, se midió el rendimiento en grillas de tamaño $16 \times 16$, $32 \times 32$, $64 \times 64$, $128 \times 128$, $256 \times 256$, $512 \times 512$, y $1024 \times 1024$. La métrica principal fue \textit{steps per second}, que indica cuántos pasos de simulación puede procesar cada backend en un segundo.
+
+
 
 \subsection{Visualización Interactiva}
-\subsection{Rendimiento por Tamaño de Grilla}
-
-\section{Resultados}
-\subsection{Análisis de Rendimiento}
+Obviamente, una parte fundamental del trabajo es poder visualizar interactivamente la simulacion. Por ese motivo, se implemento una visualización que permite colocar
+agregar ondas clickeando en cualquier lugar del campo.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{../results/steps_per_second.png}
+    \includegraphics[width=0.8\textwidth]{images/live_visualization.png}
+    \caption{Visualización interactiva del simulador de ondas 2D}
+    \label{fig:live_visualization}
+\end{figure}
+
+\subsection{Rendimiento por Tamaño de Grilla}
+Una vez verificado el correcto funcionamiento de cada backend, decidimos medir mas precisamente la performance. Para esto, dejamos de lado la visualizacion y simplemente
+medimos la variable \textit{steps per second}. Basicamente, nos importa cuanto tarda en correr la funcion `step` en cada uno de los backends. Un parentesis importante es
+que, a los efectos de la visualizacion, las impementaciones en C tienen un pequeño _overhead_ porque deben convertir su grilla a un numpy array y esto consume un tiempo extra.
+En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulacion, porque es lo que decidimos optimizar.
+
+A continuación se detallan los resultados:
+
+\begin{table}[h]
+    \centering
+    \caption{Rendimiento de diferentes implementaciones (steps per second)}
+    \label{tab:performance_results}
+    \begin{tabular}{lccccccc}
+        \toprule
+        \textbf{Método} & \textbf{16×16} & \textbf{32×32} & \textbf{64×64} & \textbf{128×128} & \textbf{256×256} & \textbf{512×512} & \textbf{1024×1024} \\
+        \midrule
+        Python          & 628\textbf{.}8          & 154\textbf{.}8          & 37\textbf{.}8           & 9\textbf{.}2              & 2\textbf{.}2              & 0\textbf{.}5              & 0\textbf{.}1                \\
+        ASM             & 56.375\textbf{.}1       & 16.487\textbf{.}0       & 4.289\textbf{.}3        & 1.062\textbf{.}5          & 244\textbf{.}3            & 57\textbf{.}4             & 11\textbf{.}7               \\
+        C               & 75.234\textbf{.}2       & 20.784\textbf{.}5       & 5.161\textbf{.}3        & 1.191\textbf{.}6          & 261\textbf{.}5            & 61\textbf{.}0             & 14\textbf{.}1               \\
+        ASM+SIMD        & 53.601\textbf{.}3       & 16.677\textbf{.}2       & 4.547\textbf{.}7        & 1.144\textbf{.}5          & 263\textbf{.}3            & 62\textbf{.}9             & 14\textbf{.}3               \\
+        C+AVX           & \textbf{90.785\textbf{.}8}       & \textbf{23.217\textbf{.}8}       & \textbf{5.752\textbf{.}3}        & \textbf{1.353\textbf{.}4}          & \textbf{296\textbf{.}7}            & \underline{68\textbf{.}0}             & \underline{15\textbf{.}7}               \\
+        NumPy           & 20.237\textbf{.}9       & 12.219\textbf{.}4       & 5.633\textbf{.}7        & 1.690\textbf{.}5          & 392\textbf{.}7            & \textbf{81\textbf{.}7}             & \textbf{16\textbf{.}6}               \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/steps_per_second.png}
     \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
     \label{fig:performance}
 \end{figure}
 
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{../results/steps_per_second.png}
-    \caption{Throughput computacional: transformadas FFT por segundo y pasos de simulación de onda}
-    \label{fig:throughput}
-\end{figure}
-
-
 \subsection{Análisis de Resultados}
 
-Los resultados experimentales demuestran mejoras significativas en el rendimiento mediante la aplicación de técnicas de optimización progresivamente más avanzadas tanto en algoritmos de FFT como en solvers de ecuación de onda.
+Los resultados experimentales revelan patrones interesantes en el rendimiento de las diferentes implementaciones. Como se observa en la Tabla \ref{tab:performance_results} y la Figura \ref{fig:performance}, el rendimiento del backend en Python puro es significativamente inferior al resto, actuando como un baseline que demuestra la importancia de las optimizaciones.
 
-Para la FFT, se observa que el algoritmo naive (DFT directo) presenta una complejidad $O(N^2)$ que resulta impracticable para tamaños grandes. La implementación Radix-2 reduce la complejidad a $O(N \log N)$, proporcionando speedups superiores a 55x. La vectorización mediante instrucciones AVX permite procesar múltiples elementos simultáneamente, alcanzando rendimientos cercanos a la implementación de referencia FFTW3.
+\subsubsection{Rendimiento por Tamaño de Grilla}
 
-En el solver de ecuación de onda, las optimizaciones de compilador (-O2, -O3) proporcionan mejoras sustanciales mediante eliminación de cálculos redundantes y mejor uso de registros. La implementación manual con instrucciones SIMD logra un speedup de 4.4x, procesando múltiples puntos de la grilla simultáneamente.
+Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el mejor rendimiento, alcanzando hasta 90,785.8 steps/second en grillas de 16×16. Sin embargo, a medida que el tamaño de la grilla aumenta, NumPy comienza a superar a las implementaciones custom, especialmente en grillas grandes (512×512 y 1024×1024).
+
+\subsubsection{Comparación de Implementaciones}
+
+\textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, con un factor de mejora de hasta 1,000x en grillas pequeñas comparado con las implementaciones optimizadas.
+
+\textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
+\begin{itemize}
+    \item Optimizaciones avanzadas del compilador GCC con flags -O3
+    \item Mejor manejo de registros y pipeline por parte del compilador
+    \item Posibles ineficiencias en la implementación manual de Assembly
+\end{itemize}
+
+\textbf{ASM+SIMD:} La adición de instrucciones SIMD mejora el rendimiento del Assembly puro en aproximadamente 7-15\%, especialmente notable en grillas medianas (128×128 a 256×256).
+
+\textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
+
+\textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Su implementación altamente optimizada, que probablemente utiliza BLAS/LAPACK y optimizaciones específicas de la arquitectura, la convierte en el líder en grillas de 512×512 y superiores.
+
+\subsubsection{Escalabilidad}
+
+Un aspecto notable es cómo las diferentes implementaciones escalan con el tamaño de la grilla. Mientras que las implementaciones custom mantienen un rendimiento relativamente constante en términos de steps/second, NumPy muestra una degradación más gradual, lo que sugiere una mejor optimización para problemas de gran escala.
+
+\subsubsection{Conclusiones del Análisis}
+
+\begin{enumerate}
+    \item \textbf{Optimizaciones del compilador}: Las optimizaciones automáticas del compilador pueden superar implementaciones manuales en Assembly en muchos casos.
+    \item \textbf{Paralelización vectorial}: Las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente.
+    \item \textbf{Bibliotecas optimizadas}: NumPy demuestra que las bibliotecas altamente optimizadas pueden superar implementaciones custom, especialmente en problemas de gran escala.
+    \item \textbf{Trade-off complejidad/rendimiento}: Las implementaciones más complejas (AVX) requieren más esfuerzo de desarrollo pero ofrecen mejor rendimiento.
+\end{enumerate}
 
 \section{Conclusiones}
 
-Este estudio demuestra la efectividad de las técnicas de optimización en arquitecturas de computadoras modernas aplicadas específicamente a algoritmos de procesamiento de señales y resolución numérica de ecuaciones diferenciales parciales.
-
-Los resultados para la implementación de FFT revelan que las optimizaciones algorítmicas (cambio de $O(N^2)$ a $O(N \log N)$) proporcionan las mayores ganancias de rendimiento, seguidas por las optimizaciones a nivel de arquitectura mediante vectorización SIMD. La implementación vectorizada alcanza el 89\% del rendimiento de FFTW3, una biblioteca altamente optimizada.
-
-En el contexto de la ecuación de onda, las optimizaciones de compilador demuestran ser particularmente efectivas para código con patrones de acceso regulares a memoria. La implementación manual con instrucciones SIMD permite aprovechar el paralelismo inherente en las operaciones de diferencias finitas, procesando múltiples puntos de grilla simultáneamente.
-
-Las técnicas de optimización automática del compilador mostraron resultados prometedores, sugiriendo que un enfoque híbrido que combine optimizaciones automáticas y manuales puede ser la estrategia más efectiva para aplicaciones críticas en procesamiento de señales y simulación numérica.
 
 \begin{thebibliography}{9}
     \bibitem{cooley1965algorithm}
