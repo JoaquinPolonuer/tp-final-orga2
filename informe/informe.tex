@@ -11,11 +11,10 @@
 
 \begin{document}
 
-\titulo{Optimización de Rendimiento en Arquitecturas de Computadoras}
-\subtitulo{Análisis Comparativo de Técnicas de Aceleración}
+\titulo{Resolviendo la Ecuación de Onda mediante la Transformada de Fourier Acelerada}
+\subtitulo{Optimización de simulador fisico utilizando SIMD}
 \fecha{30 de Agosto de 2025}
 \materia{Organización del Computador II}
-\grupo{Grupo 1}
 
 \integrante{Polonuer, Joaquin}{1612/21}{jtpolonuer@gmail.com}
 
@@ -281,7 +280,7 @@ La clase principal esta hecha en Python, porque facilita la visualización. Sin 
 en C y Assembler. A continuacion se muestra un diagrama:
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.7\textwidth]{images/image.png}
+    \includegraphics[width=0.7\textwidth]{extra/diagram.png}
     \caption{Diagrama de arquitectura del simulador de ondas}
     \label{fig:wave_sim_architecture}
 \end{figure}
@@ -668,7 +667,7 @@ for (int len = 2; len <= n; len <<= 1)
 
 \textbf{Operaciones Horizontales:} Las instrucciones \texttt{\_mm256\_hsub\_pd} y \texttt{\_mm256\_hadd\_pd} realizan sumas y restas horizontales, esenciales para la multiplicación compleja:
 \begin{itemize}
-    \item \texttt{hsub\_pd}: Calcula $[a-b, c-d, a-b, c-d]$ 
+    \item \texttt{hsub\_pd}: Calcula $[a-b, c-d, a-b, c-d]$
     \item \texttt{hadd\_pd}: Calcula $[a+b, c+d, a+b, c+d]$
 \end{itemize}
 
@@ -717,7 +716,7 @@ agregar ondas clickeando en cualquier lugar del campo.
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/live_visualization.png}
+    \includegraphics[width=0.8\textwidth]{extra/live_visualization.png}
     \caption{Visualización interactiva del simulador de ondas 2D}
     \label{fig:live_visualization}
 \end{figure}
@@ -738,30 +737,37 @@ A continuación se detallan los resultados:
         \toprule
         \textbf{Método} & \textbf{16×16}             & \textbf{32×32}             & \textbf{64×64}            & \textbf{128×128}          & \textbf{256×256}        & \textbf{512×512}          & \textbf{1024×1024}        \\
         \midrule
-        Python          & 628\textbf{.}8             & 154\textbf{.}8             & 37\textbf{.}8             & 9\textbf{.}2              & 2\textbf{.}2            & 0\textbf{.}5              & 0\textbf{.}1              \\
-        ASM             & 56.375\textbf{.}1          & 16.487\textbf{.}0          & 4.289\textbf{.}3          & 1.062\textbf{.}5          & 244\textbf{.}3          & 57\textbf{.}4             & 11\textbf{.}7             \\
-        C               & 75.234\textbf{.}2          & 20.784\textbf{.}5          & 5.161\textbf{.}3          & 1.191\textbf{.}6          & 261\textbf{.}5          & 61\textbf{.}0             & 14\textbf{.}1             \\
-        ASM+SIMD        & 53.601\textbf{.}3          & 16.677\textbf{.}2          & 4.547\textbf{.}7          & 1.144\textbf{.}5          & 263\textbf{.}3          & 62\textbf{.}9             & 14\textbf{.}3             \\
-        C+AVX           & \textbf{90.785\textbf{.}8} & \textbf{23.217\textbf{.}8} & \textbf{5.752\textbf{.}3} & \textbf{1.353\textbf{.}4} & \textbf{296\textbf{.}7} & \underline{68\textbf{.}0} & \underline{15\textbf{.}7} \\
-        NumPy           & 20.237\textbf{.}9          & 12.219\textbf{.}4          & 5.633\textbf{.}7          & 1.690\textbf{.}5          & 392\textbf{.}7          & \textbf{81\textbf{.}7}    & \textbf{16\textbf{.}6}    \\
+        Python          & 631\textbf{.}8             & 158\textbf{.}1             & 38\textbf{.}5             & 9\textbf{.}2              & 2\textbf{.}2            & 0\textbf{.}5              & 0\textbf{.}1              \\
+        ASM             & 51.501\textbf{.}8          & 16.331\textbf{.}7          & 4.226\textbf{.}1          & 1.058\textbf{.}5          & 242\textbf{.}8          & 57\textbf{.}3             & 11\textbf{.}9             \\
+        ASM+SIMD        & 55.790\textbf{.}2          & 17.182\textbf{.}7          & 4.581\textbf{.}8          & 1.140\textbf{.}7          & 264\textbf{.}3          & 62\textbf{.}5             & 12\textbf{.}9             \\
+        C               & 77.787\textbf{.}5          & 21.308\textbf{.}2          & 5.043\textbf{.}0          & 1.170\textbf{.}4          & 262\textbf{.}1          & 60\textbf{.}8             & 13\textbf{.}4             \\
+        C+AVX           & \textbf{82.080\textbf{.}3} & \textbf{23.863\textbf{.}8} & \textbf{5.701\textbf{.}4} & \textbf{1.352\textbf{.}0} & \textbf{297\textbf{.}4} & \underline{68\textbf{.}3} & \underline{16\textbf{.}0} \\
+        NumPy           & 21.262\textbf{.}8          & 13.473\textbf{.}5          & 5.801\textbf{.}6          & 1.645\textbf{.}3          & 382\textbf{.}8          & \textbf{86\textbf{.}8}    & \textbf{16\textbf{.}6}    \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{images/steps_per_second.png}
+    \includegraphics[width=0.8\textwidth]{extra/steps_per_second.png}
     \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
     \label{fig:performance}
 \end{figure}
 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{extra/steps_per_second_top3.png}
+    \caption{Comparación detallada del rendimiento en grillas grandes (top 3 implementaciones)}
+    \label{fig:performance_top3}
+\end{figure}
+
 \subsection{Análisis de Resultados}
 
-Los resultados experimentales revelan patrones interesantes en el rendimiento de las diferentes implementaciones. Como se observa en la Tabla \ref{tab:performance_results} y la Figura \ref{fig:performance}, el rendimiento del backend en Python puro es significativamente inferior al resto, actuando como un baseline que demuestra la importancia de las optimizaciones.
+Los resultados experimentales revelan patrones interesantes en el rendimiento de las diferentes implementaciones. Como se observa en la Tabla \ref{tab:performance_results}, las Figuras \ref{fig:performance} y \ref{fig:performance_top3}, el rendimiento del backend en Python puro es significativamente inferior al resto, actuando como un baseline que demuestra la importancia de las optimizaciones.
 
 \subsubsection{Rendimiento por Tamaño de Grilla}
 
-Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el mejor rendimiento, alcanzando hasta 90,785.8 steps/second en grillas de 16×16. Sin embargo, a medida que el tamaño de la grilla aumenta, NumPy comienza a superar a las implementaciones custom, especialmente en grillas grandes (512×512 y 1024×1024).
+Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el mejor rendimiento, alcanzando hasta 82,080.3 steps/second en grillas de 16×16. Sin embargo, a medida que el tamaño de la grilla aumenta, NumPy comienza a superar a las implementaciones custom, especialmente en grillas grandes (512×512 y 1024×1024). La Figura \ref{fig:performance_top3} muestra con mayor detalle la competencia entre las tres mejores implementaciones en los tamaños más grandes, donde se puede apreciar claramente cómo NumPy toma la delantera en grillas de 512×512 y superiores.
 
 \subsubsection{Comparación de Implementaciones}
 
