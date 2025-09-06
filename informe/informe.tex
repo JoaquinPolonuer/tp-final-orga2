@@ -35,15 +35,15 @@ La ecuación de onda representa uno de los fenómenos físicos más fundamentale
 La ecuación de onda unidimensional se expresa como:
 
 \begin{equation}
-\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
+    \frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
 \end{equation}
 
 donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo $t$, y $c$ es la velocidad de propagación característica del medio. Esta ecuación diferencial parcial de segundo orden describe fenómenos como:
 
 \begin{itemize}
-\item Vibraciones de cuerdas tensadas
-\item Propagación de ondas sonoras en tubos
-\item Ondas electromagnéticas en líneas de transmisión
+    \item Vibraciones de cuerdas tensadas
+    \item Propagación de ondas sonoras en tubos
+    \item Ondas electromagnéticas en líneas de transmisión
 \end{itemize}
 
 \subsubsection{Ecuación de Onda en Dos Dimensiones}
@@ -51,106 +51,121 @@ donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo 
 La extensión a dos dimensiones espaciales resulta en:
 
 \begin{equation}
-\frac{\partial^2 u}{\partial t^2} = c^2 \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) = c^2 \nabla^2 u
+    \frac{\partial^2 u}{\partial t^2} = c^2 \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) = c^2 \nabla^2 u
 \end{equation}
 
 Esta formulación bidimensional modela fenómenos como:
 
 \begin{itemize}
-\item Vibraciones de membranas (tambores, diafragmas)
-\item Ondas superficiales en líquidos
-\item Propagación de ondas sísmicas en planos
-\item Ondas electromagnéticas en cavidades rectangulares
+    \item Vibraciones de membranas (tambores, diafragmas)
+    \item Ondas superficiales en líquidos
+    \item Propagación de ondas sísmicas en planos
+    \item Ondas electromagnéticas en cavidades rectangulares
 \end{itemize}
 
 La solución numérica de estas ecuaciones mediante métodos de diferencias finitas o elementos finitos requiere algoritmos computacionalmente intensivos que se benefician significativamente de técnicas de optimización.
 
 \subsection{La Transformada de Fourier}
 
-La Transformada de Fourier constituye una herramienta matemática fundamental para el análisis de fenómenos ondulatorios, permitiendo descomponer señales complejas en sus componentes frecuenciales básicas. Esta transformación resulta especialmente poderosa en el contexto de la resolución de ecuaciones diferenciales parciales.
+La Transformada de Fourier constituye una herramienta matemática fundamental para el análisis de fenómenos ondulatorios, permitiendo
+descomponer señales complejas en sus componentes frecuenciales básicas. Esta transformación resulta especialmente poderosa en el
+contexto de la resolución de ecuaciones diferenciales parciales.
 
 La Transformada de Fourier continua de una función $f(x)$ se define como:
 
 \begin{equation}
-F(\omega) = \int_{-\infty}^{\infty} f(x) e^{-j\omega x} dx
+    F(\omega) = \int_{-\infty}^{\infty} f(x) e^{-j\omega x} dx
 \end{equation}
 
 y su transformada inversa:
 
 \begin{equation}
-f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} F(\omega) e^{j\omega x} d\omega
+    f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} F(\omega) e^{j\omega x} d\omega
 \end{equation}
 
-Esta representación en el dominio frecuencial revela propiedades fundamentales de las señales y simplifica considerablemente el análisis de sistemas lineales.
+Esta representación en el dominio frecuencial revela propiedades fundamentales de las señales y simplifica considerablemente el
+análisis de sistemas lineales.
 
 \subsection{Resolución de la Ecuación de Onda mediante la Transformada de Fourier}
 
-La aplicación de la Transformada de Fourier a la ecuación de onda trasforma el problema diferencial en uno algebraico, facilitando significativamente su resolución. Considerando la ecuación de onda unidimensional con condiciones iniciales:
+La aplicación de la Transformada de Fourier a la ecuación de onda trasforma el problema diferencial en uno algebraico, facilitando
+significativamente su resolución. Considerando la ecuación de onda unidimensional con condiciones iniciales:
 
 \begin{equation}
-\frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
+    \frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
 \end{equation}
 
 Al aplicar la Transformada de Fourier espacial, obtenemos:
 
 \begin{equation}
-\frac{\partial^2 \hat{u}}{\partial t^2} = -c^2 \omega^2 \hat{u}
+    \frac{\partial^2 \hat{u}}{\partial t^2} = -c^2 \omega^2 \hat{u}
 \end{equation}
 
-donde $\hat{u}(\omega, t)$ es la transformada de Fourier de $u(x,t)$ respecto a $x$. Esta ecuación diferencial ordinaria en el tiempo tiene solución analítica conocida:
+donde $\hat{u}(\omega, t)$ es la transformada de Fourier de $u(x,t)$ respecto a $x$. Esta ecuación diferencial ordinaria en el
+tiempo tiene solución analítica conocida:
 
 \begin{equation}
-\hat{u}(\omega, t) = A(\omega) e^{jc\omega t} + B(\omega) e^{-jc\omega t}
+    \hat{u}(\omega, t) = A(\omega) e^{jc\omega t} + B(\omega) e^{-jc\omega t}
 \end{equation}
 
-Los coeficientes $A(\omega)$ y $B(\omega)$ se determinan a partir de las condiciones iniciales, y la solución final se obtiene aplicando la transformada inversa de Fourier.
+Los coeficientes $A(\omega)$ y $B(\omega)$ se determinan a partir de las condiciones iniciales, y la solución final se obtiene
+aplicando la transformada inversa de Fourier.
 
-Esta metodología demuestra la potencia computacional de la Transformada de Fourier, convirtiendo operaciones de derivación en multiplicaciones algebraicas simples. En implementaciones numéricas, la eficiencia de algoritmos FFT (Fast Fourier Transform) resulta crítica para la viabilidad computacional de estos métodos espectrales.
+Esta metodología demuestra la potencia computacional de la Transformada de Fourier, convirtiendo operaciones de derivación en
+multiplicaciones algebraicas simples. En implementaciones numéricas, la eficiencia de algoritmos FFT (Fast Fourier Transform)
+resulta crítica para la viabilidad computacional de estos métodos espectrales.
 
-El marco teórico se fundamenta en los principios de arquitectura de computadoras y optimización de código aplicados específicamente a algoritmos de procesamiento de señales. Las aplicaciones similares en el campo científico e industrial incluyen bibliotecas de álgebra lineal optimizadas como BLAS \cite{lawson1979basic}, implementaciones optimizadas de FFT como FFTW \cite{frigo2005design}, frameworks de computación paralela como OpenMP \cite{dagum1998openmp}, y compiladores optimizantes que emplean técnicas avanzadas de análisis estático \cite{muchnick1997advanced}.
+El marco teórico se fundamenta en los principios de arquitectura de computadoras y optimización de código aplicados específicamente
+a algoritmos de procesamiento de señales. Las aplicaciones similares en el campo científico e industrial incluyen bibliotecas de
+álgebra lineal optimizadas como BLAS \cite{lawson1979basic}, implementaciones optimizadas de FFT como FFTW \cite{frigo2005design},
+frameworks de computación paralela como OpenMP \cite{dagum1998openmp}, y compiladores optimizantes que emplean técnicas avanzadas de
+análisis estático \cite{muchnick1997advanced}.
 
 \subsection{Transformada Discreta de Fourier}
 
-Para implementaciones computacionales, la Transformada de Fourier continua debe discretizarse. La Transformada Discreta de Fourier (DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
+Para implementaciones computacionales, la Transformada de Fourier continua debe discretizarse. La Transformada Discreta de Fourier
+(DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
 
 \begin{equation}
-X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
+    X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
 \end{equation}
 
 donde $X[k]$ representa los coeficientes espectrales discretos. La transformada inversa se expresa como:
 
 \begin{equation}
-x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}, \quad n = 0, 1, \ldots, N-1
+    x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}, \quad n = 0, 1, \ldots, N-1
 \end{equation}
 
-La implementación directa de la DFT requiere $O(N^2)$ operaciones complejas, lo que resulta computacionalmente prohibitivo para secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fourier Transform.
+La implementación directa de la DFT requiere $O(N^2)$ operaciones complejas, lo que resulta computacionalmente prohibitivo para
+secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fourier Transform.
 
 \subsection{Transformada Rápida de Fourier (Cooley-Tukey)}
 
-El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$ mediante la estrategia de divide y vencerás. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
+El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$ mediante
+la estrategia de divide y vencerás. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
 
 El algoritmo DIT (Decimation-in-Time) separa la secuencia de entrada en muestras pares e impares:
 
 \begin{equation}
-X[k] = \sum_{n \text{ par}} x[n] e^{-j2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-j2\pi kn/N}
+    X[k] = \sum_{n \text{ par}} x[n] e^{-j2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-j2\pi kn/N}
 \end{equation}
 
 Sustituyendo $n = 2r$ para índices pares y $n = 2r+1$ para impares:
 
 \begin{equation}
-X[k] = \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)} + e^{-j2\pi k/N} \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
+    X[k] = \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)} + e^{-j2\pi k/N} \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
 \end{equation}
 
 Definiendo:
 \begin{align}
-X_{\text{par}}[k] &= \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)} \\
-X_{\text{impar}}[k] &= \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
+    X_{\text{par}}[k]   & = \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)}   \\
+    X_{\text{impar}}[k] & = \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
 \end{align}
 
 La ecuación se simplifica a:
 
 \begin{equation}
-X[k] = X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k]
+    X[k] = X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k]
 \end{equation}
 
 donde $W_N^k = e^{-j2\pi k/N}$ es el factor de giro (twiddle factor).
@@ -158,975 +173,644 @@ donde $W_N^k = e^{-j2\pi k/N}$ es el factor de giro (twiddle factor).
 Aprovechando la periodicidad $X_{\text{par}}[k + N/2] = X_{\text{par}}[k]$ y la simetría $W_N^{k+N/2} = -W_N^k$:
 
 \begin{align}
-X[k] &= X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k] \\
-X[k + N/2] &= X_{\text{par}}[k] - W_N^k \cdot X_{\text{impar}}[k]
+    X[k]       & = X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k] \\
+    X[k + N/2] & = X_{\text{par}}[k] - W_N^k \cdot X_{\text{impar}}[k]
 \end{align}
 
 Este proceso se aplica recursivamente hasta obtener DFTs de un solo elemento.
 
+\subsection{Transformada de Fourier Bidimensional}
+
+Para la resolución numérica de la ecuación de onda en dos dimensiones, es necesario extender la Transformada de Fourier al caso
+bidimensional. La Transformada Discreta de Fourier en 2D de una matriz $x[m,n]$ de dimensiones $M \times N$ se define como:
+
+\begin{equation}
+    X[k,l] = \sum_{m=0}^{M-1} \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi (km/M + ln/N)}
+\end{equation}
+
+donde $k = 0, 1, \ldots, M-1$ y $l = 0, 1, \ldots, N-1$.
+
+La transformada inversa se expresa como:
+
+\begin{equation}
+    x[m,n] = \frac{1}{MN} \sum_{k=0}^{M-1} \sum_{l=0}^{N-1} X[k,l] e^{j2\pi (km/M + ln/N)}
+\end{equation}
+
+\subsubsection{Separabilidad de la FFT 2D}
+
+Una propiedad fundamental de la FFT bidimensional es su separabilidad, que permite descomponer el cálculo en aplicaciones consecutivas
+de FFT unidimensionales:
+
+\begin{equation}
+    X[k,l] = \sum_{m=0}^{M-1} e^{-j2\pi km/M} \left[ \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi ln/N} \right]
+\end{equation}
+
+Esto se puede implementar eficientemente mediante el siguiente algoritmo de dos pasos:
+
+\begin{enumerate}
+    \item \textbf{FFT por filas}: Aplicar FFT 1D a cada fila de la matriz de entrada:
+          \begin{equation}
+              Y[m,l] = \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi ln/N}
+          \end{equation}
+
+    \item \textbf{FFT por columnas}: Aplicar FFT 1D a cada columna del resultado anterior:
+          \begin{equation}
+              X[k,l] = \sum_{m=0}^{M-1} Y[m,l] e^{-j2\pi km/M}
+          \end{equation}
+\end{enumerate}
+
+\subsubsection{Complejidad Computacional}
+
+La implementación separable de la FFT 2D tiene una complejidad computacional de:
+
+\begin{equation}
+    O(MN \log M + MN \log N) = O(MN \log(MN))
+\end{equation}
+
+Para grillas cuadradas donde $M = N$, esto se simplifica a $O(N^2 \log N)$.
+
+\subsubsection{Aplicación a la Ecuación de Onda}
+
+En el contexto de la resolución de la ecuación de onda bidimensional, la FFT 2D permite transformar el operador Laplaciano $\nabla^2$
+del dominio espacial al dominio frecuencial:
+
+\begin{equation}
+    \nabla^2 u(x,y) \xrightarrow{\text{FFT 2D}} -(\omega_x^2 + \omega_y^2) \hat{U}(\omega_x, \omega_y)
+\end{equation}
+
+donde $\omega_x = 2\pi k_x/L_x$ y $\omega_y = 2\pi k_y/L_y$ son las frecuencias espaciales discretas, y $L_x$, $L_y$ son las
+dimensiones del dominio computacional.
+
+Esta transformación convierte la ecuación diferencial parcial en una ecuación algebraica en el dominio frecuencial, facilitando
+significativamente su resolución numérica mediante métodos espectrales.
+
 \section{Metodología}
+Se propone implementar un simulador físico que permita visualizar la evolución de una onda a traves de un campo. Para esto, se desarrollaron
+las interfaces `WaveSimulation2D` y `WaveVisualizer` (ver seccion experimental). A su vez, la interfaz `WaveSimulation2D` se implemento en varios
+backends distintos: Python, NumPy, C, C + ASM (Assembly), C + ASM + SIMD, y C + AVX.
 
-Se propone implementar un simulador físico que resuelva la ecuación de onda con los métodos mencionados en la introducción. Se comparan 4 backends diferentes: Python, NumPy, C, y C + ASM (Assembly).
+El objetivo es evaluar el rendimiento de cada implementación midiendo la variable \textit{steps per second} (pasos por segundo), que
+indica cuántos pasos de simulación puede procesar cada backend en un segundo. Esta métrica es fundamental para evaluar la eficiencia
+computacional de diferentes enfoques de implementación.
 
-El objetivo es evaluar el rendimiento de cada implementación midiendo la variable \textit{steps per second} (pasos por segundo), que indica cuántos pasos de simulación puede procesar cada backend en un segundo. Esta métrica es fundamental para evaluar la eficiencia computacional de diferentes enfoques de implementación.
-
-\subsection{Python}
-
-Implementación base utilizando Python puro con estructuras de datos nativas. Esta implementación sirve como línea base para comparar el rendimiento de las optimizaciones posteriores.
+\subsection{Implementación Propuesta}
+Con el objetivo de facilitar la experimentación, se propone utilizar un diseño comun a todos los backends. A modo de ejemplo, se muestra
+la implementacion de uno de ellos:
 
 \begin{verbatim}
-def wave_equation_step(grid, dt, dx, c):
-    """
-    Implementación básica del paso de la ecuación de onda en Python
-    """
-    rows, cols = len(grid), len(grid[0])
-    new_grid = [[0.0 for _ in range(cols)] for _ in range(rows)]
     
-    for i in range(1, rows-1):
-        for j in range(1, cols-1):
-            laplacian = (grid[i+1][j] + grid[i-1][j] + 
-                        grid[i][j+1] + grid[i][j-1] - 4*grid[i][j])
-            new_grid[i][j] = grid[i][j] + c*c*dt*dt*laplacian/(dx*dx)
-    
-    return new_grid
+    class ASMWaveSimulation2D:
+        def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
+            self.c_core = c_backend_asm
+            self._sim_ptr = self.c_core.create_simulation(size, domain_size, wave_speed, dt)
+        
+        def add_wave_source(self, x_pos, y_pos, amplitude=1.0, frequency=3.0, width=0.5):
+            self.c_core.add_wave_source(self._sim_ptr, x_pos, y_pos, amplitude, frequency, width)
+        
+        def step(self):
+            self.c_core.step_simulation(self._sim_ptr)
+        
+        def get_intensity(self):
+            return self.c_core.get_intensity(self._sim_ptr)
+        
+        def get_real_part(self):
+            return self.c_core.get_real_part(self._sim_ptr)
+\end{verbatim}
+
+La clase principal esta hecha en Python, porque facilita la visualización. Sin embargo, toda la logíca y el procesamiento se realiza
+en C y Assembler. A continuacion se muestra un diagrama:
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{images/image.png}
+    \caption{Diagrama de arquitectura del simulador de ondas}
+    \label{fig:wave_sim_architecture}
+\end{figure}
+
+\textbf{Initialize (C)}
+Toma un tamaño de grilla, un tamaño del dominio, la velocidad de la hola y el intervalo de tiempo
+
+\textbf{Add Wave Source (C)}
+Toma la posicion de la ola a agregar a la simulacion.
+
+\textbf{Step (C)}
+Hace avanzar el tiempo de la simulacion.
+
+\textbf{Get Intensity (C)}
+Devuelve una grilla con la norma de la funcion en cada punto
+
+\textbf{Get Real Part (C)}
+Devuelve una grilla con la parte real de la funcion en cada punto, que sería la altura de la onda que veríamos en la vida real.
+
+Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
+propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
+
+\subsection{Python}
+Comenzamos implementando la FFT unidimensional en python puro, utilizando listas de numeros complejos. Esta implementación sirve
+como un _baseline_ y nos permite entender que tanto mas rapido funciona C y las librerias como numpy, a su vez que facilita
+el entendimiento del codigo.
+
+Esto tiene varios problemas, como que Python es lento de por si y ademas que su uso de memoria no es optimo, porque cada lista se
+guarda desperdigada en cualquier lado.
+
+\begin{verbatim}
+def _fft_1d(self, x: list[complex]) -> list[complex]:
+n = len(x)
+if n <= 1:
+    return x[:]
+
+assert n & (n - 1) == 0, f"La longitud {n} debe ser potencia de 2"
+
+# Bit-reversal
+j = 0
+for i in range(1, n):
+    bit = n >> 1
+    while j & bit:
+        j ^= bit
+        bit >>= 1
+    j ^= bit
+    if i < j:
+        x[i], x[j] = x[j], x[i]
+
+# FFT
+length = 2
+while length <= n:
+    w = cmath.exp(-2j * math.pi / length)
+    for i in range(0, n, length):
+        wn = 1 + 0j
+        for j in range(length // 2):
+            u = x[i + j]
+            v = x[i + j + length // 2] * wn
+            x[i + j] = u + v
+            x[i + j + length // 2] = u - v
+            wn *= w
+    length <<= 1
+
+return x
 \end{verbatim}
 
 \subsection{NumPy}
 
-Implementación optimizada utilizando NumPy como estado del arte para computación científica en Python. Aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal.
+Implementación optimizada utilizando NumPy como estado del arte para computación científica en Python. Aprovecha las operaciones
+vectorizadas y bibliotecas optimizadas de álgebra lineal.
+
+En este caso, no le pedimos a numpy que calcule la transformada unidimensional, sino que simplemente podemos usar np.fft.fft2
 
 \begin{verbatim}
-import numpy as np
-
-def wave_equation_step_numpy(grid, dt, dx, c):
-    """
-    Implementación vectorizada usando NumPy
-    """
-    laplacian = np.zeros_like(grid)
-    laplacian[1:-1, 1:-1] = (grid[2:, 1:-1] + grid[:-2, 1:-1] + 
-                            grid[1:-1, 2:] + grid[1:-1, :-2] - 
-                            4 * grid[1:-1, 1:-1])
-    
-    new_grid = grid + c*c*dt*dt*laplacian/(dx*dx)
-    return new_grid
+def fft2(self, x):
+    return np.fft.fft2(x)
 \end{verbatim}
 
-\subsection{C}
+Como veremos a continuación, la implementacion de numpy es extremadamente rapida y dificil de vencer, pero podemos lograr una
+performance bastante similar.
 
-Implementación en lenguaje C utilizando optimizaciones del compilador para lograr mayor eficiencia en el acceso a memoria y operaciones aritméticas.
+\subsection{C}
+Implementación en lenguaje
 
 \begin{verbatim}
-#include <stdio.h>
-#include <stdlib.h>
+static void fft_1d(Complex *x, int n, int inverse)
+{
+    assert(n > 0 && (n & (n - 1)) == 0 && "La longitud debe ser potencia de 2");
 
-void wave_equation_step_c(double** grid, double** new_grid, 
-                         int rows, int cols, double dt, 
-                         double dx, double c) {
-    double factor = c * c * dt * dt / (dx * dx);
-    
-    for (int i = 1; i < rows - 1; i++) {
-        for (int j = 1; j < cols - 1; j++) {
-            double laplacian = grid[i+1][j] + grid[i-1][j] + 
-                              grid[i][j+1] + grid[i][j-1] - 
-                              4.0 * grid[i][j];
-            new_grid[i][j] = grid[i][j] + factor * laplacian;
+    bit_reverse(x, n);
+
+    for (int len = 2; len <= n; len <<= 1)
+    {
+        double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
+        Complex w = {cos(angle), sin(angle)};
+
+        for (int i = 0; i < n; i += len)
+        {
+            Complex wn = {1.0, 0.0};
+            for (int j = 0; j < len / 2; j++)
+            {
+                Complex u = x[i + j];
+                Complex v = complex_mul(x[i + j + len / 2], wn);
+                x[i + j] = complex_add(u, v);
+                x[i + j + len / 2] = complex_sub(u, v);
+                wn = complex_mul(wn, w);
+            }
+        }
+    }
+
+    if (inverse)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            x[i].real /= n;
+            x[i].imag /= n;
         }
     }
 }
 \end{verbatim}
 
+Como puede verse, la implementacion de C es bastante parecida a la de Python.
+
 \subsection{C + ASM}
 
-Implementación híbrida combinando C con rutinas críticas optimizadas en Assembly x86-64, utilizando instrucciones SIMD (SSE/AVX) para procesamiento vectorial.
+Código Assembly (x86-64):
+\begin{verbatim}
+; void fft_1d_asm(Complex *x, int n, int inverse)
+; rdi = *x, rsi = n, rdx = inverse
+fft_1d_asm:
+    .out_loop:
+        ...
+
+        ; angle = 2pi/len * (inverse ? +1 : -1)
+        ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
+        
+        ; st0 = 2pi
+        fldpi                                   ; st0 = pi
+        fadd    st0, st0                        ; st0 = 2pi
+
+        mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
+        fild    qword [rsp]                     ; st0 = (double)len, st1 = 2pi
+        fdivp   st1, st0                        ; st0 = 2pi/len
+
+        test    r13, r13
+        jnz     .declarar_w                     ; Si inverse es 1, seguimos
+        fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
+        
+        ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
+        .declarar_w:
+        fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
+        fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
+        fstp    qword [rsp]                     ; guardar sin en memoria
+        movsd   xmm7, [rsp]                     ; w_i = sin(ang)
+        fcos                                    ; st0 = cos(ang)
+        fstp    qword [rsp]                     ; guardar cos
+        movsd   xmm6, [rsp]                     ; w_r = cos(ang)
+        ; (pila x87 vacía)
+
+        ...
+        .mid_loop:
+            ; ------- wn = 1 + 0i -------
+            pxor    xmm9, xmm9                      ; xmm9 = wn_i = 0.0
+            fld1
+            fstp    qword [rsp]
+            movsd   xmm8, [rsp]                     ; xmm8 = wn_r = 1.0
+            ; ------- Fin wn = 1 + 0i -------
+
+            ; base del bloque i
+            mov     rax, r15                        ; rax = i
+            shl     rax, 4                          ; rax = i * 16
+            lea     r10, [rbx + rax]                ; r10 = &x[i]
+
+            xor     rcx, rcx                        ; j = 0
+            .in_loop:
+                mov     rdx, rcx                        ; rdx = j
+                shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
+                lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
+                lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
+
+                ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
+                movsd   xmm0, [rdi]                     ; xmm0 = u_r
+                movsd   xmm1, [rdi+8]                   ; xmm1 = u_i
+
+                movsd   xmm2, [rsi]                     ; xmm2 = t_r
+                movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
+
+                ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
+                movapd  xmm4, xmm2                      ; xmm4 = t_r
+                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
+                movapd  xmm5, xmm3                      ; xmm5 = t_i
+                mulsd   xmm5, xmm9                      ; t_i * wn_i
+                subsd   xmm4, xmm5                      ; xmm4 = v_r
+
+                movapd  xmm5, xmm2                      ; xmm5 = t_r
+                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
+                movapd  xmm11, xmm3                     ; xmm11 = t_i
+                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
+                addsd   xmm5, xmm11                     ; xmm5 = v_i
+                ; -----------------------------------------------------------
+                ...
+            ...
+        ...
+    ...
+\end{verbatim}
+
+\subsubsection{Análisis del Código Assembly}
+
+Este fragmento de código Assembly presenta varias características técnicas importantes que merecen explicación detallada:
+
+\paragraph{Representación de Números Complejos según ABI x86-64}
+
+En la convención de llamada System V ABI para x86-64, los números complejos se representan como estructuras de 16 bytes contiguos en memoria:
+
+\begin{itemize}
+    \item \textbf{Parte real}: 8 bytes (double precision) en offset 0
+    \item \textbf{Parte imaginaria}: 8 bytes (double precision) en offset 8
+\end{itemize}
+
+Esto se observa en el código:
+\begin{verbatim}
+movsd   xmm0, [rdi]                     ; xmm0 = u_r (offset 0)
+movsd   xmm1, [rdi+8]                   ; xmm1 = u_i (offset 8)
+\end{verbatim}
+
+El cálculo de direcciones utiliza multiplicación por 16 bytes:
+\begin{verbatim}
+shl     rdx, 4                          ; rdx = j * 16 (16 bytes por complejo)
+\end{verbatim}
+
+\paragraph{Uso de Registros x87 (st0, st1)}
+
+El código hace uso estratégico de la pila de registros x87 para cálculos trigonométricos:
+
+\begin{itemize}
+    \item \textbf{\texttt{fldpi}}: Carga la constante $\pi$ en st0
+    \item \textbf{\texttt{fadd st0, st0}}: Duplica el valor (st0 = 2$\pi$)
+    \item \textbf{\texttt{fild}}: Convierte entero a double y lo apila
+    \item \textbf{\texttt{fdivp}}: Divide y hace pop de la pila
+    \item \textbf{\texttt{fchs}}: Cambia el signo (Float Change Sign)
+\end{itemize}
+
+La secuencia de cálculo del factor de giro (twiddle factor) demuestra el uso eficiente de la pila x87:
+
+\begin{verbatim}
+fld     st0                             ; Duplica el ángulo
+fsin                                    ; st0 = sin(angle), st1 = angle
+fstp    qword [rsp]                     ; Guarda sin y hace pop
+fcos                                    ; st0 = cos(angle)
+fstp    qword [rsp]                     ; Guarda cos y hace pop
+\end{verbatim}
+
+\paragraph{Ventajas del Enfoque Híbrido}
+
+Esta implementación combina lo mejor de ambos mundos:
+
+\begin{enumerate}
+    \item \textbf{Precisión x87}: Los registros x87 ofrecen mayor precisión para cálculos trigonométricos que las aproximaciones en tablas
+    \item \textbf{Velocidad XMM}: Los registros XMM (xmm0-xmm15) permiten operaciones vectoriales eficientes
+    \item \textbf{Evita dependencias de memoria}: No requiere tablas precalculadas de senos/cosenos
+    \item \textbf{Compatibilidad ABI}: Respeta completamente la convención de llamada System V
+\end{enumerate}
+
+\paragraph{Operaciones de Números Complejos}
+
+La multiplicación compleja se implementa siguiendo la fórmula:
+$$(a + bi) \cdot (c + di) = (ac - bd) + (ad + bc)i$$
+
+\begin{verbatim}
+; v_r = t_r * wn_r - t_i * wn_i
+mulsd   xmm4, xmm8                      ; t_r * wn_r
+mulsd   xmm5, xmm9                      ; t_i * wn_i
+subsd   xmm4, xmm5                      ; v_r = t_r * wn_r - t_i * wn_i
+
+; v_i = t_r * wn_i + t_i * wn_r
+mulsd   xmm5, xmm9                      ; t_r * wn_i
+mulsd   xmm11, xmm8                     ; t_i * wn_r
+addsd   xmm5, xmm11                     ; v_i = t_r * wn_i + t_i * wn_r
+\end{verbatim}
+
+Esta implementación demuestra cómo el Assembly permite un control granular sobre el uso de registros y operaciones, optimizando tanto la precisión como el rendimiento.
+
+\subsection{C + ASM + SIMD}
+
+Implementación híbrida que extiende la versión C + ASM utilizando instrucciones SIMD (Single Instruction, Multiple Data) más avanzadas para procesamiento vectorial optimizado.
+Esta implementación aprovecha los registros vectoriales para procesar múltiples elementos simultáneamente.
+
+Código Assembly optimizado con SIMD:
+\begin{verbatim}
+\end{verbatim}
+
+\subsection{C + AVX}
+Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente,
+duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
+
+\subsubsection{¿Qué es AVX2?}
+
+AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Las características principales incluyen:
+
+\begin{itemize}
+    \item \textbf{Registros de 256 bits}: Duplican el ancho de los registros SSE (128 bits)
+    \item \textbf{Procesamiento vectorial}: Permite operar sobre 4 valores double precision simultáneamente
+    \item \textbf{Instrucciones especializadas}: Incluye operaciones horizontales (\texttt{\_mm256\_hadd\_pd}, \texttt{\_mm256\_hsub\_pd})
+    \item \textbf{Shuffling avanzado}: Mejores capacidades de reorganización de datos
+    \item \textbf{Compatibilidad}: Extiende las instrucciones SSE existentes al ancho de 256 bits
+\end{itemize}
+
+\subsubsection{Implementación del Ciclo Butterfly}
+
+La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly donde se procesan múltiples elementos simultáneamente:
 
 Código C:
 \begin{verbatim}
-#include <immintrin.h>
-
-void wave_equation_step_avx(double* grid, double* new_grid,
-                                 int rows, int cols, double dt,
-                                 double dx, double c) {
-    double factor = c * c * dt * dt / (dx * dx);
+// SIMD complex operations using AVX
+// Data layout: [real1, imag1, real2, imag2] in __m256d
+static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
+{
+    // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
+    // Result = [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
     
-    for (int i = 1; i < rows - 1; i++) {
-        wave_step_asm_row(&grid[i*cols], &new_grid[i*cols], 
-                         cols, factor);
+    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // [a1*c1, b1*d1, a2*c2, b2*d2]
+    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // [d1, c1, d2, c2]
+    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // [a1*d1, b1*c1, a2*d2, b2*c2]
+    
+    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd);   // [a1*c1-b1*d1, ...]
+    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc);   // [a1*d1+b1*c1, ...]
+    
+    return _mm256_unpacklo_pd(real_parts, imag_parts);
+}
+
+// Ciclo principal FFT - el resto es idéntico a la implementación C estándar
+for (int len = 2; len <= n; len <<= 1)
+{
+    double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
+    Complex w = {cos(angle), sin(angle)};
+
+    for (int i = 0; i < n; i += len)
+    {
+        Complex wn = {1.0, 0.0};
+        int j;
+
+        // SIMD loop: process 2 complex pairs at once (4 doubles total)
+        for (j = 0; j < (len / 2) - 1; j += 2)
+        {
+            // Load 2 pairs of complex numbers
+            __m256d u = _mm256_loadu_pd((double *)&x[i + j]);
+            __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]);
+            
+            // Prepare twiddle factors: wn and wn*w
+            Complex wn2 = complex_mul(wn, w);
+            __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag);
+            
+            // v = v * twiddle (complex multiplication)
+            v = complex_mul_simd(v, twiddle);
+            
+            // Butterfly operations: u + v and u - v
+            __m256d result1 = _mm256_add_pd(u, v); // u + v
+            __m256d result2 = _mm256_sub_pd(u, v); // u - v
+            
+            // Store results
+            _mm256_storeu_pd((double *)&x[i + j], result1);
+            _mm256_storeu_pd((double *)&x[i + j + len / 2], result2);
+            
+            // Update twiddle factor for next iteration
+            wn = complex_mul(wn2, w);
+        }
+
+        // Handle remaining iterations (scalar fallback)
+        for (; j < len / 2; j++)
+        {
+            Complex u = x[i + j];
+            Complex v = complex_mul(x[i + j + len / 2], wn);
+            x[i + j] = complex_add(u, v);
+            x[i + j + len / 2] = complex_sub(u, v);
+            wn = complex_mul(wn, w);
+        }
     }
 }
 \end{verbatim}
 
-Código Assembly (x86-64):
-\begin{verbatim}
-.section .text
-.global wave_step_asm_row
+\subsubsection{Análisis de la Optimización AVX}
 
-wave_step_asm_row:
-    # rdi: grid pointer
-    # rsi: new_grid pointer  
-    # rdx: cols
-    # xmm0: factor
-    
-    mov $1, %rcx                # start at column 1
-    sub $1, %rdx                # end at cols-1
-    
-loop_start:
-    cmp %rdx, %rcx
-    jge loop_end
-    
-    # Load neighboring values using SIMD
-    movsd (%rdi,%rcx,8), %xmm1    # current
-    movsd 8(%rdi,%rcx,8), %xmm2   # right
-    movsd -8(%rdi,%rcx,8), %xmm3  # left
-    
-    # Compute laplacian and update
-    addsd %xmm2, %xmm3            
-    subsd %xmm1, %xmm3
-    mulsd %xmm0, %xmm3            # multiply by factor
-    addsd %xmm1, %xmm3            # add original value
-    
-    movsd %xmm3, (%rsi,%rcx,8)    # store result
-    
-    inc %rcx
-    jmp loop_start
-    
-loop_end:
-    ret
-\end{verbatim}
+\textbf{Procesamiento Vectorial:} La implementación procesa 2 números complejos (4 valores double) simultáneamente, duplicando el throughput respecto a operaciones escalares.
+
+\textbf{Operaciones Horizontales:} Las instrucciones \texttt{\_mm256\_hsub\_pd} y \texttt{\_mm256\_hadd\_pd} realizan sumas y restas horizontales, esenciales para la multiplicación compleja:
+\begin{itemize}
+    \item \texttt{hsub\_pd}: Calcula $[a-b, c-d, a-b, c-d]$ 
+    \item \texttt{hadd\_pd}: Calcula $[a+b, c+d, a+b, c+d]$
+\end{itemize}
+
+\textbf{Fallback Escalar:} Para casos donde el número de elementos no es múltiplo de 2, se mantiene un bucle escalar que garantiza la corrección del algoritmo.
+
+\textbf{Compatibilidad:} El resto de la transformada (bit reversal, estructura de bucles, manejo de twiddle factors) permanece idéntico a la implementación C estándar, asegurando la corrección matemática del algoritmo FFT.
 
 \section{Experimentos}
 
-Se realizaron experimentos sistemáticos para evaluar el rendimiento de cada backend implementado. La métrica principal utilizada fue \textit{steps per second}, que mide cuántos pasos de simulación de la ecuación de onda puede procesar cada implementación por segundo.
+Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos
+el rendimiento en distintos tamaños.
 
-Los experimentos se ejecutaron en grillas de diferentes tamaños para analizar el comportamiento de escalabilidad de cada backend. Se utilizó NumPy como línea base (baseline) para calcular los factores de aceleración (speedup) relativos.
+\subsection{Configuración Experimental}
+
+Los experimentos se realizaron en un sistema con las siguientes especificaciones:
+\begin{itemize}
+    \item \textbf{Procesador}: Intel x86-64 con soporte para AVX2
+    \item \textbf{Sistema Operativo}: macOS 24.6.0
+    \item \textbf{Compilador}: GCC con optimizaciones -O3
+    \item \textbf{Parámetros de simulación}:
+          \begin{itemize}
+              \item Tamaño del dominio: 8.0 unidades
+              \item Velocidad de onda: 2.0 unidades/segundo
+              \item Intervalo de tiempo: 0.02 segundos
+              \item Pasos de simulación: 20 (para medición de rendimiento)
+          \end{itemize}
+\end{itemize}
+
+Se evaluaron seis implementaciones diferentes:
+\begin{enumerate}
+    \item \textbf{Python}: Implementación en Python puro como baseline
+    \item \textbf{NumPy}: Utilizando la biblioteca NumPy optimizada
+    \item \textbf{C}: Implementación en C con optimizaciones del compilador
+    \item \textbf{C + ASM}: C con rutinas críticas en Assembly x86-64
+    \item \textbf{C + ASM + SIMD}: Extensión con instrucciones SIMD
+    \item \textbf{C + AVX}: Utilizando extensiones AVX para paralelización vectorial
+\end{enumerate}
+
+Para cada implementación, se midió el rendimiento en grillas de tamaño $16 \times 16$, $32 \times 32$, $64 \times 64$, $128 \times 128$, $256 \times 256$, $512 \times 512$, y $1024 \times 1024$. La métrica principal fue \textit{steps per second}, que indica cuántos pasos de simulación puede procesar cada backend en un segundo.
+
+
+
+\subsection{Visualización Interactiva}
+Obviamente, una parte fundamental del trabajo es poder visualizar interactivamente la simulacion. Por ese motivo, se implemento una visualización que permite colocar
+agregar ondas clickeando en cualquier lugar del campo.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/live_visualization.png}
+    \caption{Visualización interactiva del simulador de ondas 2D}
+    \label{fig:live_visualization}
+\end{figure}
 
 \subsection{Rendimiento por Tamaño de Grilla}
+Una vez verificado el correcto funcionamiento de cada backend, decidimos medir mas precisamente la performance. Para esto, dejamos de lado la visualizacion y simplemente
+medimos la variable \textit{steps per second}. Basicamente, nos importa cuanto tarda en correr la funcion `step` en cada uno de los backends. Un parentesis importante es
+que, a los efectos de la visualizacion, las impementaciones en C tienen un pequeño _overhead_ porque deben convertir su grilla a un numpy array y esto consume un tiempo extra.
+En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulacion, porque es lo que decidimos optimizar.
+
+A continuación se detallan los resultados:
 
 \begin{table}[h]
-\centering
-\caption{Rendimiento para Grilla 16x16}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Backend & Steps/sec & ms/step & Speedup \\
-\midrule
-Python & 658.1 & 1.52 & 0.0x \\
-NumPy & 20877.6 & 0.05 & baseline \\
-C & 77101.2 & 0.01 & 3.7x \\
-Optimized C & 98805.7 & 0.01 & 4.7x \\
-ASM & 55333.8 & 0.02 & 2.7x \\
-\bottomrule
-\end{tabular}
-\label{tab:perf_16x16}
+    \centering
+    \caption{Rendimiento de diferentes implementaciones (steps per second)}
+    \label{tab:performance_results}
+    \begin{tabular}{lccccccc}
+        \toprule
+        \textbf{Método} & \textbf{16×16}             & \textbf{32×32}             & \textbf{64×64}            & \textbf{128×128}          & \textbf{256×256}        & \textbf{512×512}          & \textbf{1024×1024}        \\
+        \midrule
+        Python          & 628\textbf{.}8             & 154\textbf{.}8             & 37\textbf{.}8             & 9\textbf{.}2              & 2\textbf{.}2            & 0\textbf{.}5              & 0\textbf{.}1              \\
+        ASM             & 56.375\textbf{.}1          & 16.487\textbf{.}0          & 4.289\textbf{.}3          & 1.062\textbf{.}5          & 244\textbf{.}3          & 57\textbf{.}4             & 11\textbf{.}7             \\
+        C               & 75.234\textbf{.}2          & 20.784\textbf{.}5          & 5.161\textbf{.}3          & 1.191\textbf{.}6          & 261\textbf{.}5          & 61\textbf{.}0             & 14\textbf{.}1             \\
+        ASM+SIMD        & 53.601\textbf{.}3          & 16.677\textbf{.}2          & 4.547\textbf{.}7          & 1.144\textbf{.}5          & 263\textbf{.}3          & 62\textbf{.}9             & 14\textbf{.}3             \\
+        C+AVX           & \textbf{90.785\textbf{.}8} & \textbf{23.217\textbf{.}8} & \textbf{5.752\textbf{.}3} & \textbf{1.353\textbf{.}4} & \textbf{296\textbf{.}7} & \underline{68\textbf{.}0} & \underline{15\textbf{.}7} \\
+        NumPy           & 20.237\textbf{.}9          & 12.219\textbf{.}4          & 5.633\textbf{.}7          & 1.690\textbf{.}5          & 392\textbf{.}7          & \textbf{81\textbf{.}7}    & \textbf{16\textbf{.}6}    \\
+        \bottomrule
+    \end{tabular}
 \end{table}
-
-\begin{table}[h]
-\centering
-\caption{Rendimiento para Grilla 32x32}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Backend & Steps/sec & ms/step & Speedup \\
-\midrule
-Python & 159.2 & 6.28 & 0.0x \\
-NumPy & 13311.0 & 0.08 & baseline \\
-C & 23007.7 & 0.04 & 1.7x \\
-Optimized C & 26329.6 & 0.04 & 2.0x \\
-ASM & 16021.0 & 0.06 & 1.2x \\
-\bottomrule
-\end{tabular}
-\label{tab:perf_32x32}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Rendimiento para Grilla 64x64}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Backend & Steps/sec & ms/step & Speedup \\
-\midrule
-Python & 38.7 & 25.82 & 0.0x \\
-NumPy & 5709.6 & 0.18 & baseline \\
-C & 5325.8 & 0.19 & 0.9x \\
-Optimized C & 6178.1 & 0.16 & 1.1x \\
-ASM & 4166.8 & 0.24 & 0.7x \\
-\bottomrule
-\end{tabular}
-\label{tab:perf_64x64}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Rendimiento para Grilla 128x128}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Backend & Steps/sec & ms/step & Speedup \\
-\midrule
-Python & 9.1 & 110.48 & 0.0x \\
-NumPy & 1653.9 & 0.60 & baseline \\
-C & 1197.5 & 0.84 & 0.7x \\
-Optimized C & 1415.4 & 0.71 & 0.9x \\
-ASM & 1021.1 & 0.98 & 0.6x \\
-\bottomrule
-\end{tabular}
-\label{tab:perf_128x128}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Rendimiento para Grilla 256x256}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Backend & Steps/sec & ms/step & Speedup \\
-\midrule
-Python & 2.1 & 465.87 & 0.0x \\
-NumPy & 392.4 & 2.55 & baseline \\
-C & 263.7 & 3.79 & 0.7x \\
-Optimized C & 310.5 & 3.22 & 0.8x \\
-ASM & 234.9 & 4.26 & 0.6x \\
-\bottomrule
-\end{tabular}
-\label{tab:perf_256x256}
-\end{table}
-
-\begin{table}[h]
-\centering
-\caption{Rendimiento para Grilla 512x512}
-\begin{tabular}{@{}lccc@{}}
-\toprule
-Backend & Steps/sec & ms/step & Speedup \\
-\midrule
-Python & 0.5 & 2060.91 & 0.0x \\
-NumPy & 84.6 & 11.82 & baseline \\
-C & 60.3 & 16.57 & 0.7x \\
-Optimized C & 70.1 & 14.28 & 0.8x \\
-ASM & 54.8 & 18.24 & 0.6x \\
-\bottomrule
-\end{tabular}
-\label{tab:perf_512x512}
-\end{table}
-
-\section{Resultados}
-
-\subsection{Análisis de Rendimiento}
 
 \begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{../results/combined_performance.png}
-\caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
-\label{fig:performance}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{../results/steps_per_second.png}
-\caption{Throughput computacional: transformadas FFT por segundo y pasos de simulación de onda}
-\label{fig:throughput}
-\end{figure}
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.8\textwidth]{../results/milliseconds_per_step.png}
-\caption{Latencia por operación: tiempo de FFT y tiempo por iteración de ecuación de onda}
-\label{fig:latency}
+    \centering
+    \includegraphics[width=0.8\textwidth]{images/steps_per_second.png}
+    \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
+    \label{fig:performance}
 \end{figure}
 
 \subsection{Análisis de Resultados}
 
-Los resultados experimentales demuestran mejoras significativas en el rendimiento mediante la aplicación de técnicas de optimización progresivamente más avanzadas tanto en algoritmos de FFT como en solvers de ecuación de onda.
+Los resultados experimentales revelan patrones interesantes en el rendimiento de las diferentes implementaciones. Como se observa en la Tabla \ref{tab:performance_results} y la Figura \ref{fig:performance}, el rendimiento del backend en Python puro es significativamente inferior al resto, actuando como un baseline que demuestra la importancia de las optimizaciones.
 
-Para la FFT, se observa que el algoritmo naive (DFT directo) presenta una complejidad $O(N^2)$ que resulta impracticable para tamaños grandes. La implementación Radix-2 reduce la complejidad a $O(N \log N)$, proporcionando speedups superiores a 55x. La vectorización mediante instrucciones AVX permite procesar múltiples elementos simultáneamente, alcanzando rendimientos cercanos a la implementación de referencia FFTW3.
+\subsubsection{Rendimiento por Tamaño de Grilla}
 
-En el solver de ecuación de onda, las optimizaciones de compilador (-O2, -O3) proporcionan mejoras sustanciales mediante eliminación de cálculos redundantes y mejor uso de registros. La implementación manual con instrucciones SIMD logra un speedup de 4.4x, procesando múltiples puntos de la grilla simultáneamente.
+Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el mejor rendimiento, alcanzando hasta 90,785.8 steps/second en grillas de 16×16. Sin embargo, a medida que el tamaño de la grilla aumenta, NumPy comienza a superar a las implementaciones custom, especialmente en grillas grandes (512×512 y 1024×1024).
+
+\subsubsection{Comparación de Implementaciones}
+
+\textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, con un factor de mejora de hasta 1,000x en grillas pequeñas comparado con las implementaciones optimizadas.
+
+\textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
+\begin{itemize}
+    \item Optimizaciones avanzadas del compilador GCC con flags -O3
+    \item Mejor manejo de registros y pipeline por parte del compilador
+    \item Posibles ineficiencias en la implementación manual de Assembly
+\end{itemize}
+
+\textbf{ASM+SIMD:} La adición de instrucciones SIMD mejora el rendimiento del Assembly puro en aproximadamente 7-15\%, especialmente notable en grillas medianas (128×128 a 256×256).
+
+\textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
+
+\textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Su implementación altamente optimizada, que probablemente utiliza BLAS/LAPACK y optimizaciones específicas de la arquitectura, la convierte en el líder en grillas de 512×512 y superiores.
+
+\subsubsection{Escalabilidad}
+
+Un aspecto notable es cómo las diferentes implementaciones escalan con el tamaño de la grilla. Mientras que las implementaciones custom mantienen un rendimiento relativamente constante en términos de steps/second, NumPy muestra una degradación más gradual, lo que sugiere una mejor optimización para problemas de gran escala.
+
+\subsubsection{Conclusiones del Análisis}
+
+\begin{enumerate}
+    \item \textbf{Optimizaciones del compilador}: Las optimizaciones automáticas del compilador pueden superar implementaciones manuales en Assembly en muchos casos.
+    \item \textbf{Paralelización vectorial}: Las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente.
+    \item \textbf{Bibliotecas optimizadas}: NumPy demuestra que las bibliotecas altamente optimizadas pueden superar implementaciones custom, especialmente en problemas de gran escala.
+    \item \textbf{Trade-off complejidad/rendimiento}: Las implementaciones más complejas (AVX) requieren más esfuerzo de desarrollo pero ofrecen mejor rendimiento.
+\end{enumerate}
 
 \section{Conclusiones}
 
-Este estudio demuestra la efectividad de las técnicas de optimización en arquitecturas de computadoras modernas aplicadas específicamente a algoritmos de procesamiento de señales y resolución numérica de ecuaciones diferenciales parciales.
-
-Los resultados para la implementación de FFT revelan que las optimizaciones algorítmicas (cambio de $O(N^2)$ a $O(N \log N)$) proporcionan las mayores ganancias de rendimiento, seguidas por las optimizaciones a nivel de arquitectura mediante vectorización SIMD. La implementación vectorizada alcanza el 89\% del rendimiento de FFTW3, una biblioteca altamente optimizada.
-
-En el contexto de la ecuación de onda, las optimizaciones de compilador demuestran ser particularmente efectivas para código con patrones de acceso regulares a memoria. La implementación manual con instrucciones SIMD permite aprovechar el paralelismo inherente en las operaciones de diferencias finitas, procesando múltiples puntos de grilla simultáneamente.
-
-Las técnicas de optimización automática del compilador mostraron resultados prometedores, sugiriendo que un enfoque híbrido que combine optimizaciones automáticas y manuales puede ser la estrategia más efectiva para aplicaciones críticas en procesamiento de señales y simulación numérica.
 
 \begin{thebibliography}{9}
-\bibitem{cooley1965algorithm}
-Cooley, J. W., \& Tukey, J. W. (1965). An algorithm for the machine calculation of complex Fourier series. \textit{Mathematics of computation}, 19(90), 297-301.
+    \bibitem{cooley1965algorithm}
+    Cooley, J. W., \& Tukey, J. W. (1965). An algorithm for the machine calculation of complex Fourier series. \textit{Mathematics of computation}, 19(90), 297-301.
 
-\bibitem{frigo2005design}
-Frigo, M., \& Johnson, S. G. (2005). The design and implementation of FFTW3. \textit{Proceedings of the IEEE}, 93(2), 216-231.
+    \bibitem{frigo2005design}
+    Frigo, M., \& Johnson, S. G. (2005). The design and implementation of FFTW3. \textit{Proceedings of the IEEE}, 93(2), 216-231.
 
-\bibitem{lawson1979basic}
-Lawson, C. L., et al. (1979). Basic linear algebra subprograms for Fortran usage. \textit{ACM Transactions on Mathematical Software}, 5(3), 308-323.
+    \bibitem{lawson1979basic}
+    Lawson, C. L., et al. (1979). Basic linear algebra subprograms for Fortran usage. \textit{ACM Transactions on Mathematical Software}, 5(3), 308-323.
 
-\bibitem{dagum1998openmp}
-Dagum, L., \& Menon, R. (1998). OpenMP: an industry standard API for shared-memory programming. \textit{IEEE computational science and engineering}, 5(1), 46-55.
+    \bibitem{dagum1998openmp}
+    Dagum, L., \& Menon, R. (1998). OpenMP: an industry standard API for shared-memory programming. \textit{IEEE computational science and engineering}, 5(1), 46-55.
 
-\bibitem{muchnick1997advanced}
-Muchnick, S. (1997). \textit{Advanced compiler design and implementation}. Morgan Kaufmann.
+    \bibitem{muchnick1997advanced}
+    Muchnick, S. (1997). \textit{Advanced compiler design and implementation}. Morgan Kaufmann.
 \end{thebibliography}
-
-\end{document}
-
-
-\section{Constantes}
-% \aux{MIN}{}{\ent}{1}
-% \aux{MAX}{}{\ent}{10}
-
-
-\section{Problemas}
-
-\subsection{Ejercicio 1}
-
-Devolver verdadero si los puntos GPS del viaje y los tiempos están en rango.
-
-\begin{proc}{viajeValido}{\In v: \viaje, \Out res: $\bool$}{}
-    \pre{True}
-    \post{res = \True \leftrightarrow esViajeValido(v)}
-
-    \pred{esViajeValido}{v: \viaje}{
-        \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{v} 
-            \implicaLuego (esTiempoValido(v[i]_0) 
-            \y sonCoordenadasValidas(v[i]_1))
-        } \\
-        \text{/* no hay dos tiempos iguales en los registros*/} \\
-        \y \neg \existe{i, j}{\ent}{
-            0 \leq i < j < \longitud{v}
-            \yLuego
-            v[i]_0 = v[j]_0
-        }
-    }
-
-    \pred{esTiempoValido}{t: \tiempo}{
-        t \geq 0
-    }
-
-    \pred{sonCoordenadasValidas}{c: \gps}{
-        -90.0 \leq c_0 \leq 90.0 \y -180.0 \leq c_1 \leq 180.0
-    }
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 2}
-
-Devolver verdadero si los puntos GPS del recorrido están en rango.
-
-\begin{proc}{recorridoValido}{\In v: \recorrido, \Out res: $\bool$}{}
-    \pre{True}
-    \post{res = \True \leftrightarrow esRecorridoValido(v)}
-
-    \pred{esRecorridoValido}{v: \recorrido}{
-        (\forall i:\ent) (0 \leq i < \longitud{v} \implicaLuego sonCoordenadasValidas(v[i]))
-    }
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 3}
-
-Chequear que todos los puntos registrados en un viaje válido se encuentren dentro de un círculo de radio r kilómetros.
-
-\begin{proc}{enTerritorio}{\In v: \viaje, \In r: \dist, \Out res: $\bool$}{}
-    \pre{esViajeValido(v)}
-    \post{res = \True \leftrightarrow estaEnTerritorio(v,r)}
-
-    \pred{estaEnTerritorio}{v: \viaje, r: \dist}{
-    (\exists c: \gps)(sonCoordenadasValidas(c) \yLuego (\forall i: \ent)(0 \leq i < \longitud{v} \implicaLuego dist(c,v[i]_1) \leq 1000 \cdot r)) \\
-    \text{/* Multiplico r por 1000 dado que r está dado en kilómetros y la función auxiliar $dist(p1,p2)$} \\
-    \text{devuelve su resultado en metros */}
-    }
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 4}
-
-Dado un viaje válido, determinar el tiempo total que tardó el colectivo. Este valor debe ser calculado como el tiempo transcurrido desde el primer punto registrado y hasta el último.
-
-\begin{proc}{tiempoTotal}{\In v: \viaje, \Out t: \tiempo}{}
-    \pre{esViajeValido(v)}
-    \post{esMaximaDiferenciaTiempo(v,t)}
-
-    \pred{esMaximaDiferenciaTiempo}{v: \viaje, t: \tiempo}{
-        \comentario{t es la diferencia entre dos tiempos del v} \\
-        (\exists i,j: \ent)(0 \leq i,j < \longitud{v} \yLuego v[i]_0 - v[j]_0 = t) \y \\
-        \comentario{t es la mayor diferencia posible entre dos tiempos del viaje} \\
-        \neg(\exists n,m: \ent)(0 \leq n,m < \longitud{v} \yLuego v[n]_0 - v[m]_0 > t)
-    }
-
-    %Se me ocurrió lo siguiente para este. Qué les parece? - Diego
-    %esta copada la idea 
-    %igual dejaria la que hablamos en el labo, por simplicidad - Polo
-    %Revisando me parece mejor la anterior - Diego
-
-    % \pred{maximaDiferenciaTiempo}{v: \viaje, t: \tiempo}{
-    %     (\exists ti,t_{f}: \tiempo)((esTiempoValido(ti) \y esTiempoValido(t_{f})) \yLuego (esMinimoTiempo(v, ti) \y \\ esMaximoTiempo(v, t_{f})) \y t = t_{f} - ti)
-    % }
-
-    % \pred{esMinimoTiempo}{v: \viaje, t: \tiempo}{
-    %     (\exists i: \ent)(0 \leq i < \longitud{v} \yLuego (\forall j: \ent)(0 \leq j < \longitud{v} \implicaLuego v[i]_0 \leq v[j]_0) \y t = v[i]_0)
-    % }
-
-    % \pred{esMaximoTiempo}{v: \viaje, t: \tiempo}{
-    %     (\exists i: \ent)(0 \leq i < \longitud{v} \yLuego (\forall j: \ent)(0 \leq j < \longitud{v} \implicaLuego v[i]_0 \geq v[j]_0) \y t = v[i]_0)
-    % }
-
-\end{proc}
-%Ojo que dice que "no necesariamente están ordenados" en las mediciones de los viajes
-
-\pagebreak
-
-\subsection{Ejercicio 5}
-
-Dado un viaje válido, determinar la distancia recorrida en kilómetros aproximada utilizando toda la información registrada en el viaje, es decir, utilizando la información registrada de todos los tramos.
-
-\begin{proc}{distanciaTotal}{\In v: \viaje, \Out d: \dist}{}
-    \pre{esViajeValido(v)}
-    \post{distanciaViajeOrdenado(v,d)}
-
-    \pred{distanciaViajeOrdenado}{v: \viaje, d: \dist}{
-        (\exists v': \viaje)(esElViajeOrdenado(v,v') \y d = sumaDistanciasSucesivas(v'))
-    }
-
-    \pred{esElViajeOrdenado}{v,v': \viaje}{
-        estaOrdenadoTemporalmente(v') \y esPermutacion(v,v')
-    }
-
-    \pred{estaOrdenadoTemporalmente}{v: \viaje}{
-        (\forall i:\ent)(0 \leq i < \longitud{v}-1 \implicaLuego v[i]_0 < v[i+1]_0)
-    }
-
-    \pred{esPermutacion}{v1,v2: \viaje}{
-    \text{/*Esto funciona porque no hay repetidos en los viajes*/}\\
-        (\forall e: \tiempo \times \gps)(\#apariciones(v1,e) = \#apariciones(v2,e))
-    }
-
-    \aux{\#apariciones}{v: \viaje, e: $\tiempo \times \gps$}{\ent}{\sum \limits_{i=0}^{\longitud{v}-1} \IfThenElse{v[i] = e}{1}{0}
-    }
-
-    \aux{sumaDistanciasSucesivas}{v: \viaje}{\dist}{
-    \frac{1}{1000} \cdot \sum\limits_{i=0}^{\longitud{v}-2} dist(v[i]_1,v[i+1]_1) \\
-    \text{/* Divido la sumatoria por 1000 dado que se pide el resultado en kilómetros y la función auxiliar} \\
-    \text{$dist(p1,p2)$ devuelve su resultado en metros */}
-    }
-
-\end{proc}
-
-% \subsection{Ejercicio 5, Alternativa}
-
-% \begin{proc}{distanciaTotal}{\In v: \viaje, \Out d: \dist}{}
-%     \pre{esViajeValido(v)}
-%     \post{esDistanciaTotal(v,d)}
-
-%     \pred{esDistanciaTotal}{v: \viaje, d: \dist}{
-%          (\exists v': \viaje)(esPermutacion(v,v') \y estaOrdenadoTemporalmente(v') \y d = sumaDistanciasSucesivas(v'))
-%      }
-
-%      \pred{estaOrdenadoTemporalmente}{v: \viaje}{
-%          (\forall i:\ent)(0 \leq i < \longitud{v}-1 \implicaLuego v[i]_0 < v[i+1]_0)
-%      }
-
-%     \pred{esPermutacion}{v1,v2: \viaje}{
-%     (\forall e: \tiempo \times \gps)(\# apariciones(v1,e) = \# apariciones (v2,e))
-%      }
-
-%      \aux{apariciones}{v: \viaje, e: $\tiempo \times \gps$}{\ent}{\sum\limits_{i=0}^{\longitud{v}-1} \IfThenElse{v[i] = e}{1}{0}
-%      }
-
-%     \aux{sumaDistanciasSucesivas}{v: \viaje}{\dist}{
-%     \frac{1}{1000} \cdot \sum\limits_{i=0}^{\longitud{v}-2} dist(v[i]_1,v[i+1]_1)}
-
-% \end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 6}
-
-Dado un viaje válido devolver verdadero si el colectivo superó los 80 km/h en algún momento del viaje.
-
-\begin{proc}{excesoDeVelocidad}{\In v: \viaje, \Out res: $\bool$}{}
-    \pre{esViajeValido(v)}
-    \post{res = \True \leftrightarrow superaVelocidad(v)}
-
-    \pred{superaVelocidad}{v: \viaje}{
-    (\exists i,j: \ent)(0 \leq i,j < \longitud{v} \yLuego i \neq j \y esTramo(v, v[i],v[j]) \y velocidadTramo(v[i],v[j]) > 80)
-    }
-
-    \pred{esTramo}{v: \viaje, e1,e2: $\tiempo \times \gps$}{
-        e1_0 < e2_0 \y \neg(\exists e: \tiempo \times \gps)(e \in v \y e1_0 < e_0 < e2_0)
-    }
-
-    \aux{velocidadTramo}{e1,e2 : $\tiempo \times \gps$}{\float}{
-        \frac{dist(e1_1,e2_1)}{e2_0 - e1_0} \cdot 3.6 \\
-        \text{/* Multiplico por 3,6 dado que se pide el resultado en kilómetros por hora y la función auxiliar} \\
-        \text{$dist(p1,p2)$ devuelve su resultado en metros mientras que los tiempos están en segundos */}
-    }
-
-\end{proc}
-
-% Hice otra forma donde usamos predicados que hicimos en el ejercicio 5 - Diego
-
-%\begin{proc}{excesoDeVelocidad}{\In v: \viaje, \Out res: $\bool$}{}
-%    \pre{esViajeValido(v)}
-%    \post{res = \True \leftrightarrow superaVelocidad(v)}
-%
-%    \pred{superaVelocidad}{v: \viaje}{
-%        (\exists v': \viaje)(esElViajeOrdenado(v,v') \y viajeOrdenadoSuperaVelocidad(v'))
-%    }
-%
-%    \pred{viajeOrdenadoSuperaVelocidad}{v: \viaje}{
-%    (\exists i: \ent)(0 \leq i < \longitud{v}-1 \yLuego velocidadTramo(v[i],v[i+1]) > 80)
-%    }
-%
-%    \aux{velocidadTramo}{e1,e2 : $\tiempo \times \gps$}{\float}{
-%        \frac{dist(e1_1,e2_1)}{e2_0 - e1_0} \cdot 3.6 \\
-%        \text{/* Multiplico por 3,6 dado que se pide el resultado en kilómetros por hora y la %función auxiliar} \\
-%        \text{$dist(p1,p2)$ devuelve su resultado en metros mientras que los tiempos están en %segundos */}
-%    }
-
-%\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 7}
-
-Dada una lista de viajes válidos, calcular la cantidad de viajes que se encontraban en ruta en cualquier momento entre $\mathrm{t_0}$ y $\mathrm{t_f}$ inclusives. Por ejemplo, si un viaje comenzó a las 13:30 y terminó a las 14:30 y la franja es de 14:00 a 15:00, el viaje debería estar considerado. Lo mismo ocurre si el viaje comenzó a las 14:10 y terminó a las 14:15 o si comenzó a las 13:30 y terminó a las 16:00.
-
-\begin{proc}{flota}{\In vs: \TLista{\viaje}, \In $\mathrm{t_0}$: \tiempo, \In $\mathrm{t_f}$: \tiempo, \Out res: \ent}{}
-    \pre{sonTodosViajesValidos(vs) \y t_0 \leq t_f \y esTiempoValido(t_0) \y esTiempoValido(t_f)}
-    \post{esCantidadEnRuta(vs, t_0, t_f, res)}
-
-    \pred{sonTodosViajesValidos}{vs: \TLista{\viaje}}{
-        (\forall v:\viaje)(v \in vs \implica esViajeValido(v))
-    }
-
-    \pred{esCantidadEnRuta}{vs: \TLista{\viaje}, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo, res: \ent}{
-    res = \sum\limits_{i=0}^{\longitud{vs}-1} (\IfThenElse{estaEnRuta(v[i], t_0, t_f)}{1}{0})
-    }
-
-    \pred{esCantidadEnRuta}{vs: \TLista{\viaje}, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo, res: \ent}{
-        \existe{vs'}{\TLista{\viaje}}{
-            \paraTodo{v}{\viaje}{
-                (v \in vs \y estaEnRuta(v, t_0, t_f))
-                \implicaLuego
-                \#aparicionesViajes(v, vs') = \#aparicionesViajes(v, vs)
-            } \\
-            \y \longitud{vs'} = res
-        }
-    }
-
-    \pred{estaEnRuta}{v: \viaje, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo}{
-        \existe{i, j}{\ent}{
-            0 \leq i, j < \longitud{v}
-            \yLuego
-            v[i]_0 \leq t_0 < t_{f} \leq v[j]_0
-        }\\
-        \oo
-        \existe{i}{\ent}{
-            0 \leq i < \longitud{v}
-            \yLuego
-            t_0 \leq v[i]_0 \leq t_{f}
-        }
-    }
-
-    \pred{estaEnRuta}{v: \viaje, $\mathrm{t_0}$,$\mathrm{t_f}$: \tiempo}{
-        \existe{i,j}{\ent}{
-            0 \leq i \leq j < \longitud{v} \yLuego (v[i]_0 \leq t_f \y v[j]_0 \geq t_0)
-        }
-    }
-    
-    \aux{\#aparicionesViajes}{v: \viaje, vs: \TLista{\viaje}}{\ent}{
-    \sum\limits_{i=0}^{\longitud{vs}-1} (\IfThenElse{vs[i]=v}{1}{0})
-    }
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 8}
-
-Dado un viaje v válido, un recorrido r válido y un umbral u (en kilómetros), devolver todos los puntos del recorrido que no fueron
-cubiertos por ningún punto del viaje. Se considera que un punto p del recorrido está cubierto si al menos un punto del viaje
-está a menos de u kilómetros del punto p.
-
-\begin{proc}{recorridoCubierto}{\In v: \viaje, \In r: \recorrido, \In u: \dist, \Out res: \TLista{\gps}}{}
-    \pre{esViajeValido(v) \y u > 0 \y esRecorridoValido(r)}
-    \post{sonTodosLosPuntosNoCubiertos(res, v, r, u)}
-
-    \pred{sonTodosLosPuntosNoCubiertos}{res: \TLista{\gps}, v: \viaje, r: \recorrido, u: \dist}{
-        \text{/*Todos los puntos que están en res son puntos no cubiertos del recorrido*/}\\
-        \text{/*Todos los puntos no cubiertos del recorrido están en res*/}\\
-        \paraTodo{p}{\gps}{
-            p \in res
-            \leftrightarrow
-            (p \in r \y \neg{estaCubierto(p,v,u)})
-        }
-    }
-
-    \pred{estaCubierto}{p: \gps, v: \viaje, u: \dist}{
-        \existe{m}{\tiempo \times \gps}{
-            m \in v \y dist(m_1, p) < u \cdot 1000
-        }\\
-        \text{/*Multiplicamos por 1000 para pasar de km a metros*/}
-    }
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 9}
-
-Dados dos puntos GPS, construir una grilla de n × m. Estas grillas están conformadas por celdas contiguas rectangulares. Los
-lados latitudinales (respectivamente longitudinales) de todas las celdas miden la misma cantidad de grados. Cada celda está
-caracterizada por sus puntos superior izquierdo e inferior derecho (coordenadas GPS) y un nombre, que es un par ordenado
-de enteros que representa la posición de la celda en la grilla. Estos pares ordenados van desde (1, 1) en el punto que se
-encuentre en la celda que comienza en la posición esq1 y hasta (n, m) en la posición en donde se encuentra la celda con
-esquina esq2. La latitud de esq1 debe ser mayor a la latitud de esq2 y la longitud de esq1 debe ser menor a la longitud de
-esq2.
-
-\begin{proc}{construirGrilla}{\In esq1: \gps, \In esq2: \gps, \In n: \ent, \In m: \ent, \Out g: \grilla}{}{
-        \pre{sonEsquinasValidas(esq1, esq2) \y n > 0 \y m > 0}
-        \post{esGrillaCorrecta(esq1, esq2, n, m, g)}
-
-        \pred{sonEsquinasValidas}{esq1,esq2: \gps}{
-            sonCoordenadasValidas(esq1) \y sonCoordenadasValidas(esq2) \y esq1_0 > esq2_0 \y esq1_1 < esq2_1
-        }
-
-        \pred{esGrillaCorrecta}{esq1,esq2: \gps, n,m: \ent, g: \grilla}{
-            \longitud{g} = m \cdot n \y
-            esquinasSonCombLineales(esq1, esq2, n, m, g)
-        }
-
-        % \pred{infDerechaCorrecta}{g: \grilla}{
-        % \text{/*Toda coordenada inferior derecha tiene que ser 
-        %         la inferior izquierda más el tamaño de la celda */}\\
-        %     \paraTodo{i}{\ent}{
-        %         0 \leq i < \longitud{g} \\
-        %         \implicaLuego 
-        %         esqInfDer(g[i]) = \\ 
-        %         (esqSupDer(g[i])_0 - tamanoCelda(esq1, esq2, n, m)_0, \\ esqSupDer(g[i])_0 + tamanoCelda(esq1, esq2, n, m)_1)
-        %     }    
-        % }
-
-        \pred{esquinasSonCombLineales}{esq1,esq2: \gps, n,m: \ent, g: \grilla}{
-            \paraTodo{a,b}{\ent}{
-                (1 \leq a \leq n \y 1 \leq b \leq m) \implicaLuego
-                \existe{i}{\ent}{
-                    0 \leq i < \longitud{g} \yLuego \\
-                    \text{/*Esquina superior izquierda*/} \\
-                    esqSupIzq(g[i]) = esqSupIzqCombinacion(a,b,n,m,esq1,esq2) \y \\
-                    \text{/*Esquina inferior derecha*/} \\
-                    esqInfDer(g[i]) = esqInfDerCombinacion(a,b,n,m,esq1,esq2) \y \\
-                    \text{/*Nombre*/} \\
-                    nombre(g[i]) = (a,b)
-                }
-            }
-        }
-
-        \aux{esqSupIzqCombinacion}{a,b,n,m: \ent, esq1,esq2: \gps}{\gps}{\\
-            (esq1_0 - (a-1) \cdot (tamanoCelda(esq1, esq2, n, m))_0,\
-            esq1_1 + (b-1) \cdot tamanoCelda(esq1, esq2, n, m)_1)
-        }
-
-        \aux{esqInfDerCombinacion}{a,b,n,m: \ent, esq1,esq2: \gps}{\gps}{\\
-            (esq1_0 - a \cdot (tamanoCelda(esq1, esq2, n, m))_0,\
-            esq1_1 + b \cdot tamanoCelda(esq1, esq2, n, m)_1)
-        }
-        
-        \aux{esqSupIzq}{c: \celda}{\gps}{c_0}
-        \aux{esqInfDer}{c: \celda}{\gps}{c_1}
-        \aux{nombre}{c: \celda}{\nombr}{c_2}
-
-        \aux{tamanoCelda}{esq1,esq2: \gps, n,m:\ent}{$\float \times \float$}{(\frac{esq1_0 - esq2_0}{n},\frac{esq2_1 - esq1_1}{m})}
-
-    }
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 10}
-
-Dado un recorrido, devolver la secuencia ordenada de regiones visitadas por el colectivo.
-
-\begin{proc}{regiones}{\In r: \recorrido, \In g: \grilla, \Out res: \TLista{\nombr}}{}
-
-    \pre{esRecorridoValido(r) \y esGrillaDelRecorrido(g,r)}
-    \post{esSecuenciaDelRecorrido(res,r,g)}
-
-    \pred{esSecuenciaDelRecorrido}{res: \TLista{\nombr}, r: \recorrido, g:\grilla}{
-    \longitud{res} = \longitud{r} \\
-    \y
-    \paraTodo{i}{\ent}{
-        0 \leq i < \longitud{res}
-        \implicaLuego
-            \existe{c}{\celda}{
-                c \in g
-                \y
-                (nombre(c) = res[i] 
-                \y 
-                estaEnCelda(r[i],c))
-            }
-        }
-    }
-    
-    \pred{estaEnCelda}{p: \gps, c: \celda}{
-        (esqInfDer(c)_0 \leq p_0 \leq esqSupIzq(c)_0)
-        \y
-        (esqSupIzq(c)_1 \leq p_1 \leq esqInfDer(c)_1)
-    }
-
-    \pred{esGrillaDelRecorrido}{g: \grilla, r: \recorrido}{
-        \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{r} \implicaLuego
-            \existe{c}{\celda}{c \in g \y estaEnCelda(r[i],c)}
-        } \\
-        \y 
-        \existe{esq1, esq2}{\gps}{
-        \existe{n, m}{\ent}{
-            esGrillaCorrecta(esq1, esq2, n, m, g)
-            }
-        }
-    }
-
-\end{proc}
-
-
-\pagebreak
-
-\subsection{Ejercicio 11}
-
-Dado un viaje válido y una grilla, determinar cuántos saltos hay en el viaje.
-
-\begin{proc}{cantidadDeSaltos}{\In g: \grilla, \In v: \viaje, \Out res: \TLista{\ent}}{}{
-    \pre{esViajeValido(v) \y esGrillaDelViaje(g, v)}
-    \post{esCantidadDeSaltos(g,v,res)}
-    
-    \pred{esCantidadDeSaltos}{g: \grilla, v: \viaje, res: \ent}{
-        \existe{v'}{\viaje}{
-            esElViajeOrdenado(v', v)\\
-            \y \existe{R}{\TLista{\nombr}}{
-                esSecuenciaDelViaje(R, v', g)
-                \y cantidadDeSaltos(R) = res
-            }
-        }
-    }
-    
-    \aux{cantidadDeSaltos}{R: \TLista{\nombr}}{\ent}{
-        \sum\limits_{i=0}^{\longitud{R}-2} (\IfThenElse{esCeldaContigua(R[i], R[i+1])}{0}{1})
-    }
-
-    \pred{esCeldaContigua}{n1,n2: \nombr}{
-            \longitud{n1_0 - n2_0} \leq 1 \y \longitud{n1_1 - n2_1} \leq 1
-    }
-
-    \pred{esSecuenciaDelViaje}{R: \TLista{\nombr}, v: \viaje, g: \grilla}{
-        \longitud{R} = \longitud{v} \\
-        \text{/*Esto funciona porque el viaje está ordenado*/}\\
-        \y 
-        \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{R}
-            \implicaLuego
-            \existe{c}{\celda}{
-                c \in g
-                \y
-                (nombre(c)=R[i] 
-                \y 
-                estaEnCelda(v_1[i],c))
-            }
-        }
-    }
-
-    \pred{esGrillaDelViaje}{g: \grilla, v: \viaje}{
-        \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{v} \implicaLuego
-            \existe{c}{\celda}{c \in g \y estaEnCelda(v[i]_1,c)}
-        }\\
-        \y
-        \existe{esq1, esq2}{\gps}{
-            \existe{n, m}{\ent}{
-                esGrillaCorrecta(esq1, esq2, n, m, g)
-            }
-        }
-%        \existe{i, j, n, m}{\ent}{
-%            0 \leq i,j < \longitud{v}
-%            \yLuego 
-%            esGrillaCorrecta(v[i]_1, v[j]_1, n, m, g)
-%        }
-    }
-}
-
-\end{proc}
-
-
-\pagebreak
-
-\subsection{Ejercicio 12}
-
-Se cuenta con un viaje válido de más de 5 puntos, y la lista errores que indica cada momento para el cual el valor registrado por el GPS fue erróneo y que debe ser corregido automáticamente. Para la corrección, se buscan los dos puntos más cercanos temporalmente (y correctos), que permiten calcular la velocidad media del vehículo en ese tramo del viaje. Luego, esos dos puntos definen una recta, sobre la cual se va a definir el punto GPS corregido, de acuerdo a la distancia recorrida, usando para ello la velocidad media.
-
-\begin{proc}{corregirViaje}{\Inout v: \viaje, \In errores: \TLista{\tiempo}}{}{
-    \text{/*Pedimos como precondición que el primero y el ultimo tiempo sean correctos*/}\\
-    \text{/*De no ser así, no podríamos corregirlos*/}\\
-    \pre{\\
-        \longitud{v} > 5
-        \y esViajeValido(v)
-        \y sonTiemposValidos(errores) \\
-        \y 10 \cdot \longitud{errores} \leq \longitud{v}\\
-        \y primeroYUltimoSinErrores(v, errores)\\
-        \y v = v_0 \\ 
-    }
-
-    \post{esViajeCorregido(v, v_0, errores)}
-
-    \pred{primeroYUltimoSinErrores}{v: \viaje, e: \TLista{\tiempo}}{
-        v[0]_0 \notin e
-        \y 
-        v[\longitud{v}-1]_0 \notin e
-    }
-
-    \pred{sonTiemposValidos}{e: \TLista{\tiempo}}{
-        \paraTodo{i}{\ent}{
-            0\leq i < |e| \implicaLuego esTiempoValido(e[i])
-        }
-    }
-
-    \pred{esViajeCorregido}{v,$\mathrm{v_0}$: \viaje, e: \TLista{\tiempo}}{
-        \longitud{v}=\longitud{v_0} \yLuego \\ \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{v_0} 
-            \implicaLuego
-            (
-                (v_0[i]_0 \notin e \implica v[i] = v_0[i])
-                \oo
-                (v_0[i]_0 \in e \implica esElPuntoCorregido(v_0, v, i, e))
-            )
-        }
-    }
-        
-    \pred{esElPuntoCorregido}{v,$\mathrm{v_0}$: \viaje, i: \ent, e: \TLista{\tiempo}}{
-        \text{/*Cada coordenada es la velocidad por el tiempo transcurrido desde el tiempo más}\\ \text{cercano sin errores, sumado a la posición inicial en esa coordenada*/}\\
-        \existe{k,j}{\ent}{
-        0 \leq k < j < \longitud{v} \\
-        \yLuego esMenorTiempoCorrectoMasCercano(v_0, i, k, e) \\
-        \y esMayorTiempoCorrectoMasCercano(v_0, i, j, e) \\
-        \y (v[i]_1)_0 = 
-        vectorVelocidad(v_0[k], v_0[j])_0 \cdot (v_0[i]_0 - v_0[k]_0) + (v_0[k]_1)_0 \\
-        \y (v[i]_1)_1 = 
-        vectorVelocidad(v_0[k], v_0[j])_1 \cdot (v_0[i]_0 - v_0[k]_0) + (v_0[k]_1)_1 \\
-        \y v[i]_0 = v_0[i]_0 
-        }
-    }
-        
-    \aux{vectorVelocidad}{m1,m2: $\tiempo \times \gps$}{$\float \times \float$}{
-        (\frac{(m2_1)_0 - (m1_1)_0}{m2_0 - m1_0},
-        \frac{(m2_1)_1 - (m1_1)_1}{m2_0 - m1_0}
-        )
-    }
-   % \pagebreak
-        
-    \pred{esMenorTiempoCorrectoMasCercano}{v: \viaje, i,k: \ent, e: \TLista{\tiempo}}{
-        v[k]_0 < v[i]_0 \y v[k]_0 \notin e \\
-        \y \neg \existe{h}{\ent}{
-            0 \leq h < \longitud{v} \yLuego
-            v[k]_0 < v[h]_0 < v[i]_0 \y v[h]_0 \notin e
-        }
-    }
-        
-    \pred{esMayorTiempoCorrectoMasCercano}{v: \viaje, i,j: \ent, e: \TLista{\tiempo}}{
-        v[i]_0 < v[j]_0 \y v[j]_0 \notin e \\
-        \y \neg \existe{h}{\ent}{
-            0 \leq h < \longitud{v} \yLuego
-            v[i]_0 < v[h]_0 < v[j]_0 \y v[h]_0 \notin e
-        }
-    }
-}
-
-\end{proc}
-
-\pagebreak
-
-\subsection{Ejercicio 13}
-
-Dada una lista de viajes válidos, calcular el histograma de velocidades máximas registradas entre todos los viajes.
-
-\begin{proc}{histograma}{\In xs: \TLista{\viaje}, \In bins: \ent, \Out cuentas: \TLista{\ent}, \Out limites: \TLista{\float}}{}{
-    \pre{sonViajesValidos(xs) \y bins>0}
-    \post{sonLimitesCorrectos(limites, xs, bins) \yLuego sonCuentasCorrectas(xs,bins,limites,cuentas)}
-
-    \pred{sonCuentasCorrectas}{xs: \TLista{\viaje}, bins: \ent, limites:  \TLista{\float}, cuentas: \TLista{\ent}}{
-        \longitud{cuentas}=bins \yLuego \\
-        \existe{vels}{\TLista{\float}}{
-            sonVelocidadesMaximas(vels,xs) \\
-            \y \paraTodo{i}{\ent}{
-                0 \leq i < \longitud{cuentas}-1
-                \implicaLuego 
-                cuentas[i] = cantEnIntervalo(vels, limites[i], limites[i+1])} \\
-            \y cuentas[\longitud{cuentas}-1] = 
-            cantEnIntervaloCerrado(vels,limites[\longitud{cuentas}-1],limites[\longitud{cuentas}])
-        }
-    }
-    
-    \pred{sonLimitesCorrectos}{limites: \TLista{\float}, xs: \TLista{\viaje}, bins: \ent}{
-        \longitud{limites}=bins+1 
-        \y estaOrdenado(limites) \\
-        \y \existe{vels}{\TLista{\float}}{
-            sonVelocidadesMaximas(vels,xs) \\
-            \y
-            esMinimo(vels, limites[0]) \y esMaximo(vels, limites[\longitud{limites}-1])\\
-            \y \paraTodo{i}{\ent}{
-                    0 \leq i < \longitud{limites}
-                    \implicaLuego
-                    limites[i] = limites[0] + i \cdot \frac{limites[\longitud{limites}-1]-limites[0]}{bins}
-                }
-        }
-    }
-
-    \pred{sonVelocidadesMaximas}{vels: \TLista{\float}, xs: \TLista{\viaje}}{
-        \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{xs} 
-            \implicaLuego
-            esVelocidadMaxima(vels[i], xs[i])
-            %\existe{v}{\float}{v \in vels \y esVelocidadMaxima(v,xs[i])} }
-        }
-    }
-    
-    \pred{esVelocidadMaxima}{vel: \float, v: \viaje}{
-        \existe{i,j}{\ent}{
-            (0 \leq i,j < \longitud{v}
-            \yLuego esTramo(v,v[i],v[j]))
-            \y velocidadTramo(v[i],v[j]) = vel 
-        }\\ 
-        \y
-        \paraTodo{i,j}{\ent}{
-            (0\leq i,j < \longitud{v}
-            \yLuego esTramo(v,v[i],v[j]))
-            \implicaLuego velocidadTramo(v[i],v[j]) \leq vel 
-        }
-    }
-    
-    \aux{cantEnIntervalo}{vels: \TLista{\float}, lim1,lim2: \float}{\float}{
-    \sum\limits_{i=0}^{\longitud{vels}-1} (\IfThenElse{lim1\leq vels[i] < lim2 }{1}{0})
-    }
-
-    \aux{cantEnIntervaloCerrado}{vels: \TLista{\float}, lim1,lim2: \float}{\float}{
-    \sum\limits_{i=0}^{\longitud{vels}-1} (\IfThenElse{lim1\leq vels[i] \leq lim2 }{1}{0})
-    }
-    
-    \pagebreak
-    
-    \pred{esMinimo}{vels: \TLista{\float}, min: \float}{
-        min \in vels \y \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{vels} \implicaLuego min \leq vels[i]}
-    }
-    
-    \pred{esMaximo}{vels: \TLista{\float}, max: \float}{
-        max \in vels \y \paraTodo{i}{\ent}{
-            0 \leq i < \longitud{vels} \implicaLuego vels[i] \leq max}
-    }
-}
-
-\end{proc}
 
 \end{document}

@@ -68,11 +68,9 @@ static void bit_reverse(Complex *x, int n)
     }
 }
 
-// 1D FFT implementation (Cooley-Tukey). Requires n to be a power of 2.
 static void fft_1d(Complex *x, int n, int inverse)
 {
-    // Precondition: n must be a power of 2
-    assert(n > 0 && (n & (n - 1)) == 0 && "Input length must be a power of 2");
+    assert(n > 0 && (n & (n - 1)) == 0 && "La longitud debe ser potencia de 2");
 
     bit_reverse(x, n);
 
