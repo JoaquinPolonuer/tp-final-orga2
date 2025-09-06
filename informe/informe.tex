@@ -177,6 +177,92 @@ Aprovechando la periodicidad $\hat{x}_{\text{par}}[k + N/2] = \hat{x}_{\text{par
 
 Este proceso se aplica recursivamente hasta obtener DFTs de un solo elemento.
 
+\subsubsection{Algoritmo Recursivo FFT}
+
+El algoritmo recursivo implementa directamente la estrategia divide and conquer descrita anteriormente:
+
+\begin{verbatim}
+def fft_recursive(x):
+    n = len(x)
+    if n <= 1:
+        return x
+    
+    # Dividir en pares e impares
+    x_par = [x[2*i] for i in range(n//2)]
+    x_impar = [x[2*i+1] for i in range(n//2)]
+    
+    # Aplicar FFT recursivamente
+    y_par = fft_recursive(x_par)
+    y_impar = fft_recursive(x_impar)
+    
+    # Combinar resultados
+    y = [0] * n
+    for k in range(n//2):
+        w = exp(-2j * pi * k / n)
+        y[k] = y_par[k] + w * y_impar[k]
+        y[k + n//2] = y_par[k] - w * y_impar[k]
+    
+    return y
+\end{verbatim}
+
+Este algoritmo recursivo tiene complejidad $O(N \log N)$ pero presenta overhead significativo debido a:
+\begin{itemize}
+    \item Creación de múltiples listas temporales
+    \item Llamadas recursivas con overhead de stack
+    \item Acceso no secuencial a memoria
+\end{itemize}
+
+Por esta razón, las implementaciones prácticas utilizan versiones iterativas optimizadas que mantienen la misma complejidad algorítmica pero con mejor rendimiento en la práctica.
+
+\subsubsection{Algoritmo Iterativo FFT}
+
+La versión iterativa evita el overhead de la recursión mediante el uso de bit-reversal y bucles anidados:
+
+\begin{verbatim}
+def fft_iterative(x):
+    n = len(x)
+    if n <= 1:
+        return x
+    
+    # Bit-reversal permutation
+    j = 0
+    for i in range(1, n):
+        bit = n >> 1
+        while j & bit:
+            j ^= bit
+            bit >>= 1
+        j ^= bit
+        if i < j:
+            x[i], x[j] = x[j], x[i]
+    
+    # FFT iterativa
+    length = 2
+    while length <= n:
+        w = exp(-2j * pi / length)
+        for i in range(0, n, length):
+            wn = 1 + 0j
+            for j in range(length // 2):
+                u = x[i + j]
+                v = x[i + j + length // 2] * wn
+                x[i + j] = u + v
+                x[i + j + length // 2] = u - v
+                wn *= w
+        length <<= 1
+    
+    return x
+\end{verbatim}
+
+Esta implementación iterativa presenta varias ventajas sobre la versión recursiva:
+
+\begin{itemize}
+    \item \textbf{Acceso secuencial a memoria}: Mejor utilización de la jerarquía de cache
+    \item \textbf{Sin overhead de recursión}: Elimina el costo de las llamadas a función
+    \item \textbf{Menor uso de memoria}: No requiere múltiples copias de los datos
+    \item \textbf{Mejor paralelización}: Los bucles pueden ser optimizados por el compilador
+\end{itemize}
+
+El algoritmo mantiene la misma complejidad $O(N \log N)$ pero con constantes significativamente menores, lo que resulta en mejor rendimiento en la práctica.
+
 \subsection{Transformada de Fourier Bidimensional}
 
 Para la resolución numérica de la ecuación de onda en dos dimensiones, es necesario extender la Transformada de Fourier al caso
@@ -290,64 +376,22 @@ Devuelve una grilla con la parte real de la funcion en cada punto, que sería la
 Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
 propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
 
-\subsection{Python}
-Comenzamos implementando la FFT unidimensional en python puro, utilizando listas de numeros complejos. Esta implementación sirve
-como un _baseline_ y nos permite entender que tanto mas rapido funciona C y las librerias como numpy, a su vez que facilita
-el entendimiento del codigo.
+\subsection{Python y NumPy}
 
-Esto tiene varios problemas, como que Python es lento de por si y ademas que su uso de memoria no es optimo, porque cada lista se
-guarda desperdigada en cualquier lado.
+Para establecer un baseline de rendimiento, implementamos dos versiones en Python:
 
-\begin{verbatim}
-def _fft_1d(self, x: list[complex]) -> list[complex]:
-n = len(x)
-if n <= 1:
-    return x[:]
+\textbf{Python puro:} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos. Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
 
-assert n & (n - 1) == 0, f"La longitud {n} debe ser potencia de 2"
+Esta implementación presenta limitaciones inherentes de Python: lentitud en operaciones numéricas y uso ineficiente de memoria, ya que las listas se almacenan de forma dispersa en memoria.
 
-# Bit-reversal
-j = 0
-for i in range(1, n):
-    bit = n >> 1
-    while j & bit:
-        j ^= bit
-        bit >>= 1
-    j ^= bit
-    if i < j:
-        x[i], x[j] = x[j], x[i]
-
-# FFT
-length = 2
-while length <= n:
-    w = cmath.exp(-2j * math.pi / length)
-    for i in range(0, n, length):
-        wn = 1 + 0j
-        for j in range(length // 2):
-            u = x[i + j]
-            v = x[i + j + length // 2] * wn
-            x[i + j] = u + v
-            x[i + j + length // 2] = u - v
-            wn *= w
-    length <<= 1
-
-return x
-\end{verbatim}
-
-\subsection{NumPy}
-
-Implementación optimizada utilizando NumPy como estado del arte para computación científica en Python. Aprovecha las operaciones
-vectorizadas y bibliotecas optimizadas de álgebra lineal.
-
-En este caso, no le pedimos a numpy que calcule la transformada unidimensional, sino que simplemente podemos usar np.fft.fft2
+\textbf{NumPy:} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
 
 \begin{verbatim}
 def fft2(self, x):
     return np.fft.fft2(x)
 \end{verbatim}
 
-Como veremos a continuación, la implementacion de numpy es extremadamente rapida y dificil de vencer, pero podemos lograr una
-performance bastante similar.
+Como se observará en los resultados experimentales, la implementación de NumPy es extremadamente rápida y difícil de superar, aunque lograremos un rendimiento bastante similar con nuestras implementaciones optimizadas en C.
 
 \subsection{C}
 Implementación en lenguaje
