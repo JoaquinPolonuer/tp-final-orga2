@@ -1,5 +1,5 @@
 try:
-    from backends import c_backend_optimized
+    from backends import c_backend_avx
 except ImportError:
     raise ImportError(
         "Optimized C backend core module not available. "
@@ -9,7 +9,7 @@ except ImportError:
 
 class OptimizedCWaveSimulation2D:
     def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
-        self.c_core = c_backend_optimized
+        self.c_core = c_backend_avx
         self._sim_ptr = self.c_core.create_simulation(size, domain_size, wave_speed, dt)
 
     def add_wave_source(self, x_pos, y_pos, amplitude=1.0, frequency=3.0, width=0.5):

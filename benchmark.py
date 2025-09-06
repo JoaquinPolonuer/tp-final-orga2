@@ -12,7 +12,7 @@ matplotlib.use("Agg")  # Use non-interactive backend
 from backends.wave_simulation_numpy import NumpyWaveSimulation2D
 from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
-from backends.wave_simulation_c_optimized import OptimizedCWaveSimulation2D
+from backends.wave_simulation_c_avx import OptimizedCWaveSimulation2D
 from backends.wave_simulation_asm import ASMWaveSimulation2D
 from backends.wave_simulation_asm_simd import ASMSIMDWaveSimulation2D
 
@@ -30,7 +30,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
             sim = PythonWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
         elif backend_name == "c":
             sim = CWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
-        elif backend_name == "optimized_c":
+        elif backend_name == "avx_c":
             sim = OptimizedCWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
         elif backend_name == "asm":
             sim = ASMWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
@@ -82,7 +82,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
 print("Wave Simulation Backend Performance Benchmark")
 print("=" * 50)
 
-backends = ["numpy", "c", "optimized_c", "asm_simd", "asm"]
+backends = ["numpy", "c", "avx_c", "asm_simd", "asm"]
 sizes = [16, 32, 64, 128, 256, 512, 1024]
 steps = 20
 

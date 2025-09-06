@@ -11,10 +11,11 @@
 
 \begin{document}
 
-\titulo{Resolviendo la ecuacion de onda mediante FFT acelerada}
-\subtitulo{Optimización de simulacion fisica mediante SIMD}
+\titulo{Optimización de Rendimiento en Arquitecturas de Computadoras}
+\subtitulo{Análisis Comparativo de Técnicas de Aceleración}
 \fecha{30 de Agosto de 2025}
 \materia{Organización del Computador II}
+\grupo{Grupo 1}
 
 \integrante{Polonuer, Joaquin}{1612/21}{jtpolonuer@gmail.com}
 
@@ -236,13 +237,13 @@ void wave_equation_step_c(double** grid, double** new_grid,
 
 \subsection{C + ASM}
 
-Implementación híbrida combinando C con rutinas críticas optimizadas en Assembly x86-64, utilizando instrucciones SIMD (SSE/SIMD) para procesamiento vectorial.
+Implementación híbrida combinando C con rutinas críticas optimizadas en Assembly x86-64, utilizando instrucciones SIMD (SSE/AVX) para procesamiento vectorial.
 
 Código C:
 \begin{verbatim}
 #include <immintrin.h>
 
-void wave_equation_step_optimized(double* grid, double* new_grid,
+void wave_equation_step_avx(double* grid, double* new_grid,
                                  int rows, int cols, double dt,
                                  double dx, double c) {
     double factor = c * c * dt * dt / (dx * dx);
@@ -431,7 +432,7 @@ ASM & 54.8 & 18.24 & 0.6x \\
 
 Los resultados experimentales demuestran mejoras significativas en el rendimiento mediante la aplicación de técnicas de optimización progresivamente más avanzadas tanto en algoritmos de FFT como en solvers de ecuación de onda.
 
-Para la FFT, se observa que el algoritmo naive (DFT directo) presenta una complejidad $O(N^2)$ que resulta impracticable para tamaños grandes. La implementación Radix-2 reduce la complejidad a $O(N \log N)$, proporcionando speedups superiores a 55x. La vectorización mediante instrucciones SIMD permite procesar múltiples elementos simultáneamente, alcanzando rendimientos cercanos a la implementación de referencia FFTW3.
+Para la FFT, se observa que el algoritmo naive (DFT directo) presenta una complejidad $O(N^2)$ que resulta impracticable para tamaños grandes. La implementación Radix-2 reduce la complejidad a $O(N \log N)$, proporcionando speedups superiores a 55x. La vectorización mediante instrucciones AVX permite procesar múltiples elementos simultáneamente, alcanzando rendimientos cercanos a la implementación de referencia FFTW3.
 
 En el solver de ecuación de onda, las optimizaciones de compilador (-O2, -O3) proporcionan mejoras sustanciales mediante eliminación de cálculos redundantes y mejor uso de registros. La implementación manual con instrucciones SIMD logra un speedup de 4.4x, procesando múltiples puntos de la grilla simultáneamente.
 

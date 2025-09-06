@@ -56,13 +56,13 @@ c_backend_asm_simd = Extension(
     sources=["backends/c_backend_asm_simd.c", "backends/fft_asm_simd.asm"],
 )
 
-c_backend_optimized_extension = Extension(
-    "backends.c_backend_optimized",
-    sources=["backends/c_backend_optimized.c"],
+c_backend_avx_extension = Extension(
+    "backends.c_backend_avx",
+    sources=["backends/c_backend_avx.c"],
     extra_compile_args=["-mavx", "-mavx2"],
 )
 
-ext_modules = [c_backend_extension, c_backend_asm_extension, c_backend_asm_simd, c_backend_optimized_extension]
+ext_modules = [c_backend_extension, c_backend_asm_extension, c_backend_asm_simd, c_backend_avx_extension]
 
 setup(
     name="wave_simulation_backends",

@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 from backends.wave_simulation_numpy import NumpyWaveSimulation2D
 from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
-from backends.wave_simulation_c_optimized import OptimizedCWaveSimulation2D
+from backends.wave_simulation_c_avx import OptimizedCWaveSimulation2D
 from backends.wave_simulation_asm import ASMWaveSimulation2D
 from backends.wave_simulation_asm_simd import ASMSIMDWaveSimulation2D
 

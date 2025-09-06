@@ -464,12 +464,12 @@ static PyMethodDef PureCBackendMethods[] = {
 // Module definition
 static struct PyModuleDef purecbackendmodule = {
     PyModuleDef_HEAD_INIT,
-    "c_backend_optimized",
+    "c_backend_avx",
     "Pure C backend core functions without NumPy",
     -1,
     PureCBackendMethods};
 
-PyMODINIT_FUNC PyInit_c_backend_optimized(void)
+PyMODINIT_FUNC PyInit_c_backend_avx(void)
 {
     return PyModule_Create(&purecbackendmodule);
 }
