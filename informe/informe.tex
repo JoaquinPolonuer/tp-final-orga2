@@ -716,14 +716,14 @@ el rendimiento en distintos tamaños.
 Los experimentos se realizaron en un sistema con las siguientes especificaciones:
 \begin{itemize}
     \item \textbf{Procesador}: Intel x86-64 con soporte para AVX2
-    \item \textbf{Sistema Operativo}: macOS 24.6.0
-    \item \textbf{Compilador}: GCC con optimizaciones -O3
+    \item \textbf{Sistema Operativo}: Linux 6.8.0-78-generic
+    \item \textbf{Compilador}: GCC sin optimizaciones específicas (compilación por defecto)
     \item \textbf{Parámetros de simulación}:
           \begin{itemize}
               \item Tamaño del dominio: 8.0 unidades
               \item Velocidad de onda: 2.0 unidades/segundo
               \item Intervalo de tiempo: 0.02 segundos
-              \item Pasos de simulación: 20 (para medición de rendimiento)
+              \item Pasos de simulación: 50 (para medición de rendimiento)
           \end{itemize}
 \end{itemize}
 
@@ -780,16 +780,19 @@ A continuación se detallan los resultados:
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.8\textwidth]{extra/steps_per_second.png}
-    \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
-    \label{fig:performance}
-\end{figure}
-
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.8\textwidth]{extra/steps_per_second_top3.png}
-    \caption{Comparación detallada del rendimiento en grillas grandes (top 3 implementaciones)}
-    \label{fig:performance_top3}
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{extra/steps_per_second.png}
+        \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
+        \label{fig:performance}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{extra/steps_per_second_top3.png}
+        \caption{Comparación detallada del rendimiento en grillas grandes (top 3 implementaciones)}
+        \label{fig:performance_top3}
+    \end{minipage}
 \end{figure}
 
 \subsection{Análisis de Resultados}
