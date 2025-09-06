@@ -2,6 +2,7 @@ import numpy as np
 import math
 import cmath
 
+
 class PythonWaveSimulation2D:
     def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
 
@@ -74,14 +75,8 @@ class PythonWaveSimulation2D:
     def get_real_part(self):
         return np.real(self.wave)
 
-    def _fft_1d(self, x: list[complex]) -> list[complex]:
-        n = len(x)
-        if n <= 1:
-            return x[:]
-
-        assert n & (n - 1) == 0, f"La longitud {n} debe ser potencia de 2"
-
-        # Bit-reversal
+    def _bit_reverse(self, x: list[complex], n: int):
+        """Bit-reversal permutation for FFT"""
         j = 0
         for i in range(1, n):
             bit = n >> 1
@@ -91,6 +86,16 @@ class PythonWaveSimulation2D:
             j ^= bit
             if i < j:
                 x[i], x[j] = x[j], x[i]
+
+    def _fft_1d(self, x: list[complex]) -> list[complex]:
+        n = len(x)
+        if n <= 1:
+            return x[:]
+
+        assert n & (n - 1) == 0, f"La longitud {n} debe ser potencia de 2"
+
+        # Bit-reversal
+        self._bit_reverse(x, n)
 
         # FFT
         length = 2
