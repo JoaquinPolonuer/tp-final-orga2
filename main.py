@@ -6,7 +6,7 @@ from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
 from backends.wave_simulation_c_optimized import OptimizedCWaveSimulation2D
 from backends.wave_simulation_asm import ASMWaveSimulation2D
-from backends.wave_simulation_asm_avx import ASMAVXWaveSimulation2D
+from backends.wave_simulation_asm_simd import ASMSIMDWaveSimulation2D
 
 
 class WaveVisualizer:
@@ -83,7 +83,14 @@ class WaveVisualizer:
 
 
 if __name__ == "__main__":
-    sim = ASMAVXWaveSimulation2D(
+    # sim = ASMSIMDWaveSimulation2D(
+    #     size=128,
+    #     domain_size=8.0,
+    #     wave_speed=2.0,
+    #     dt=0.02,
+    # )
+
+    sim = ASMWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,

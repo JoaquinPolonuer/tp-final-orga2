@@ -13,6 +13,7 @@ clean:
 	rm -f backends/*.so
 	rm -f backends/*.dylib
 	rm -f backends/*.dll
+	rm -f backends/*.o
 	find . -name "*.pyc" -delete
 	find . -name "__pycache__" -type d -exec rm -rf {} +
 	@echo "Clean complete!"

@@ -13,7 +13,7 @@ typedef struct
 } Complex;
 
 // Assembly FFT functions
-extern void fft_1d_asm_avx(Complex *x, int n, int inverse);
+extern void fft_1d_asm_simd(Complex *x, int n, int inverse);
 
 typedef struct
 {
@@ -53,7 +53,7 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
     for (int i = 0; i < rows; i++)
     {
         memcpy(temp, &data[i * cols], cols * sizeof(Complex));
-        fft_1d_asm_avx(temp, cols, inverse);
+        fft_1d_asm_simd(temp, cols, inverse);
         // fft_1d(temp, cols, inverse);
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
@@ -66,7 +66,7 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         {
             temp[i] = data[i * cols + j];
         }
-        fft_1d_asm_avx(temp, cols, inverse);
+        fft_1d_asm_simd(temp, cols, inverse);
         // fft_1d(temp, rows, inverse);
         for (int i = 0; i < rows; i++)
         {
@@ -345,12 +345,12 @@ static PyMethodDef PureCBackendMethods[] = {
 // Module definition
 static struct PyModuleDef purecbackendmodule = {
     PyModuleDef_HEAD_INIT,
-    "c_backend_asm_avx",
+    "c_backend_asm_simd",
     "Pure C backend core functions without NumPy",
     -1,
     PureCBackendMethods};
 
-PyMODINIT_FUNC PyInit_c_backend_asm_avx(void)
+PyMODINIT_FUNC PyInit_c_backend_asm_simd(void)
 {
     return PyModule_Create(&purecbackendmodule);
 }
