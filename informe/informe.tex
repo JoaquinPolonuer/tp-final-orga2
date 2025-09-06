@@ -1,6 +1,7 @@
 \documentclass[a4paper]{article}
 
 \setlength{\parskip}{2mm}
+\setlength{\parindent}{0pt} % Make  the default
 \newcommand{\tab}{~ \qquad}
 \input{Macros}
 \usepackage{caratula} % Version modificada para usar las macros de algo1 de ~> https://github.com/bcardiff/dc-tex
@@ -27,9 +28,9 @@
 
 \subsection{La Ecuación de Onda}
 
-La ecuación de onda representa uno de los fenómenos físicos más fundamentales en la naturaleza, describiendo la propagación de perturbaciones en medios continuos. Desde ondas sonoras y electromagnéticas hasta vibraciones mecánicas, este modelo matemático encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural.
-
-\subsubsection{Ecuación de Onda en Una Dimensión}
+La ecuación de onda representa uno de los fenómenos físicos más fundamentales en la naturaleza, describiendo la propagación de
+perturbaciones en medios continuos. Desde ondas sonoras y electromagnéticas hasta vibraciones mecánicas, este modelo matemático
+encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural.
 
 La ecuación de onda unidimensional se expresa como:
 
@@ -37,7 +38,8 @@ La ecuación de onda unidimensional se expresa como:
     \frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
 \end{equation}
 
-donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo $t$, y $c$ es la velocidad de propagación característica del medio. Esta ecuación diferencial parcial de segundo orden describe fenómenos como:
+donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo $t$, y $c$ es la velocidad de propagación característica
+del medio. Esta ecuación en derivadas parciales de segundo orden describe fenómenos como:
 
 \begin{itemize}
     \item Vibraciones de cuerdas tensadas
@@ -45,9 +47,7 @@ donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo 
     \item Ondas electromagnéticas en líneas de transmisión
 \end{itemize}
 
-\subsubsection{Ecuación de Onda en Dos Dimensiones}
-
-La extensión a dos dimensiones espaciales resulta en:
+Naturalmente, su extensión a dos dimensiones espaciales es:
 
 \begin{equation}
     \frac{\partial^2 u}{\partial t^2} = c^2 \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) = c^2 \nabla^2 u
@@ -59,10 +59,8 @@ Esta formulación bidimensional modela fenómenos como:
     \item Vibraciones de membranas (tambores, diafragmas)
     \item Ondas superficiales en líquidos
     \item Propagación de ondas sísmicas en planos
-    \item Ondas electromagnéticas en cavidades rectangulares
+    \item Ondas electromagnéticas
 \end{itemize}
-
-La solución numérica de estas ecuaciones mediante métodos de diferencias finitas o elementos finitos requiere algoritmos computacionalmente intensivos que se benefician significativamente de técnicas de optimización.
 
 \subsection{La Transformada de Fourier}
 
@@ -73,52 +71,53 @@ contexto de la resolución de ecuaciones diferenciales parciales.
 La Transformada de Fourier continua de una función $f(x)$ se define como:
 
 \begin{equation}
-    F(\omega) = \int_{-\infty}^{\infty} f(x) e^{-j\omega x} dx
+    \hat{f}(\omega) = \int_{-\infty}^{\infty} f(x) e^{-i\omega x} dx
 \end{equation}
 
 y su transformada inversa:
 
 \begin{equation}
-    f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} F(\omega) e^{j\omega x} d\omega
+    f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} \hat{f}(\omega) e^{i\omega x} d\omega
 \end{equation}
 
-Esta representación en el dominio frecuencial revela propiedades fundamentales de las señales y simplifica considerablemente el
-análisis de sistemas lineales.
 
 \subsection{Resolución de la Ecuación de Onda mediante la Transformada de Fourier}
 
-La aplicación de la Transformada de Fourier a la ecuación de onda trasforma el problema diferencial en uno algebraico, facilitando
-significativamente su resolución. Considerando la ecuación de onda unidimensional con condiciones iniciales:
+La aplicación de la Transformada de Fourier a la ecuación de onda permite convertir la ecuación en derivadas parciales en una ecuación diferencial ordinaria,
+lo que simplifica notablemente su resolución. Para abordar la ecuación (1), se aprovechan propiedades fundamentales de la transformada de Fourier relacionadas con las derivadas:
+
+% Props
+\textbf{Propiedad 1:} La transformada de Fourier de la derivada $n$-ésima de una función es igual a la multiplicación por $(i\omega)^n$ de la transformada de la función original. En particular, para $n=1$ se obtiene el caso de la derivada simple.
 
 \begin{equation}
-    \frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
+    \mathcal{F}\left\{\frac{\partial^n f}{\partial x^n}\right\} = (i\omega)^n \hat{f}(\omega)
 \end{equation}
 
-Al aplicar la Transformada de Fourier espacial, obtenemos:
+\textbf{Propiedad 2:} Cuando se transforma respecto a una variable diferente a la que se deriva, la derivada parcial se convierte en una derivada ordinaria de la transformada:
+
+\begin{equation}
+    \mathcal{F}_x\left\{\frac{\partial f}{\partial t}\right\} = \frac{\partial \hat{f}}{\partial t}
+\end{equation}
+
+donde $\mathcal{F}_x$ denota la transformada de Fourier respecto a la variable $x$.
+% fin props
+
+Es por estas dos propiedades que al aplicar la Transformada de Fourier espacial, obtenemos:
 
 \begin{equation}
     \frac{\partial^2 \hat{u}}{\partial t^2} = -c^2 \omega^2 \hat{u}
 \end{equation}
 
-donde $\hat{u}(\omega, t)$ es la transformada de Fourier de $u(x,t)$ respecto a $x$. Esta ecuación diferencial ordinaria en el
-tiempo tiene solución analítica conocida:
+donde $\hat{u}(\omega, t)$ es la transformada de Fourier de $u(x,t)$ respecto a $x$.
+
+Que es ecuación diferencial ordinaria con solución analitica conocida:
 
 \begin{equation}
-    \hat{u}(\omega, t) = A(\omega) e^{jc\omega t} + B(\omega) e^{-jc\omega t}
+    \hat{u}(\omega, t) = A(\omega) e^{ic\omega t} + B(\omega) e^{-ic\omega t}
 \end{equation}
 
 Los coeficientes $A(\omega)$ y $B(\omega)$ se determinan a partir de las condiciones iniciales, y la solución final se obtiene
-aplicando la transformada inversa de Fourier.
-
-Esta metodología demuestra la potencia computacional de la Transformada de Fourier, convirtiendo operaciones de derivación en
-multiplicaciones algebraicas simples. En implementaciones numéricas, la eficiencia de algoritmos FFT (Fast Fourier Transform)
-resulta crítica para la viabilidad computacional de estos métodos espectrales.
-
-El marco teórico se fundamenta en los principios de arquitectura de computadoras y optimización de código aplicados específicamente
-a algoritmos de procesamiento de señales. Las aplicaciones similares en el campo científico e industrial incluyen bibliotecas de
-álgebra lineal optimizadas como BLAS \cite{lawson1979basic}, implementaciones optimizadas de FFT como FFTW \cite{frigo2005design},
-frameworks de computación paralela como OpenMP \cite{dagum1998openmp}, y compiladores optimizantes que emplean técnicas avanzadas de
-análisis estático \cite{muchnick1997advanced}.
+aplicando la transformada inversa.
 
 \subsection{Transformada Discreta de Fourier}
 
@@ -126,13 +125,13 @@ Para implementaciones computacionales, la Transformada de Fourier continua debe 
 (DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
 
 \begin{equation}
-    X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
+    \hat{x}[k] = \sum_{n=0}^{N-1} x[n] e^{-i2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
 \end{equation}
 
-donde $X[k]$ representa los coeficientes espectrales discretos. La transformada inversa se expresa como:
+donde $\hat{x}[k]$ representa los coeficientes espectrales discretos. La transformada inversa se expresa como:
 
 \begin{equation}
-    x[n] = \frac{1}{N} \sum_{k=0}^{N-1} X[k] e^{j2\pi kn/N}, \quad n = 0, 1, \ldots, N-1
+    x[n] = \frac{1}{N} \sum_{k=0}^{N-1} \hat{x}[k] e^{i2\pi kn/N}, \quad n = 0, 1, \ldots, N-1
 \end{equation}
 
 La implementación directa de la DFT requiere $O(N^2)$ operaciones complejas, lo que resulta computacionalmente prohibitivo para
@@ -140,40 +139,40 @@ secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fou
 
 \subsection{Transformada Rápida de Fourier (Cooley-Tukey)}
 
-El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$ mediante
-la estrategia de divide y vencerás. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
+El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$
+mediante la estrategia de divide and conquer. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
 
 El algoritmo DIT (Decimation-in-Time) separa la secuencia de entrada en muestras pares e impares:
 
 \begin{equation}
-    X[k] = \sum_{n \text{ par}} x[n] e^{-j2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-j2\pi kn/N}
+    \hat{x}[k] = \sum_{n \text{ par}} x[n] e^{-i2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-i2\pi kn/N}
 \end{equation}
 
 Sustituyendo $n = 2r$ para índices pares y $n = 2r+1$ para impares:
 
 \begin{equation}
-    X[k] = \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)} + e^{-j2\pi k/N} \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
+    \hat{x}[k] = \sum_{r=0}^{N/2-1} x[2r] e^{-i2\pi kr/(N/2)} + e^{-i2\pi k/N} \sum_{r=0}^{N/2-1} x[2r+1] e^{-i2\pi kr/(N/2)}
 \end{equation}
 
 Definiendo:
 \begin{align}
-    X_{\text{par}}[k]   & = \sum_{r=0}^{N/2-1} x[2r] e^{-j2\pi kr/(N/2)}   \\
-    X_{\text{impar}}[k] & = \sum_{r=0}^{N/2-1} x[2r+1] e^{-j2\pi kr/(N/2)}
+    \hat{x}_{\text{par}}[k]   & = \sum_{r=0}^{N/2-1} x[2r] e^{-i2\pi kr/(N/2)}   \\
+    \hat{x}_{\text{impar}}[k] & = \sum_{r=0}^{N/2-1} x[2r+1] e^{-i2\pi kr/(N/2)}
 \end{align}
 
 La ecuación se simplifica a:
 
 \begin{equation}
-    X[k] = X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k]
+    \hat{x}[k] = \hat{x}_{\text{par}}[k] + W_N^k \cdot \hat{x}_{\text{impar}}[k]
 \end{equation}
 
-donde $W_N^k = e^{-j2\pi k/N}$ es el factor de giro (twiddle factor).
+donde $W_N^k = e^{-i2\pi k/N}$ es el factor de giro (twiddle factor).
 
-Aprovechando la periodicidad $X_{\text{par}}[k + N/2] = X_{\text{par}}[k]$ y la simetría $W_N^{k+N/2} = -W_N^k$:
+Aprovechando la periodicidad $\hat{x}_{\text{par}}[k + N/2] = \hat{x}_{\text{par}}[k]$ y la simetría $W_N^{k+N/2} = -W_N^k$:
 
 \begin{align}
-    X[k]       & = X_{\text{par}}[k] + W_N^k \cdot X_{\text{impar}}[k] \\
-    X[k + N/2] & = X_{\text{par}}[k] - W_N^k \cdot X_{\text{impar}}[k]
+    \hat{x}[k]       & = \hat{x}_{\text{par}}[k] + W_N^k \cdot \hat{x}_{\text{impar}}[k] \\
+    \hat{x}[k + N/2] & = \hat{x}_{\text{par}}[k] - W_N^k \cdot \hat{x}_{\text{impar}}[k]
 \end{align}
 
 Este proceso se aplica recursivamente hasta obtener DFTs de un solo elemento.
@@ -184,7 +183,7 @@ Para la resolución numérica de la ecuación de onda en dos dimensiones, es nec
 bidimensional. La Transformada Discreta de Fourier en 2D de una matriz $x[m,n]$ de dimensiones $M \times N$ se define como:
 
 \begin{equation}
-    X[k,l] = \sum_{m=0}^{M-1} \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi (km/M + ln/N)}
+    \hat{x}[k,l] = \sum_{m=0}^{M-1} \sum_{n=0}^{N-1} x[m,n] e^{-i2\pi (km/M + ln/N)}
 \end{equation}
 
 donde $k = 0, 1, \ldots, M-1$ y $l = 0, 1, \ldots, N-1$.
@@ -192,16 +191,14 @@ donde $k = 0, 1, \ldots, M-1$ y $l = 0, 1, \ldots, N-1$.
 La transformada inversa se expresa como:
 
 \begin{equation}
-    x[m,n] = \frac{1}{MN} \sum_{k=0}^{M-1} \sum_{l=0}^{N-1} X[k,l] e^{j2\pi (km/M + ln/N)}
+    x[m,n] = \frac{1}{MN} \sum_{k=0}^{M-1} \sum_{l=0}^{N-1} \hat{x}[k,l] e^{i2\pi (km/M + ln/N)}
 \end{equation}
 
-\subsubsection{Separabilidad de la FFT 2D}
-
-Una propiedad fundamental de la FFT bidimensional es su separabilidad, que permite descomponer el cálculo en aplicaciones consecutivas
-de FFT unidimensionales:
+Una propiedad fundamental de la FFT bidimensional es su separabilidad, que permite descomponer el cálculo en aplicaciones
+consecutivas de FFT unidimensionales:
 
 \begin{equation}
-    X[k,l] = \sum_{m=0}^{M-1} e^{-j2\pi km/M} \left[ \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi ln/N} \right]
+    \hat{x}[k,l] = \sum_{m=0}^{M-1} e^{-i2\pi km/M} \left[ \sum_{n=0}^{N-1} x[m,n] e^{-i2\pi ln/N} \right]
 \end{equation}
 
 Esto se puede implementar eficientemente mediante el siguiente algoritmo de dos pasos:
@@ -209,24 +206,14 @@ Esto se puede implementar eficientemente mediante el siguiente algoritmo de dos 
 \begin{enumerate}
     \item \textbf{FFT por filas}: Aplicar FFT 1D a cada fila de la matriz de entrada:
           \begin{equation}
-              Y[m,l] = \sum_{n=0}^{N-1} x[m,n] e^{-j2\pi ln/N}
+              \hat{y}[m,l] = \sum_{n=0}^{N-1} x[m,n] e^{-i2\pi ln/N}
           \end{equation}
 
     \item \textbf{FFT por columnas}: Aplicar FFT 1D a cada columna del resultado anterior:
           \begin{equation}
-              X[k,l] = \sum_{m=0}^{M-1} Y[m,l] e^{-j2\pi km/M}
+              \hat{x}[k,l] = \sum_{m=0}^{M-1} \hat{y}[m,l] e^{-i2\pi km/M}
           \end{equation}
 \end{enumerate}
-
-\subsubsection{Complejidad Computacional}
-
-La implementación separable de la FFT 2D tiene una complejidad computacional de:
-
-\begin{equation}
-    O(MN \log M + MN \log N) = O(MN \log(MN))
-\end{equation}
-
-Para grillas cuadradas donde $M = N$, esto se simplifica a $O(N^2 \log N)$.
 
 \subsubsection{Aplicación a la Ecuación de Onda}
 
@@ -234,7 +221,7 @@ En el contexto de la resolución de la ecuación de onda bidimensional, la FFT 2
 del dominio espacial al dominio frecuencial:
 
 \begin{equation}
-    \nabla^2 u(x,y) \xrightarrow{\text{FFT 2D}} -(\omega_x^2 + \omega_y^2) \hat{U}(\omega_x, \omega_y)
+    \nabla^2 u(x,y) \xrightarrow{\text{FFT 2D}} -(\omega_x^2 + \omega_y^2) \hat{u}(\omega_x, \omega_y)
 \end{equation}
 
 donde $\omega_x = 2\pi k_x/L_x$ y $\omega_y = 2\pi k_y/L_y$ son las frecuencias espaciales discretas, y $L_x$, $L_y$ son las
