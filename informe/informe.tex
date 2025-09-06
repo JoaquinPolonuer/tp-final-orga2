@@ -402,60 +402,95 @@ Como puede verse, la implementacion de C es bastante parecida a la de Python.
 
 \subsection{C + ASM}
 
-Implementación híbrida combinando C con rutinas críticas optimizadas en Assembly x86-64, utilizando instrucciones SIMD (SSE/AVX) para procesamiento vectorial.
-
-Código C:
-\begin{verbatim}
-#include <immintrin.h>
-
-void wave_equation_step_optimized(double* grid, double* new_grid,
-                                 int rows, int cols, double dt,
-                                 double dx, double c) {
-    double factor = c * c * dt * dt / (dx * dx);
-    
-    for (int i = 1; i < rows - 1; i++) {
-        wave_step_asm_row(&grid[i*cols], &new_grid[i*cols], 
-                         cols, factor);
-    }
-}
-\end{verbatim}
-
 Código Assembly (x86-64):
 \begin{verbatim}
-.section .text
-.global wave_step_asm_row
+; void fft_1d_asm(Complex *x, int n, int inverse)
+; rdi = *x, rsi = n, rdx = inverse
+fft_1d_asm:
+    .out_loop:
+        ...
 
-wave_step_asm_row:
-    # rdi: grid pointer
-    # rsi: new_grid pointer  
-    # rdx: cols
-    # xmm0: factor
-    
-    mov $1, %rcx                # start at column 1
-    sub $1, %rdx                # end at cols-1
-    
-loop_start:
-    cmp %rdx, %rcx
-    jge loop_end
-    
-    # Load neighboring values using SIMD
-    movsd (%rdi,%rcx,8), %xmm1    # current
-    movsd 8(%rdi,%rcx,8), %xmm2   # right
-    movsd -8(%rdi,%rcx,8), %xmm3  # left
-    
-    # Compute laplacian and update
-    addsd %xmm2, %xmm3            
-    subsd %xmm1, %xmm3
-    mulsd %xmm0, %xmm3            # multiply by factor
-    addsd %xmm1, %xmm3            # add original value
-    
-    movsd %xmm3, (%rsi,%rcx,8)    # store result
-    
-    inc %rcx
-    jmp loop_start
-    
-loop_end:
-    ret
+        ; angle = 2π/len * (inverse ? +1 : -1)
+        ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
+        
+        ; st0 = 2pi
+        fldpi                                   ; st0 = π
+        fadd    st0, st0                        ; st0 = 2π
+
+        mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
+        fild    qword [rsp]                     ; st0 = (double)len, st1 = 2π
+        fdivp   st1, st0                        ; st0 = 2π/len
+
+        test    r13, r13
+        jnz     .declarar_w                     ; Si inverse es 1, seguimos
+        fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
+        
+        ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
+        .declarar_w:
+        fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
+        fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
+        fstp    qword [rsp]                     ; guardar sin en memoria
+        movsd   xmm7, [rsp]                     ; w_i = sin(ang)
+        fcos                                    ; st0 = cos(ang)
+        fstp    qword [rsp]                     ; guardar cos
+        movsd   xmm6, [rsp]                     ; w_r = cos(ang)
+        ; (pila x87 vacía)
+
+        ...
+        .mid_loop:
+            ; ------- wn = 1 + 0i -------
+            pxor    xmm9, xmm9                      ; xmm9 = wn_i = 0.0
+            fld1
+            fstp    qword [rsp]
+            movsd   xmm8, [rsp]                     ; xmm8 = wn_r = 1.0
+            ; ------- Fin wn = 1 + 0i -------
+
+            ; base del bloque i
+            mov     rax, r15                        ; rax = i
+            shl     rax, 4                          ; rax = i * 16
+            lea     r10, [rbx + rax]                ; r10 = &x[i]
+
+            xor     rcx, rcx                        ; j = 0
+            .in_loop:
+                mov     rdx, rcx                        ; rdx = j
+                shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
+                lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
+                lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
+
+                ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
+                movsd   xmm0, [rdi]                     ; xmm0 = u_r
+                movsd   xmm1, [rdi+8]                   ; xmm1 = u_i
+
+                movsd   xmm2, [rsi]                     ; xmm2 = t_r
+                movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
+
+                ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
+                movapd  xmm4, xmm2                      ; xmm4 = t_r
+                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
+                movapd  xmm5, xmm3                      ; xmm5 = t_i
+                mulsd   xmm5, xmm9                      ; t_i * wn_i
+                subsd   xmm4, xmm5                      ; xmm4 = v_r
+
+                movapd  xmm5, xmm2                      ; xmm5 = t_r
+                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
+                movapd  xmm11, xmm3                     ; xmm11 = t_i
+                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
+                addsd   xmm5, xmm11                     ; xmm5 = v_i
+                ; -----------------------------------------------------------
+
+                ; --------------- x[i + j] = complex_add(u, v) --------------
+                movapd  xmm11, xmm0                     ; xmm11 = u_r
+                addsd   xmm11, xmm4                     ; xmm11 = u_r + v_r
+                movapd  xmm12, xmm1                     ; xmm12 = u_i
+                addsd   xmm12, xmm5                     ; xmm12 = u_i + v_i
+                movsd   [rdi],   xmm11
+                movsd   [rdi+8], xmm12
+                ; -----------------------------------------------------------
+
+                ...
+            ...
+        ...
+    ...
 \end{verbatim}
 
 \subsection{C + ASM + SIMD}
