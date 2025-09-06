@@ -488,6 +488,82 @@ fft_1d_asm:
     ...
 \end{verbatim}
 
+\subsubsection{Análisis del Código Assembly}
+
+Este fragmento de código Assembly presenta varias características técnicas importantes que merecen explicación detallada:
+
+\paragraph{Representación de Números Complejos según ABI x86-64}
+
+En la convención de llamada System V ABI para x86-64, los números complejos se representan como estructuras de 16 bytes contiguos en memoria:
+
+\begin{itemize}
+    \item \textbf{Parte real}: 8 bytes (double precision) en offset 0
+    \item \textbf{Parte imaginaria}: 8 bytes (double precision) en offset 8
+\end{itemize}
+
+Esto se observa en el código:
+\begin{verbatim}
+movsd   xmm0, [rdi]                     ; xmm0 = u_r (offset 0)
+movsd   xmm1, [rdi+8]                   ; xmm1 = u_i (offset 8)
+\end{verbatim}
+
+El cálculo de direcciones utiliza multiplicación por 16 bytes:
+\begin{verbatim}
+shl     rdx, 4                          ; rdx = j * 16 (16 bytes por complejo)
+\end{verbatim}
+
+\paragraph{Uso de Registros x87 (st0, st1)}
+
+El código hace uso estratégico de la pila de registros x87 para cálculos trigonométricos:
+
+\begin{itemize}
+    \item \textbf{\texttt{fldpi}}: Carga la constante $\pi$ en st0
+    \item \textbf{\texttt{fadd st0, st0}}: Duplica el valor (st0 = 2$\pi$)
+    \item \textbf{\texttt{fild}}: Convierte entero a double y lo apila
+    \item \textbf{\texttt{fdivp}}: Divide y hace pop de la pila
+    \item \textbf{\texttt{fchs}}: Cambia el signo (Float Change Sign)
+\end{itemize}
+
+La secuencia de cálculo del factor de giro (twiddle factor) demuestra el uso eficiente de la pila x87:
+
+\begin{verbatim}
+fld     st0                             ; Duplica el ángulo
+fsin                                    ; st0 = sin(angle), st1 = angle
+fstp    qword [rsp]                     ; Guarda sin y hace pop
+fcos                                    ; st0 = cos(angle)
+fstp    qword [rsp]                     ; Guarda cos y hace pop
+\end{verbatim}
+
+\paragraph{Ventajas del Enfoque Híbrido}
+
+Esta implementación combina lo mejor de ambos mundos:
+
+\begin{enumerate}
+    \item \textbf{Precisión x87}: Los registros x87 ofrecen mayor precisión para cálculos trigonométricos que las aproximaciones en tablas
+    \item \textbf{Velocidad XMM}: Los registros XMM (xmm0-xmm15) permiten operaciones vectoriales eficientes
+    \item \textbf{Evita dependencias de memoria}: No requiere tablas precalculadas de senos/cosenos
+    \item \textbf{Compatibilidad ABI}: Respeta completamente la convención de llamada System V
+\end{enumerate}
+
+\paragraph{Operaciones de Números Complejos}
+
+La multiplicación compleja se implementa siguiendo la fórmula:
+$$(a + bi) \cdot (c + di) = (ac - bd) + (ad + bc)i$$
+
+\begin{verbatim}
+; v_r = t_r * wn_r - t_i * wn_i
+mulsd   xmm4, xmm8                      ; t_r * wn_r
+mulsd   xmm5, xmm9                      ; t_i * wn_i
+subsd   xmm4, xmm5                      ; v_r = t_r * wn_r - t_i * wn_i
+
+; v_i = t_r * wn_i + t_i * wn_r
+mulsd   xmm5, xmm9                      ; t_r * wn_i
+mulsd   xmm11, xmm8                     ; t_i * wn_r
+addsd   xmm5, xmm11                     ; v_i = t_r * wn_i + t_i * wn_r
+\end{verbatim}
+
+Esta implementación demuestra cómo el Assembly permite un control granular sobre el uso de registros y operaciones, optimizando tanto la precisión como el rendimiento.
+
 \subsection{C + ASM + SIMD}
 
 Implementación híbrida que extiende la versión C + ASM utilizando instrucciones SIMD (Single Instruction, Multiple Data) más avanzadas para procesamiento vectorial optimizado.
@@ -501,9 +577,104 @@ Código Assembly optimizado con SIMD:
 Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente,
 duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
 
+\subsubsection{¿Qué es AVX2?}
+
+AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Las características principales incluyen:
+
+\begin{itemize}
+    \item \textbf{Registros de 256 bits}: Duplican el ancho de los registros SSE (128 bits)
+    \item \textbf{Procesamiento vectorial}: Permite operar sobre 4 valores double precision simultáneamente
+    \item \textbf{Instrucciones especializadas}: Incluye operaciones horizontales (\texttt{\_mm256\_hadd\_pd}, \texttt{\_mm256\_hsub\_pd})
+    \item \textbf{Shuffling avanzado}: Mejores capacidades de reorganización de datos
+    \item \textbf{Compatibilidad}: Extiende las instrucciones SSE existentes al ancho de 256 bits
+\end{itemize}
+
+\subsubsection{Implementación del Ciclo Butterfly}
+
+La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly donde se procesan múltiples elementos simultáneamente:
+
 Código C:
 \begin{verbatim}
+// SIMD complex operations using AVX
+// Data layout: [real1, imag1, real2, imag2] in __m256d
+static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
+{
+    // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
+    // Result = [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
+    
+    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // [a1*c1, b1*d1, a2*c2, b2*d2]
+    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // [d1, c1, d2, c2]
+    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // [a1*d1, b1*c1, a2*d2, b2*c2]
+    
+    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd);   // [a1*c1-b1*d1, ...]
+    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc);   // [a1*d1+b1*c1, ...]
+    
+    return _mm256_unpacklo_pd(real_parts, imag_parts);
+}
+
+// Ciclo principal FFT - el resto es idéntico a la implementación C estándar
+for (int len = 2; len <= n; len <<= 1)
+{
+    double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
+    Complex w = {cos(angle), sin(angle)};
+
+    for (int i = 0; i < n; i += len)
+    {
+        Complex wn = {1.0, 0.0};
+        int j;
+
+        // SIMD loop: process 2 complex pairs at once (4 doubles total)
+        for (j = 0; j < (len / 2) - 1; j += 2)
+        {
+            // Load 2 pairs of complex numbers
+            __m256d u = _mm256_loadu_pd((double *)&x[i + j]);
+            __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]);
+            
+            // Prepare twiddle factors: wn and wn*w
+            Complex wn2 = complex_mul(wn, w);
+            __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag);
+            
+            // v = v * twiddle (complex multiplication)
+            v = complex_mul_simd(v, twiddle);
+            
+            // Butterfly operations: u + v and u - v
+            __m256d result1 = _mm256_add_pd(u, v); // u + v
+            __m256d result2 = _mm256_sub_pd(u, v); // u - v
+            
+            // Store results
+            _mm256_storeu_pd((double *)&x[i + j], result1);
+            _mm256_storeu_pd((double *)&x[i + j + len / 2], result2);
+            
+            // Update twiddle factor for next iteration
+            wn = complex_mul(wn2, w);
+        }
+
+        // Handle remaining iterations (scalar fallback)
+        for (; j < len / 2; j++)
+        {
+            Complex u = x[i + j];
+            Complex v = complex_mul(x[i + j + len / 2], wn);
+            x[i + j] = complex_add(u, v);
+            x[i + j + len / 2] = complex_sub(u, v);
+            wn = complex_mul(wn, w);
+        }
+    }
+}
 \end{verbatim}
+
+\subsubsection{Análisis de la Optimización AVX}
+
+\textbf{Procesamiento Vectorial:} La implementación procesa 2 números complejos (4 valores double) simultáneamente, duplicando el throughput respecto a operaciones escalares.
+
+\textbf{Operaciones Horizontales:} Las instrucciones \texttt{\_mm256\_hsub\_pd} y \texttt{\_mm256\_hadd\_pd} realizan sumas y restas horizontales, esenciales para la multiplicación compleja:
+\begin{itemize}
+    \item \texttt{hsub\_pd}: Calcula $[a-b, c-d, a-b, c-d]$ 
+    \item \texttt{hadd\_pd}: Calcula $[a+b, c+d, a+b, c+d]$
+\end{itemize}
+
+\textbf{Fallback Escalar:} Para casos donde el número de elementos no es múltiplo de 2, se mantiene un bucle escalar que garantiza la corrección del algoritmo.
+
+\textbf{Compatibilidad:} El resto de la transformada (bit reversal, estructura de bucles, manejo de twiddle factors) permanece idéntico a la implementación C estándar, asegurando la corrección matemática del algoritmo FFT.
 
 \section{Experimentos}
 
@@ -565,14 +736,14 @@ A continuación se detallan los resultados:
     \label{tab:performance_results}
     \begin{tabular}{lccccccc}
         \toprule
-        \textbf{Método} & \textbf{16×16} & \textbf{32×32} & \textbf{64×64} & \textbf{128×128} & \textbf{256×256} & \textbf{512×512} & \textbf{1024×1024} \\
+        \textbf{Método} & \textbf{16×16}             & \textbf{32×32}             & \textbf{64×64}            & \textbf{128×128}          & \textbf{256×256}        & \textbf{512×512}          & \textbf{1024×1024}        \\
         \midrule
-        Python          & 628\textbf{.}8          & 154\textbf{.}8          & 37\textbf{.}8           & 9\textbf{.}2              & 2\textbf{.}2              & 0\textbf{.}5              & 0\textbf{.}1                \\
-        ASM             & 56.375\textbf{.}1       & 16.487\textbf{.}0       & 4.289\textbf{.}3        & 1.062\textbf{.}5          & 244\textbf{.}3            & 57\textbf{.}4             & 11\textbf{.}7               \\
-        C               & 75.234\textbf{.}2       & 20.784\textbf{.}5       & 5.161\textbf{.}3        & 1.191\textbf{.}6          & 261\textbf{.}5            & 61\textbf{.}0             & 14\textbf{.}1               \\
-        ASM+SIMD        & 53.601\textbf{.}3       & 16.677\textbf{.}2       & 4.547\textbf{.}7        & 1.144\textbf{.}5          & 263\textbf{.}3            & 62\textbf{.}9             & 14\textbf{.}3               \\
-        C+AVX           & \textbf{90.785\textbf{.}8}       & \textbf{23.217\textbf{.}8}       & \textbf{5.752\textbf{.}3}        & \textbf{1.353\textbf{.}4}          & \textbf{296\textbf{.}7}            & \underline{68\textbf{.}0}             & \underline{15\textbf{.}7}               \\
-        NumPy           & 20.237\textbf{.}9       & 12.219\textbf{.}4       & 5.633\textbf{.}7        & 1.690\textbf{.}5          & 392\textbf{.}7            & \textbf{81\textbf{.}7}             & \textbf{16\textbf{.}6}               \\
+        Python          & 628\textbf{.}8             & 154\textbf{.}8             & 37\textbf{.}8             & 9\textbf{.}2              & 2\textbf{.}2            & 0\textbf{.}5              & 0\textbf{.}1              \\
+        ASM             & 56.375\textbf{.}1          & 16.487\textbf{.}0          & 4.289\textbf{.}3          & 1.062\textbf{.}5          & 244\textbf{.}3          & 57\textbf{.}4             & 11\textbf{.}7             \\
+        C               & 75.234\textbf{.}2          & 20.784\textbf{.}5          & 5.161\textbf{.}3          & 1.191\textbf{.}6          & 261\textbf{.}5          & 61\textbf{.}0             & 14\textbf{.}1             \\
+        ASM+SIMD        & 53.601\textbf{.}3          & 16.677\textbf{.}2          & 4.547\textbf{.}7          & 1.144\textbf{.}5          & 263\textbf{.}3          & 62\textbf{.}9             & 14\textbf{.}3             \\
+        C+AVX           & \textbf{90.785\textbf{.}8} & \textbf{23.217\textbf{.}8} & \textbf{5.752\textbf{.}3} & \textbf{1.353\textbf{.}4} & \textbf{296\textbf{.}7} & \underline{68\textbf{.}0} & \underline{15\textbf{.}7} \\
+        NumPy           & 20.237\textbf{.}9          & 12.219\textbf{.}4          & 5.633\textbf{.}7          & 1.690\textbf{.}5          & 392\textbf{.}7          & \textbf{81\textbf{.}7}    & \textbf{16\textbf{.}6}    \\
         \bottomrule
     \end{tabular}
 \end{table}
