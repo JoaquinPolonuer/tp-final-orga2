@@ -721,6 +721,35 @@ Los resultados experimentales presentados en \ref{tab:performance_results} revel
 
 \section{Conclusiones}
 
+Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. Los resultados experimentales proporcionan insights valiosos sobre el rendimiento de diferentes técnicas de optimización.
+
+Los experimentos demuestran que las técnicas de optimización pueden generar mejoras dramáticas de rendimiento. La implementación en Python puro exhibe un rendimiento base que sirve como referencia, pero resulta inadecuado para aplicaciones que requieran cálculos en tiempo real. Las implementaciones en C muestran mejoras de hasta dos órdenes de magnitud respecto al baseline de Python.
+
+La implementación C+AVX emerge como la más eficiente entre las implementaciones desarrolladas, logrando un 20-25\% de mejora respecto a C puro gracias al paralelismo a nivel de instrucción. Esto demuestra el valor de las extensiones vectoriales modernas cuando se aplican correctamente a problemas computacionalmente intensivos.
+
+Sorprendentemente, NumPy supera consistentemente a todas las implementaciones custom en grillas grandes (256×256 y superiores), evidenciando la efectividad de bibliotecas altamente optimizadas que incorporan décadas de optimizaciones y técnicas avanzadas como BLAS y LAPACK.
+
+Contrario a las expectativas iniciales, la implementación en Assembly puro no superó a la versión en C. Este resultado subraya una realidad importante en la optimización moderna: los compiladores actuales incorporan optimizaciones sofisticadas que pueden superar implementaciones manuales en muchos escenarios. Las optimizaciones automáticas del compilador incluyen scheduling de instrucciones, manejo inteligente de registros, y aprovechamiento del pipeline del procesador.
+
+Los resultados tienen implicaciones importantes para el desarrollo de software científico:
+
+\textbf{Selección de herramientas:} Para la mayoría de aplicaciones científicas, bibliotecas maduras como NumPy ofrecen el mejor balance entre facilidad de desarrollo y rendimiento.
+
+\textbf{Optimización custom:} Cuando se requieren optimizaciones específicas, las extensiones AVX proporcionan un camino viable, especialmente en aplicaciones que procesan grandes volúmenes de datos regulares.
+
+\textbf{Desarrollo iterativo:} La estrategia de implementar primero en lenguajes de alto nivel y optimizar posteriormente las secciones críticas resultó efectiva para identificar cuellos de botella reales.
+
+Este trabajo abre varias direcciones para investigación adicional:
+
+\begin{itemize}
+    \item \textbf{Paralelización multi-core}: Explorar OpenMP o threading manual para aprovechar múltiples núcleos de procesamiento.
+    \item \textbf{Optimizaciones de memoria}: Investigar técnicas de cache-blocking y prefetching para mejorar el rendimiento en grillas muy grandes.
+    \item \textbf{GPU Computing}: Evaluar implementaciones en CUDA o OpenCL para problemas de mayor escala.
+    \item \textbf{Precisión mixta}: Analizar el trade-off entre precisión numérica y rendimiento usando aritmética de precisión reducida.
+\end{itemize}
+
+En conclusión, este trabajo demuestra que la optimización efectiva requiere un entendimiento profundo tanto del problema matemático como de la arquitectura del procesador, y que las bibliotecas especializadas representan una opción competitiva frente a implementaciones custom para muchas aplicaciones científicas.
+
 
 
 \begin{thebibliography}{9}
