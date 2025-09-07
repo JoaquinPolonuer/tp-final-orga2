@@ -301,6 +301,38 @@ Esto se puede implementar eficientemente mediante el siguiente algoritmo de dos 
           \end{equation}
 \end{enumerate}
 
+Esto se implementa en C de la siguiente manera:
+\begin{verbatim}
+static void fft2d(Complex *data, int rows, int cols, int inverse)
+{
+
+    Complex *temp = (Complex *)malloc(cols * sizeof(Complex));
+
+    for (int i = 0; i < rows; i++)
+    {
+        memcpy(temp, &data[i * cols], cols * sizeof(Complex));
+        fft_1d(temp, cols, inverse);
+        memcpy(&data[i * cols], temp, cols * sizeof(Complex));
+    }
+
+    temp = (Complex *)realloc(temp, rows * sizeof(Complex));
+    for (int j = 0; j < cols; j++)
+    {
+        for (int i = 0; i < rows; i++)
+        {
+            temp[i] = data[i * cols + j];
+        }
+        fft_1d(temp, rows, inverse);
+        for (int i = 0; i < rows; i++)
+        {
+            data[i * cols + j] = temp[i];
+        }
+    }
+
+    free(temp);
+}
+\end{verbatim}
+
 \subsubsection{Aplicación a la Ecuación de Onda}
 
 En el contexto de la resolución de la ecuación de onda bidimensional, la FFT 2D permite transformar el operador Laplaciano $\nabla^2$
@@ -437,32 +469,26 @@ typedef struct
 \end{verbatim}
 
 WaveSimulation funciona de la siguiente manera
+\begin{itemize}
+    \item \textbf{grid\_coords}: es una grilla cuadrada de un tamaño determinado (\texttt{size}). En cada posición guarda un valor $(x, y)$ que determina a qué punto del dominio equivale esa posición. En la práctica, los valores se guardan todos contiguos en memoria: $[x_0, y_0, x_1, y_1, \ldots]$.
+    \item \textbf{k\_grid\_coords}: es exactamente lo mismo pero en el dominio de las frecuencias. Recordemos que la transformada de Fourier permite resolver la ecuación diferencial fácilmente al cambiar el dominio del espacio a las frecuencias.
+    \item \textbf{wave} y \textbf{wave\_k}: funcionan en conjunto con \texttt{grid\_coords} y \texttt{k\_grid\_coords}. Tienen, para cada valor de la grilla, el valor de la función en ese punto. Básicamente, \texttt{wave[i][j] = phi(grid\_coords[i][j])}.
+    \item \textbf{K}: Matriz que almacena, para cada punto en el dominio de las frecuencias, el valor de $k^2 = k_x^2 + k_y^2$, necesario para la evolución temporal de la ecuación de onda en el dominio espectral.
+    \item Los demas elementos son parametros que manejan el paso del tiempo y la velocidad de las olas. El primero no afecta la precision de la simulacion, dado que
+    la solucion utilizada es analitica. El segundo, wave\_speed, es un parametro de la ecuacion diferencila.
+\end{itemize}
 
-- \textbf{grid_coords} es una grilla cuadrada de un tamaño determinado (size). En cada posicion guarda un valor (x, y) que determina a que punto del dominio equivale
-esa posicion. En la practica los valores se guardan todos contiguos en memoria [x0,y0,x1,y1,...].
+Este struct funciona gracias a tres metodos principales: create\_wave\_simulation, add\_wave\_source y wave\_sim\_step.
 
-- \textbf{k_grid_coords} es exactamente lo mismo pero en el dominio de las frecuencias. Recordemos que la transformada de Fourier permite resolver la ecuacion
-diferencial facilmente al cambiar el dominio del espacio a las frecuencias.
-
-- \textbf{wave} y \textbf{wave_k} funcionan en conjunto con grid_coords y k_grid_coords. Tienen, para cada valor de la grilla, el valor de la funcion en ese punto. Basicamente
-wave[i][j] = phi(grid_coords[i][j]).
-
-- \textbf{K}: COMPLETAR
-
-- Los demas elementos son parametros que manejan el paso del tiempo y la velocidad de las olas. El primero no afecta la precision de la simulacion, dado que
-la solucion utilizada es analitica. El segundo, wave_speed, es un parametro de la ecuacion diferencila.
-
-Este struct funciona gracias a tres metodos principales: create_wave_simulation, add_wave_source y wave_sim_step.
-
-\textbf{create_wave_simulation} \\
+\textbf{create\_wave\_simulation} \\
 - Asigna las variable, realizando las reservas de memoria necesarias \\
-- Inicializa grid_coords, k_grid_coords y K. \\
+- Inicializa grid\_coords, k\_grid\_coords y K. \\
 
-\textbf{add_wave_source} \\
+\textbf{add\_wave\_source} \\
 - Agrega un circulito \\
 - Aplica la transformada y vuelve a resolver la ecuacion \\
 
-\textbf{wave_sim_step} \\
+\textbf{wave\_sim\_step} \\
 - Obtiene, para cada punto del dominio de las frecuencias, el nuevo valor \\
 - Aplica la transformada inversa para obtener el nuevo valor de la funcion de onda \\
 
@@ -615,12 +641,13 @@ Para simplificar la implementacion y aprovechar las optimizaciones realizadas po
 
 La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly, donde se procesan
 múltiples elementos simultáneamente. Las funciones que permiten esta aceleracion son
-
-- \textbf{\_mm256\_loadu\_pd}\\
-- \textbf{\_mm256\_setr\_pd} \\
-- \textbf{complex\_mul\_simd}\\
-- \textbf{\_mm256\_add\_pd} y \textbf{\_mm256\_sub\_pd}\\
-- \textbf{\_mm256\_storeu\_pd}\\
+\begin{itemize}
+    \item \textbf{\_mm256\_loadu\_pd}jkjl
+    \item \textbf{\_mm256\_setr\_pd}
+    \item \textbf{complex\_mul\_simd}
+    \item \textbf{\_mm256\_add\_pd} y \textbf{\_mm256\_sub\_pd}
+    \item \textbf{\_mm256\_storeu\_pd}
+\end{itemize}
 
 Y vale la pena detenerse a considerar la implementacion de complex\_mul\_simd, dado que utiliza operaciones interesantes:
 \begin{verbatim}
