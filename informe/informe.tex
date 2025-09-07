@@ -356,21 +356,21 @@ en C y Assembler. A continuacion se muestra un diagrama:
     \includegraphics[width=0.7\textwidth]{extra/diagram.png}
     \caption{Diagrama de arquitectura del simulador de ondas}
     \label{fig:wave_sim_architecture}
-\end{figure}
+\end{figure} \\
 
-\textbf{Initialize (C)}
+\textbf{Initialize (C)} \\
 Toma un tamaño de grilla, un tamaño del dominio, la velocidad de la hola y el intervalo de tiempo
 
-\textbf{Add Wave Source (C)}
+\textbf{Add Wave Source (C)} \\
 Toma la posicion de la ola a agregar a la simulacion.
 
-\textbf{Step (C)}
+\textbf{Step (C)} \\
 Hace avanzar el tiempo de la simulacion.
 
-\textbf{Get Intensity (C)}
+\textbf{Get Intensity (C)} \\
 Devuelve una grilla con la norma de la funcion en cada punto
 
-\textbf{Get Real Part (C)}
+\textbf{Get Real Part (C)} \\
 Devuelve una grilla con la parte real de la funcion en cada punto, que sería la altura de la onda que veríamos en la vida real.
 
 Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
@@ -394,7 +394,69 @@ def fft2(self, x):
 Como se observará en los resultados experimentales, la implementación de NumPy es extremadamente rápida y difícil de superar, aunque lograremos un rendimiento bastante similar con nuestras implementaciones optimizadas en C.
 
 \subsection{C}
-Implementación en lenguaje
+Como se ve en `ASMWaveSimulation2D`, la clase implementada en Python es simplemente una fachada, y toda la logica y estructuras de datos
+utilizadas para correr la simulacion se manejan desde C. Esto funciona asi en el backend de C puro, como en el de C + AVX y C + Assembler.
+
+En el archivo `c_backend.c` definimos dos structs fundamentales: Complex y WaveSimulation
+
+\begin{verbatim}
+
+typedef struct
+{
+    double real;
+    double imag;
+} Complex;
+    
+typedef struct
+{
+    Complex *wave;
+    Complex *wave_k;
+    double *grid_coords;
+    double *k_grid_coords;
+    double *K;
+    int size;
+    double domain_size;
+    double wave_speed;
+    double dt;
+    double dx;
+} WaveSimulation;
+
+\end{verbatim}
+
+WaveSimulation funciona de la siguiente manera
+
+- \textbf{grid_coords} es una grilla cuadrada de un tamaño determinado (size). En cada posicion guarda un valor (x, y) que determina a que punto del dominio equivale
+esa posicion. En la practica los valores se guardan todos contiguos en memoria [x0,y0,x1,y1,...].
+
+- \textbf{k_grid_coords} es exactamente lo mismo pero en el dominio de las frecuencias. Recordemos que la transformada de Fourier permite resolver la ecuacion
+diferencial facilmente al cambiar el dominio del espacio a las frecuencias.
+
+- \textbf{wave} y \textbf{wave_k} funcionan en conjunto con grid_coords y k_grid_coords. Tienen, para cada valor de la grilla, el valor de la funcion en ese punto. Basicamente
+wave[i][j] = phi(grid_coords[i][j]).
+
+- \textbf{K}: COMPLETAR
+
+- Los demas elementos son parametros que manejan el paso del tiempo y la velocidad de las olas. El primero no afecta la precision de la simulacion, dado que
+la solucion utilizada es analitica. El segundo, wave_speed, es un parametro de la ecuacion diferencila.
+
+Este struct funciona gracias a tres metodos principales: create_wave_simulation, add_wave_source y wave_sim_step.
+
+\textbf{create_wave_simulation} \\
+- Asigna las variable, realizando las reservas de memoria necesarias \\
+- Inicializa grid_coords, k_grid_coords y K. \\
+
+\textbf{add_wave_source} \\
+- Agrega un circulito \\
+- Aplica la transformada y vuelve a resolver la ecuacion \\
+
+\textbf{wave_sim_step} \\
+- Obtiene, para cada punto del dominio de las frecuencias, el nuevo valor \\
+- Aplica la transformada inversa para obtener el nuevo valor de la funcion de onda \\
+
+COMPLETAR: Cuando decimos (hace la transformada) en realidad llama a la transformada 2d.
+
+Estos metodos son fundamentales y, como se menciono previamente, son la base necesaria que nos permite acelerar la simulacion en todos los backends. Ya aclarado
+esto la implementacion de la transformada de Fourier:
 
 \begin{verbatim}
 static void fft_1d(Complex *x, int n, int inverse)
@@ -433,191 +495,122 @@ static void fft_1d(Complex *x, int n, int inverse)
 }
 \end{verbatim}
 
-Como puede verse, la implementacion de C es bastante parecida a la de Python.
-
 \subsection{C + ASM}
 
-Código Assembly (x86-64):
-\begin{verbatim}
-; void fft_1d_asm(Complex *x, int n, int inverse)
-; rdi = *x, rsi = n, rdx = inverse
-fft_1d_asm:
-    .out_loop:
-        ...
+La motivacion de esta optimizacion es que necesitamos calcular la transformada todo el tiempo para volver desde el dominio de las frecuencias a el dominio espacial,
+y esto requiere calcular la transformada en cada paso de la simulacion.
 
-        ; angle = 2pi/len * (inverse ? +1 : -1)
-        ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
-        
-        ; st0 = 2pi
-        fldpi                                   ; st0 = pi
-        fadd    st0, st0                        ; st0 = 2pi
+La implementacion en Assembler puede entenderse facilmente haciendo un paralelismo linea por linea con la implementacion en C. Sin embargo, hay algunos detalles interesantes
+que vale la pena mencionar.
 
-        mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
-        fild    qword [rsp]                     ; st0 = (double)len, st1 = 2pi
-        fdivp   st1, st0                        ; st0 = 2pi/len
+\textbf{Uso de la pila x87 para operaciones matematicas}\\
+La arquitectura x86-64 incluye una pila de registros especializada, conocida como la \textbf{pila x87}, diseñada para operaciones matemáticas en punto flotante.
+Esta pila, compuesta por ocho registros de 80 bits (st0--st7), permite realizar cálculos complejos de manera eficiente, especialmente en operaciones trigonométricas
+y exponenciales, que son fundamentales para la Transformada de Fourier.
 
-        test    r13, r13
-        jnz     .declarar_w                     ; Si inverse es 1, seguimos
-        fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
-        
-        ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
-        .declarar_w:
-        fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
-        fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
-        fstp    qword [rsp]                     ; guardar sin en memoria
-        movsd   xmm7, [rsp]                     ; w_i = sin(ang)
-        fcos                                    ; st0 = cos(ang)
-        fstp    qword [rsp]                     ; guardar cos
-        movsd   xmm6, [rsp]                     ; w_r = cos(ang)
-        ; (pila x87 vacía)
+En la implementación en Assembly, la pila x87 se utiliza para calcular funciones como seno y coseno de un ángulo, aprovechando instrucciones dedicadas como
+\texttt{fsin} y \texttt{fcos}. El flujo típico consiste en cargar el ángulo en la pila, calcular el seno (dejando el ángulo aún disponible en la pila), almacenar
+el resultado en memoria, y luego calcular el coseno sobre el mismo ángulo. Finalmente, ambos resultados se transfieren a registros xmm para su uso vectorizado.
 
-        ...
-        .mid_loop:
-            ; ------- wn = 1 + 0i -------
-            pxor    xmm9, xmm9                      ; xmm9 = wn_i = 0.0
-            fld1
-            fstp    qword [rsp]
-            movsd   xmm8, [rsp]                     ; xmm8 = wn_r = 1.0
-            ; ------- Fin wn = 1 + 0i -------
+El siguiente fragmento ilustra este proceso, equivalente a la operación en C \texttt{Complex w = {cos(angle), sin(angle)}}:
+\begin{verbatim}    
+.declarar_w:
+fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
+fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
+fstp    qword [rsp]                     ; guardar sin en memoria
+movhpd  xmm6, [rsp]                     ; xmm6 = [?, w_i]
 
-            ; base del bloque i
-            mov     rax, r15                        ; rax = i
-            shl     rax, 4                          ; rax = i * 16
-            lea     r10, [rbx + rax]                ; r10 = &x[i]
+fcos                                    ; st0 = cos(ang)
+fstp    qword [rsp]                     ; guardar cos
+movlpd   xmm6, [rsp]                     ; xmm6 = [w_r, w_i]        
+; (pila x87 vacía)
+\end{verbatim}
+En este código, se observa cómo la pila x87 permite calcular ambas funciones trigonométricas sin necesidad de recalcular el ángulo ni acceder repetidamente a memoria, optimizando así el rendimiento en operaciones matemáticas intensivas.
 
-            xor     rcx, rcx                        ; j = 0
-            .in_loop:
-                mov     rdx, rcx                        ; rdx = j
-                shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
-                lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
-                lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
 
-                ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
-                movsd   xmm0, [rdi]                     ; xmm0 = u_r
-                movsd   xmm1, [rdi+8]                   ; xmm1 = u_i
+\textbf{Representacion de numeros complejos} \\
+Dado que la Transformada de Fourier trabaja con numeros complejos, es fundamental definir como vamos a manejarlos en Assembler. Como vimos en la implementacion de C, la
+funcion recibe un puntero a un arreglo de complejos. Como ya vimos antes, el tipo de dato Complex ocupa 128 bits, o dos doubles, por lo que resulta ideal usar registros
+xmm para operar con ellos. En este trabajo, trabajamos con numeros complejos en los registros xmm de la siguiente manera:
 
-                movsd   xmm2, [rsi]                     ; xmm2 = t_r
-                movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{extra/xmm complex.png}
+    \caption{Representación de números complejos en memoria para la implementación en Assembly}
+    \label{fig:asm_complex_representation}
+\end{figure}
+Esta representacion no solo permite hacer solo una lectura de memoria por cada complejo, lo cual es razonable, si no que ademas permite aprovechar las
+instrucciones de packed double para paralelizar sumas y restas:
 
-                ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
-                movapd  xmm4, xmm2                      ; xmm4 = t_r
-                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
-                movapd  xmm5, xmm3                      ; xmm5 = t_i
-                mulsd   xmm5, xmm9                      ; t_i * wn_i
-                subsd   xmm4, xmm5                      ; xmm4 = v_r
-
-                movapd  xmm5, xmm2                      ; xmm5 = t_r
-                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
-                movapd  xmm11, xmm3                     ; xmm11 = t_i
-                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
-                addsd   xmm5, xmm11                     ; xmm5 = v_i
-                ; -----------------------------------------------------------
-                ...
-            ...
-        ...
-    ...
+\begin{verbatim}    
+; --------------- x[i + j] = complex_add(u, v) --------------
+movapd  xmm11, xmm0                     ; xmm11 = u_r, u_i
+addpd   xmm11, xmm4                     ; xmm11 = u_r + v_r, u_i + v_i
+movapd  [rdi],   xmm11
 \end{verbatim}
 
-\subsubsection{Análisis del Código Assembly}
+Es decir, al sumar dos numeros complejos, la suma de la parte real e imaginaria se realiza simultaneamente.
 
-Este fragmento de código Assembly presenta varias características técnicas importantes que merecen explicación detallada:
+\textbf{Definicion de la macro de multiplicacion} \\
+Otro detalle interesante de la implementacion en Assembler es la utilizacion de una macro para el calculo de la multiplicacion compleja, dado de la misma se
+utiliza mas de una vez. Esto resulta conveniente porque:\\
 
-\paragraph{Representación de Números Complejos según ABI x86-64}
+- Facilita la edicion del codigo si queremos hacer optimizaciones posteriores\\
+- Al añadirse al codigo al momento de compilar, no tiene efectos en la performance, como si tendría utilizar una funcion.
 
-En la convención de llamada System V ABI para x86-64, los números complejos se representan como estructuras de 16 bytes contiguos en memoria:
-
-\begin{itemize}
-    \item \textbf{Parte real}: 8 bytes (double precision) en offset 0
-    \item \textbf{Parte imaginaria}: 8 bytes (double precision) en offset 8
-\end{itemize}
-
-Esto se observa en el código:
-\begin{verbatim}
-movsd   xmm0, [rdi]                     ; xmm0 = u_r (offset 0)
-movsd   xmm1, [rdi+8]                   ; xmm1 = u_i (offset 8)
-\end{verbatim}
-
-El cálculo de direcciones utiliza multiplicación por 16 bytes:
-\begin{verbatim}
-shl     rdx, 4                          ; rdx = j * 16 (16 bytes por complejo)
-\end{verbatim}
-
-\paragraph{Uso de Registros x87 (st0, st1)}
-
-El código hace uso estratégico de la pila de registros x87 para cálculos trigonométricos:
-
-\begin{itemize}
-    \item \textbf{\texttt{fldpi}}: Carga la constante $\pi$ en st0
-    \item \textbf{\texttt{fadd st0, st0}}: Duplica el valor (st0 = 2$\pi$)
-    \item \textbf{\texttt{fild}}: Convierte entero a double y lo apila
-    \item \textbf{\texttt{fdivp}}: Divide y hace pop de la pila
-    \item \textbf{\texttt{fchs}}: Cambia el signo (Float Change Sign)
-\end{itemize}
-
-La secuencia de cálculo del factor de giro (twiddle factor) demuestra el uso eficiente de la pila x87:
+La macro se define de la siguiente manera:
 
 \begin{verbatim}
-fld     st0                             ; Duplica el ángulo
-fsin                                    ; st0 = sin(angle), st1 = angle
-fstp    qword [rsp]                     ; Guarda sin y hace pop
-fcos                                    ; st0 = cos(angle)
-fstp    qword [rsp]                     ; Guarda cos y hace pop
+; Macro para multiplicación compleja: result = a * b
+; Parámetros: a, b, result
+; Fórmula: (a_r + a_i*i) * (b_r + b_i*i) = (a_r*b_r - a_i*b_i) + (a_r*b_i + a_i*b_r)*i
+%macro COMPLEX_MUL 3
+    movapd  %3, %1                      ; t1 = a
+    mulpd   %3, %2                      ; t1 = [ar*br, ai*bi]
+    xorpd   %3, [rel COMPLEX_NEGHI]     ; t1 = [ar*br, -(ai*bi)]
+
+    movapd  xmm15, %1
+    shufpd  xmm15, xmm15, 1   ; xmm15 = [ai, ar]
+    mulpd   xmm15, %2         ; xmm15 = [ai*br, ar*bi]
+
+    haddpd  %3, xmm15         ; %3 = [ar*br - ai*bi, ai*br + ar*bi]
+%endmacro
 \end{verbatim}
 
-\paragraph{Ventajas del Enfoque Híbrido}
-
-Esta implementación combina lo mejor de ambos mundos:
-
-\begin{enumerate}
-    \item \textbf{Precisión x87}: Los registros x87 ofrecen mayor precisión para cálculos trigonométricos que las aproximaciones en tablas
-    \item \textbf{Velocidad XMM}: Los registros XMM (xmm0-xmm15) permiten operaciones vectoriales eficientes
-    \item \textbf{Evita dependencias de memoria}: No requiere tablas precalculadas de senos/cosenos
-    \item \textbf{Compatibilidad ABI}: Respeta completamente la convención de llamada System V
-\end{enumerate}
-
-\paragraph{Operaciones de Números Complejos}
-
-La multiplicación compleja se implementa siguiendo la fórmula:
-$$(a + bi) \cdot (c + di) = (ac - bd) + (ad + bc)i$$
-
-\begin{verbatim}
-; v_r = t_r * wn_r - t_i * wn_i
-mulsd   xmm4, xmm8                      ; t_r * wn_r
-mulsd   xmm5, xmm9                      ; t_i * wn_i
-subsd   xmm4, xmm5                      ; v_r = t_r * wn_r - t_i * wn_i
-
-; v_i = t_r * wn_i + t_i * wn_r
-mulsd   xmm5, xmm9                      ; t_r * wn_i
-mulsd   xmm11, xmm8                     ; t_i * wn_r
-addsd   xmm5, xmm11                     ; v_i = t_r * wn_i + t_i * wn_r
-\end{verbatim}
-
-Esta implementación demuestra cómo el Assembly permite un control granular sobre el uso de registros y operaciones, optimizando tanto la precisión como el rendimiento.
+Y utiliza una mascara definida en la seccion .rodata que permite negar la parte imaginaria del numero.
 
 \subsection{C + AVX}
-Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente,
-duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
+Como se menciono en la seccion anterior, cada numero complejo ocupa 128 bits, por lo que el uso de los registros xmm, a pesar de permitir paralelizar las operaciones
+efectivamente, solo soporta operar sobre un elemento del arreglo a la vez. Es por esto que se propone utilizar AVX para acelerar el ciclo interno de la transformada,
+habitualmente llamado __butterfly__.
 
-\subsubsection{¿Qué es AVX2?}
+AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Los registros introducidos duplican el ancho
+de los registros SSE (128 bits), por lo que permiten operar sobre 4 valores double precision simultáneamente.
 
-AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Las características principales incluyen:
+El uso de estos registros en este trabajo es analogo al explicado en la implementacion de C + ASM, solo que guardando dos numeros complejo por cada registro ymm:
 
-\begin{itemize}
-    \item \textbf{Registros de 256 bits}: Duplican el ancho de los registros SSE (128 bits)
-    \item \textbf{Procesamiento vectorial}: Permite operar sobre 4 valores double precision simultáneamente
-    \item \textbf{Instrucciones especializadas}: Incluye operaciones horizontales (\texttt{\_mm256\_hadd\_pd}, \texttt{\_mm256\_hsub\_pd})
-    \item \textbf{Shuffling avanzado}: Mejores capacidades de reorganización de datos
-    \item \textbf{Compatibilidad}: Extiende las instrucciones SSE existentes al ancho de 256 bits
-\end{itemize}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{extra/ymm complex.png}
+    \caption{Esquema del ciclo butterfly vectorizado con AVX para la FFT}
+    \label{fig:avx_butterfly}
+\end{figure}
+
+Para simplificar la implementacion y aprovechar las optimizaciones realizadas por el compilador, utilizamos C para añadir estas operaciones _inline_.
 
 \subsubsection{Implementación del Ciclo Butterfly}
 
-La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly donde se procesan múltiples elementos simultáneamente:
+La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly, donde se procesan
+múltiples elementos simultáneamente. Las funciones que permiten esta aceleracion son
 
-Código C:
+- \textbf{\_mm256\_loadu\_pd}\\
+- \textbf{\_mm256\_setr\_pd} \\
+- \textbf{complex\_mul\_simd}\\
+- \textbf{\_mm256\_add\_pd} y \textbf{\_mm256\_sub\_pd}\\
+- \textbf{\_mm256\_storeu\_pd}\\
+
+Y vale la pena detenerse a considerar la implementacion de complex\_mul\_simd, dado que utiliza operaciones interesantes:
 \begin{verbatim}
-// SIMD complex operations using AVX
-// Data layout: [real1, imag1, real2, imag2] in __m256d
 static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
 {
     // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
@@ -632,77 +625,12 @@ static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
     
     return _mm256_unpacklo_pd(real_parts, imag_parts);
 }
-
-// Ciclo principal FFT - el resto es idéntico a la implementación C estándar
-for (int len = 2; len <= n; len <<= 1)
-{
-    double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
-    Complex w = {cos(angle), sin(angle)};
-
-    for (int i = 0; i < n; i += len)
-    {
-        Complex wn = {1.0, 0.0};
-        int j;
-
-        // SIMD loop: process 2 complex pairs at once (4 doubles total)
-        for (j = 0; j < (len / 2) - 1; j += 2)
-        {
-            // Load 2 pairs of complex numbers
-            __m256d u = _mm256_loadu_pd((double *)&x[i + j]);
-            __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]);
-            
-            // Prepare twiddle factors: wn and wn*w
-            Complex wn2 = complex_mul(wn, w);
-            __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag);
-            
-            // v = v * twiddle (complex multiplication)
-            v = complex_mul_simd(v, twiddle);
-            
-            // Butterfly operations: u + v and u - v
-            __m256d result1 = _mm256_add_pd(u, v); // u + v
-            __m256d result2 = _mm256_sub_pd(u, v); // u - v
-            
-            // Store results
-            _mm256_storeu_pd((double *)&x[i + j], result1);
-            _mm256_storeu_pd((double *)&x[i + j + len / 2], result2);
-            
-            // Update twiddle factor for next iteration
-            wn = complex_mul(wn2, w);
-        }
-
-        // Handle remaining iterations (scalar fallback)
-        for (; j < len / 2; j++)
-        {
-            Complex u = x[i + j];
-            Complex v = complex_mul(x[i + j + len / 2], wn);
-            x[i + j] = complex_add(u, v);
-            x[i + j + len / 2] = complex_sub(u, v);
-            wn = complex_mul(wn, w);
-        }
-    }
-}
 \end{verbatim}
-
-\subsubsection{Análisis de la Optimización AVX}
-
-\textbf{Procesamiento Vectorial:} La implementación procesa 2 números complejos (4 valores double) simultáneamente, duplicando el throughput respecto a operaciones escalares.
-
-\textbf{Operaciones Horizontales:} Las instrucciones \texttt{\_mm256\_hsub\_pd} y \texttt{\_mm256\_hadd\_pd} realizan sumas y restas horizontales, esenciales para la multiplicación compleja:
-\begin{itemize}
-    \item \texttt{hsub\_pd}: Calcula $[a-b, c-d, a-b, c-d]$
-    \item \texttt{hadd\_pd}: Calcula $[a+b, c+d, a+b, c+d]$
-\end{itemize}
-
-\textbf{Fallback Escalar:} Para casos donde el número de elementos no es múltiplo de 2, se mantiene un bucle escalar que garantiza la corrección del algoritmo.
-
-\textbf{Compatibilidad:} El resto de la transformada (bit reversal, estructura de bucles, manejo de twiddle factors) permanece idéntico a la implementación C estándar, asegurando la corrección matemática del algoritmo FFT.
 
 \section{Experimentos}
 
 Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos
 el rendimiento en distintos tamaños.
-
-\subsection{Configuración Experimental}
 
 Los experimentos se realizaron en un sistema con las siguientes especificaciones:
 \begin{itemize}
@@ -726,10 +654,6 @@ Se evaluaron seis implementaciones diferentes:
     \item \textbf{C + ASM}: C con rutinas críticas en Assembly x86-64
     \item \textbf{C + AVX}: Utilizando extensiones AVX para paralelización vectorial
 \end{enumerate}
-
-Para cada implementación, se midió el rendimiento en grillas de tamaño $16 \times 16$, $32 \times 32$, $64 \times 64$, $128 \times 128$, $256 \times 256$, $512 \times 512$, y $1024 \times 1024$. La métrica principal fue \textit{steps per second}, que indica cuántos pasos de simulación puede procesar cada backend en un segundo.
-
-
 
 \subsection{Visualización Interactiva}
 Obviamente, una parte fundamental del trabajo es poder visualizar interactivamente la simulacion. Por ese motivo, se implemento una visualización que permite colocar
@@ -762,7 +686,7 @@ A continuación se detallan los resultados:
         ASM             & 58.661,6             & 17.405,2             & 4.397,7             & 1.088,5             & 243,1             & 58,0             & 13,4               \\
         C               & \underline{78.603,9} & 22.248,6             & 5.091,3             & 1.186,9             & 261,5             & 61,0             & 14,1               \\
         C\_AVX          & \textbf{82.695,3}    & \textbf{23.736,9}    & \underline{5.697,9} & \underline{1.335,2} & \underline{296,9} & \underline{68,7} & \underline{15,3}   \\
-        Numpy           & 19.689,7             & \underline{12.918,3} & \textbf{5.707,2} & \textbf{1.617,4}    & \textbf{380,6 }   & \textbf{85,4}    & \textbf{15,8}      \\
+        Numpy           & 19.689,7             & \underline{12.918,3} & \textbf{5.707,2}    & \textbf{1.617,4}    & \textbf{380,6 }   & \textbf{85,4}    & \textbf{15,8}      \\
         \bottomrule
     \end{tabular}
 \end{table}

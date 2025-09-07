@@ -46,13 +46,13 @@ bit_reverse_asm:
         mov     r15, r12
         shr     r15, 1                  ; r15 = bit
 
-    ; while (j & bit) { j ^= bit; bit >>= 1; }
-    .while_loop:
-        test    r13, r15
-        jz      .after_while
-        xor     r13, r15                ; j ^= bit
-        shr     r15, 1                  ; bit >>= 1
-        jmp     .while_loop
+        ; while (j & bit) { j ^= bit; bit >>= 1; }
+        .while_loop:
+            test    r13, r15
+            jz      .after_while
+            xor     r13, r15                ; j ^= bit
+            shr     r15, 1                  ; bit >>= 1
+            jmp     .while_loop
 
     .after_while:
         ; j ^= bit;
