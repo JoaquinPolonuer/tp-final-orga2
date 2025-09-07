@@ -14,6 +14,7 @@ typedef struct
 
 // Assembly FFT functions
 extern void fft_1d_asm(Complex *x, int n, int inverse);
+// extern void test_complex_mul(Complex *a, Complex *b, Complex *result);
 
 typedef struct
 {
@@ -54,7 +55,6 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
     {
         memcpy(temp, &data[i * cols], cols * sizeof(Complex));
         fft_1d_asm(temp, cols, inverse);
-        // fft_1d(temp, cols, inverse);
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
 
@@ -66,8 +66,7 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         {
             temp[i] = data[i * cols + j];
         }
-        fft_1d_asm(temp, cols, inverse);
-        // fft_1d(temp, rows, inverse);
+        fft_1d_asm(temp, rows, inverse);
         for (int i = 0; i < rows; i++)
         {
             data[i * cols + j] = temp[i];
@@ -333,6 +332,23 @@ static PyObject *c_get_real_part(PyObject *self, PyObject *args)
     return wave_sim_get_real_part(sim);
 }
 
+// static PyObject *c_test_complex_mul(PyObject *self, PyObject *args)
+// {
+//     double a_real, a_imag, b_real, b_imag;
+//     if (!PyArg_ParseTuple(args, "dddd", &a_real, &a_imag, &b_real, &b_imag))
+//     {
+//         return NULL;
+//     }
+
+//     Complex a = {a_real, a_imag};
+//     Complex b = {b_real, b_imag};
+//     Complex result = {0.0, 0.0};
+
+//     test_complex_mul(&a, &b, &result);
+
+//     return Py_BuildValue("(dd)", result.real, result.imag);
+// }
+
 // Method definitions
 static PyMethodDef PureCBackendMethods[] = {
     {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
@@ -340,6 +356,7 @@ static PyMethodDef PureCBackendMethods[] = {
     {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
     {"get_intensity", c_get_intensity, METH_VARARGS, "Get wave intensity"},
     {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
+    // {"test_complex_mul", c_test_complex_mul, METH_VARARGS, "Test complex multiplication macro"},
     {NULL, NULL, 0, NULL}};
 
 // Module definition
