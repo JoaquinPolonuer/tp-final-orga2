@@ -1,0 +1,232 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated as
+% required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+\datalist[entry]{none/global//global/global/global}
+  \entry{strauss2008partial}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=SWA}{%
+         family={Strauss},
+         familyi={S\bibinitperiod},
+         given={Walter\bibnamedelima A},
+         giveni={W\bibinitperiod\bibinitdelim A\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {John Wiley \& Sons}%
+    }
+    \strng{namehash}{SWA1}
+    \strng{fullhash}{SWA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{Partial differential equations: an introduction}
+    \field{year}{2008}
+  \endentry
+
+  \entry{oppenheim1999discrete}{book}{}{}
+    \name{author}{2}{}{%
+      {{hash=OAV}{%
+         family={Oppenheim},
+         familyi={O\bibinitperiod},
+         given={Alan\bibnamedelima V},
+         giveni={A\bibinitperiod\bibinitdelim V\bibinitperiod},
+      }}%
+      {{hash=SRW}{%
+         family={Schafer},
+         familyi={S\bibinitperiod},
+         given={Ronald\bibnamedelima W},
+         giveni={R\bibinitperiod\bibinitdelim W\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Prentice Hall}%
+    }
+    \strng{namehash}{OAVSRW1}
+    \strng{fullhash}{OAVSRW1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{Discrete-time signal processing}
+    \field{year}{1999}
+  \endentry
+
+  \entry{strang2007computational}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=SG}{%
+         family={Strang},
+         familyi={S\bibinitperiod},
+         given={Gilbert},
+         giveni={G\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Wellesley-Cambridge Press}%
+    }
+    \strng{namehash}{SG1}
+    \strng{fullhash}{SG1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{Computational science and engineering}
+    \field{volume}{1}
+    \field{year}{2007}
+  \endentry
+
+  \entry{cooley1965algorithm}{article}{}{}
+    \name{author}{2}{}{%
+      {{hash=CJW}{%
+         family={Cooley},
+         familyi={C\bibinitperiod},
+         given={James\bibnamedelima W},
+         giveni={J\bibinitperiod\bibinitdelim W\bibinitperiod},
+      }}%
+      {{hash=TJW}{%
+         family={Tukey},
+         familyi={T\bibinitperiod},
+         given={John\bibnamedelima W},
+         giveni={J\bibinitperiod\bibinitdelim W\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {JSTOR}%
+    }
+    \strng{namehash}{CJWTJW1}
+    \strng{fullhash}{CJWTJW1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{number}{90}
+    \field{pages}{297\bibrangedash 301}
+    \field{title}{An algorithm for the machine calculation of complex Fourier series}
+    \field{volume}{19}
+    \field{journaltitle}{Mathematics of computation}
+    \field{year}{1965}
+  \endentry
+
+  \entry{brigham1988fast}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=BOE}{%
+         family={Brigham},
+         familyi={B\bibinitperiod},
+         given={Oran\bibnamedelima E},
+         giveni={O\bibinitperiod\bibinitdelim E\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Prentice Hall}%
+    }
+    \strng{namehash}{BOE1}
+    \strng{fullhash}{BOE1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{The fast Fourier transform and its applications}
+    \field{year}{1988}
+  \endentry
+
+  \entry{duhamel1990fast}{article}{}{}
+    \name{author}{2}{}{%
+      {{hash=DP}{%
+         family={Duhamel},
+         familyi={D\bibinitperiod},
+         given={Pierre},
+         giveni={P\bibinitperiod},
+      }}%
+      {{hash=VM}{%
+         family={Vetterli},
+         familyi={V\bibinitperiod},
+         given={Martin},
+         giveni={M\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Elsevier}%
+    }
+    \strng{namehash}{DPVM1}
+    \strng{fullhash}{DPVM1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{number}{4}
+    \field{pages}{259\bibrangedash 299}
+    \field{title}{Fast Fourier transforms: a tutorial review and a state of the art}
+    \field{volume}{19}
+    \field{journaltitle}{Signal processing}
+    \field{year}{1990}
+  \endentry
+
+  \entry{numpy2020array}{article}{}{}
+    \true{moreauthor}
+    \true{morelabelname}
+    \name{author}{1}{}{%
+      {{hash=HCR}{%
+         family={Harris},
+         familyi={H\bibinitperiod},
+         given={Charles\bibnamedelima R},
+         giveni={C\bibinitperiod\bibinitdelim R\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Nature Publishing Group}%
+    }
+    \strng{namehash}{HCR+1}
+    \strng{fullhash}{HCR+1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{number}{7825}
+    \field{pages}{357\bibrangedash 362}
+    \field{title}{Array programming with {NumPy}}
+    \field{volume}{585}
+    \field{journaltitle}{Nature}
+    \field{year}{2020}
+  \endentry
+
+  \entry{intel2016intrinsics}{article}{}{}
+    \name{author}{1}{}{%
+      {{hash=I}{%
+         family={{Intel Corporation}},
+         familyi={I\bibinitperiod},
+      }}%
+    }
+    \strng{namehash}{I1}
+    \strng{fullhash}{I1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{Intel Intrinsics Guide}
+    \verb{url}
+    \verb https://software.intel.com/sites/landingpage/IntrinsicsGuide/
+    \endverb
+    \field{journaltitle}{Intel Developer Zone}
+    \field{year}{2016}
+  \endentry
+
+  \entry{fog2016optimizing}{book}{}{}
+    \name{author}{1}{}{%
+      {{hash=FA}{%
+         family={Fog},
+         familyi={F\bibinitperiod},
+         given={Agner},
+         giveni={A\bibinitperiod},
+      }}%
+    }
+    \list{publisher}{1}{%
+      {Copenhagen University College of Engineering}%
+    }
+    \strng{namehash}{FA1}
+    \strng{fullhash}{FA1}
+    \field{labelnamesource}{author}
+    \field{labeltitlesource}{title}
+    \field{title}{Optimizing software in C++}
+    \field{year}{2016}
+  \endentry
+\enddatalist
+\endinput

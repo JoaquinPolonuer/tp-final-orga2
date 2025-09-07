@@ -9,6 +9,8 @@
 \usepackage{booktabs}
 \usepackage{amsmath}
 \usepackage{amssymb}
+\usepackage[backend=bibtex,style=ieee]{biblatex}
+\addbibresource{referencias.bib}
 
 \begin{document}
 
@@ -29,7 +31,7 @@
 
 La ecuación de onda representa uno de los fenómenos físicos más fundamentales en la naturaleza, describiendo la propagación de
 perturbaciones en medios continuos. Desde ondas sonoras y electromagnéticas hasta vibraciones mecánicas, este modelo matemático
-encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural.
+encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural \cite{strauss2008partial}.
 
 La ecuación de onda unidimensional se expresa como:
 \begin{equation}
@@ -61,8 +63,8 @@ Esta formulación bidimensional modela fenómenos como:
 \subsection{La Transformada de Fourier}
 
 La Transformada de Fourier constituye una herramienta matemática fundamental para el análisis de fenómenos ondulatorios, permitiendo
-descomponer señales complejas en sus componentes frecuenciales básicas. Esta transformación resulta especialmente poderosa en el
-contexto de la resolución de ecuaciones diferenciales parciales.
+descomponer señales complejas en sus componentes frecuenciales básicas \cite{oppenheim1999discrete}. Esta transformación resulta especialmente poderosa en el
+contexto de la resolución de ecuaciones diferenciales parciales \cite{strang2007computational}.
 
 La Transformada de Fourier continua de una función $f(x)$ se define como:
 \begin{equation}
@@ -123,8 +125,8 @@ secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fou
 
 \subsection{Transformada Rápida de Fourier (Cooley-Tukey)}
 
-El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$
-mediante la estrategia de divide and conquer. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
+El algoritmo FFT, desarrollado por Cooley y Tukey en 1965 \cite{cooley1965algorithm}, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$
+mediante la estrategia de divide and conquer \cite{brigham1988fast}. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
 
 El algoritmo DIT (Decimation-in-Time) separa la secuencia de entrada en muestras pares e impares:
 \begin{equation}
@@ -193,7 +195,7 @@ Este algoritmo recursivo tiene complejidad $O(N \log N)$ pero presenta overhead 
     \item Acceso no secuencial a memoria
 \end{itemize}
 
-Por esta razón, las implementaciones prácticas utilizan versiones iterativas optimizadas que mantienen la misma complejidad algorítmica pero con mejor rendimiento en la práctica.
+Por esta razón, las implementaciones prácticas utilizan versiones iterativas optimizadas que mantienen la misma complejidad algorítmica pero con mejor rendimiento en la práctica \cite{duhamel1990fast}.
 
 \subsubsection{Algoritmo Iterativo FFT}
 
@@ -387,7 +389,7 @@ Esta implementación presenta limitaciones inherentes de Python:
     \item Uso ineficiente de memoria, ya que las listas se almacenan de forma dispersa en memoria
 \end{itemize}
 
-\subsubsection{NumPy} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar
+\subsubsection{NumPy} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal \cite{numpy2020array}. En lugar
 de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
 
 \begin{verbatim}
@@ -579,8 +581,8 @@ Y utiliza una mascara definida en la seccion .rodata que permite negar la parte 
 \subsection{C + AVX}
 Como se mencionó en la sección anterior, cada número complejo ocupa 128 bits, por lo que el uso de los registros xmm, a pesar de permitir paralelizar las operaciones efectivamente, solo soporta operar sobre un elemento del arreglo a la vez. Es por esto que se propone utilizar AVX para acelerar el ciclo interno de la transformada, habitualmente llamado \textit{butterfly}.
 
-AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Los registros introducidos duplican el ancho
-de los registros SSE (128 bits), por lo que permiten operar sobre 4 valores double precision simultáneamente.
+AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013 \cite{intel2016intrinsics}. Los registros introducidos duplican el ancho
+de los registros SSE (128 bits), por lo que permiten operar sobre 4 valores double precision simultáneamente \cite{fog2016optimizing}.
 
 \subsubsection{Representación de números complejos}
 
@@ -719,23 +721,8 @@ Los resultados experimentales presentados en \ref{tab:performance_results} revel
 
 \section{Conclusiones}
 
-Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. Los resultados experimentales proporcionan insights importantes sobre el rendimiento relativo de diferentes técnicas de optimización.
+Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. 
 
-\begin{thebibliography}{9}
-    \bibitem{cooley1965algorithm}
-    Cooley, J. W., \& Tukey, J. W. (1965). An algorithm for the machine calculation of complex Fourier series. \textit{Mathematics of computation}, 19(90), 297-301.
-
-    \bibitem{frigo2005design}
-    Frigo, M., \& Johnson, S. G. (2005). The design and implementation of FFTW3. \textit{Proceedings of the IEEE}, 93(2), 216-231.
-
-    \bibitem{lawson1979basic}
-    Lawson, C. L., et al. (1979). Basic linear algebra subprograms for Fortran usage. \textit{ACM Transactions on Mathematical Software}, 5(3), 308-323.
-
-    \bibitem{dagum1998openmp}
-    Dagum, L., \& Menon, R. (1998). OpenMP: an industry standard API for shared-memory programming. \textit{IEEE computational science and engineering}, 5(1), 46-55.
-
-    \bibitem{muchnick1997advanced}
-    Muchnick, S. (1997). \textit{Advanced compiler design and implementation}. Morgan Kaufmann.
-\end{thebibliography}
+\printbibliography
 
 \end{document}
