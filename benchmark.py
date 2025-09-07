@@ -11,7 +11,6 @@ from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
 from backends.wave_simulation_c_avx import OptimizedCWaveSimulation2D
 from backends.wave_simulation_asm import ASMWaveSimulation2D
-from backends.wave_simulation_asm_simd import ASMSIMDWaveSimulation2D
 
 
 def benchmark_backend(backend_name, size=64, steps=100):
@@ -29,8 +28,6 @@ def benchmark_backend(backend_name, size=64, steps=100):
         sim = OptimizedCWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
     elif backend_name == "asm":
         sim = ASMWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
-    elif backend_name == "asm_simd":
-        sim = ASMSIMDWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
     else:
         raise ImportError(f"Unknown backend: {backend_name}")
 
@@ -103,9 +100,7 @@ def save_results_to_csv(df, output_dir="/home/joacopolo/Documents/tp-final-orga2
 
     # Sort by performance on largest size (descending)
     largest_size = df.columns[-1]
-    df.sort_values(by=largest_size, na_position="last").round(1).to_csv(
-        csv_path, index_label="Method"
-    )
+    df.sort_values(by=largest_size, na_position="last").round(1).to_csv(csv_path, index_label="Method")
 
     print(f"Results saved to {csv_path}")
     return csv_path
@@ -186,15 +181,15 @@ def create_performance_plots(df, output_dir="/home/joacopolo/Documents/tp-final-
 
 
 if __name__ == "__main__":
-    backends = ["python", "numpy", "c", "c_avx", "asm_simd", "asm"]
-    sizes = [16, 32, 64, 128, 256, 512, 1024]
+    backends = ["numpy", "c", "c_avx", "asm"]
+    sizes = [ 128, 256, 512]
     steps = 50
 
-    if not os.path.exists("results/table_of_results.csv"):
-        df = create_performance_dataframe(backends, sizes, steps)
-    else:
-        df = pd.read_csv("results/table_of_results.csv", index_col="Method")
-        df.columns = [int(col) for col in df.columns]
+    # if not os.path.exists("results/table_of_results.csv"):
+    df = create_performance_dataframe(backends, sizes, steps)
+    # else:
+    #     df = pd.read_csv("results/table_of_results.csv", index_col="Method")
+    #     df.columns = [int(col) for col in df.columns]
 
     print_performance_summary(df)
 

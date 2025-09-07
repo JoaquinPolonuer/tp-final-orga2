@@ -7,7 +7,6 @@ class CustomBuildExt(build_ext):
     def build_extension(self, ext):
         asm_files = {
             "backends.c_backend_asm": "backends/fft_asm.asm",
-            "backends.c_backend_asm_simd": "backends/fft_asm_simd.asm",
         }
 
         asm_src = asm_files.get(ext.name)
@@ -40,19 +39,13 @@ c_backend_asm_extension = Extension(
     "backends.c_backend_asm",
     sources=["backends/c_backend_asm.c", "backends/fft_asm.asm"],
 )
-
-c_backend_asm_simd = Extension(
-    "backends.c_backend_asm_simd",
-    sources=["backends/c_backend_asm_simd.c", "backends/fft_asm_simd.asm"],
-)
-
 c_backend_avx_extension = Extension(
     "backends.c_backend_avx",
     sources=["backends/c_backend_avx.c"],
     extra_compile_args=["-mavx", "-mavx2"],
 )
 
-ext_modules = [c_backend_extension, c_backend_asm_extension, c_backend_asm_simd, c_backend_avx_extension]
+ext_modules = [c_backend_extension, c_backend_asm_extension, c_backend_avx_extension]
 
 setup(
     name="wave_simulation_backends",
