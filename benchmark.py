@@ -9,7 +9,7 @@ matplotlib.use("Agg")  # Use non-interactive backend
 from backends.wave_simulation_numpy import NumpyWaveSimulation2D
 from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
-from backends.wave_simulation_c_avx import OptimizedCWaveSimulation2D
+from backends.wave_simulation_c_avx import AVXWaveSimulation2D
 from backends.wave_simulation_asm import ASMWaveSimulation2D
 
 
@@ -25,7 +25,7 @@ def benchmark_backend(backend_name, size=64, steps=100):
     elif backend_name == "c":
         sim = CWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
     elif backend_name == "c_avx":
-        sim = OptimizedCWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
+        sim = AVXWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
     elif backend_name == "asm":
         sim = ASMWaveSimulation2D(size=size, domain_size=8.0, wave_speed=2.0, dt=0.02)
     else:

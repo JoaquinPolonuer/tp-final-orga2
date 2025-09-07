@@ -4,7 +4,7 @@ import matplotlib.animation as animation
 from backends.wave_simulation_numpy import NumpyWaveSimulation2D
 from backends.wave_simulation_python import PythonWaveSimulation2D
 from backends.wave_simulation_c import CWaveSimulation2D
-from backends.wave_simulation_c_avx import OptimizedCWaveSimulation2D
+from backends.wave_simulation_c_avx import AVXWaveSimulation2D
 from backends.wave_simulation_asm import ASMWaveSimulation2D
 
 
@@ -82,7 +82,7 @@ class WaveVisualizer:
 
 
 if __name__ == "__main__":
-    sim = OptimizedCWaveSimulation2D(
+    sim = NumpyWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,
