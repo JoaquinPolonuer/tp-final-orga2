@@ -2,12 +2,6 @@
 #include <assert.h>
 #include <immintrin.h>
 
-static Complex complex_sub(Complex a, Complex b)
-{
-    Complex result = {a.real - b.real, a.imag - b.imag};
-    return result;
-}
-
 // SIMD complex operations
 // Data layout: [real1, imag1, real2, imag2] in __m256d
 static inline __m256d complex_add_simd(__m256d z1, __m256d z2)
@@ -25,35 +19,14 @@ static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
     // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
     // Result = [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
 
-    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // [a1*c1, b1*d1, a2*c2, b2*d2]
-    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // [d1, c1, d2, c2]
-    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // [a1*d1, b1*c1, a2*d2, b2*c2]
+    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // ac_bd = [a1*c1, b1*d1, a2*c2, b2*d2]
+    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // z2_swapped = [d1, c1, d2, c2] (intercambio real/imag)
+    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // ad_bc = [a1*d1, b1*c1, a2*d2, b2*c2]
 
-    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd); // [a1*c1-b1*d1, a1*c1-b1*d1, a2*c2-b2*d2, a2*c2-b2*d2]
-    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc); // [a1*d1+b1*c1, a1*d1+b1*c1, a2*d2+b2*c2, a2*d2+b2*c2]
+    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd); // real_parts = [a1*c1-b1*d1, a1*c1-b1*d1, a2*c2-b2*d2, a2*c2-b2*d2]
+    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc); // imag_parts = [a1*d1+b1*c1, a1*d1+b1*c1, a2*d2+b2*c2, a2*d2+b2*c2]
 
-    return _mm256_unpacklo_pd(real_parts, imag_parts); // [a1*c1-b1*d1, a1*d1+b1*c1, a2*c2-b2*d2, a2*d2+b2*c2]
-}
-
-static void bit_reverse(Complex *x, int n)
-{
-    int j = 0;
-    for (int i = 1; i < n; i++)
-    {
-        int bit = n >> 1;
-        while (j & bit)
-        {
-            j ^= bit;
-            bit >>= 1;
-        }
-        j ^= bit;
-        if (i < j)
-        {
-            Complex temp = x[i];
-            x[i] = x[j];
-            x[j] = temp;
-        }
-    }
+    return _mm256_unpacklo_pd(real_parts, imag_parts); // Resultado = [a1*c1-b1*d1, a1*d1+b1*c1, a2*c2-b2*d2, a2*d2+b2*c2]
 }
 
 static void fft_1d_vectorized(Complex *x, int n, int inverse)
@@ -72,33 +45,27 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
             Complex wn = {1.0, 0.0};
             int j;
 
-            // SIMD loop: process 2 complex pairs at once
+            // Proceso 2 elementos complejos por iteración
             for (j = 0; j < (len / 2) - 1; j += 2)
             {
-                // Load 2 pairs of complex numbers
-                __m256d u = _mm256_loadu_pd((double *)&x[i + j]);           // [u1.real, u1.imag, u2.real, u2.imag]
-                __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]); // [v1.real, v1.imag, v2.real, v2.imag]
+                __m256d u = _mm256_loadu_pd((double *)&x[i + j]);           // u = [u1.real, u1.imag, u2.real, u2.imag]
+                __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]); // v = [v1.real, v1.imag, v2.real, v2.imag]
 
-                // Prepare twiddle factors: wn and wn*w
-                Complex wn2 = complex_mul(wn, w);
-                __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag);
+                Complex wn2 = complex_mul(wn, w);                                       // wn2 = wn * w (siguiente twiddle factor)
+                __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag); // twiddle = [wn, wn2]
 
-                // v = v * twiddle
-                v = complex_mul_simd(v, twiddle);
+                v = complex_mul_simd(v, twiddle); // v = v * twiddle (multiplico por twiddle factors)
 
-                // Butterfly operations
-                __m256d result1 = complex_add_simd(u, v); // u + v
-                __m256d result2 = complex_sub_simd(u, v); // u - v
+                __m256d result1 = complex_add_simd(u, v); // result1 = u + v
+                __m256d result2 = complex_sub_simd(u, v); // result2 = u - v
 
-                // Store results
-                _mm256_storeu_pd((double *)&x[i + j], result1);
-                _mm256_storeu_pd((double *)&x[i + j + len / 2], result2);
+                _mm256_storeu_pd((double *)&x[i + j], result1);           // x[i + j] = u + v
+                _mm256_storeu_pd((double *)&x[i + j + len / 2], result2); // x[i + j + len/2] = u - v
 
-                // Update twiddle factor for next iteration
-                wn = complex_mul(wn2, w);
+                wn = complex_mul(wn2, w); // wn = wn2 * w (actualizo para próxima iteración)
             }
 
-            // Handle remaining iterations (scalar)
+            // Proceso el resto sin simd (solo importa para len = 2)
             for (; j < len / 2; j++)
             {
                 Complex u = x[i + j];
@@ -148,28 +115,12 @@ static void fft2d_vectorized(Complex *data, int rows, int cols, int inverse)
     free(temp);
 }
 
-static void __attribute__((constructor)) init_fft_backend(void) {
+static void __attribute__((constructor)) init_fft_backend(void)
+{
     fft2d = fft2d_vectorized;
 }
 
-// Method definitions
-static PyMethodDef PureCBackendMethods[] = {
-    {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
-    {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
-    {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
-    {"get_intensity", c_get_intensity, METH_VARARGS, "Get wave intensity"},
-    {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
-    {NULL, NULL, 0, NULL}};
-
-// Module definition
-static struct PyModuleDef purecbackendmodule = {
-    PyModuleDef_HEAD_INIT,
-    "c_backend_avx",
-    "Pure C backend core functions without NumPy",
-    -1,
-    PureCBackendMethods};
-
 PyMODINIT_FUNC PyInit_c_backend_avx(void)
 {
-    return PyModule_Create(&purecbackendmodule);
+    return create_python_module("c_backend_avx", "Pure C backend core functions without NumPy");
 }

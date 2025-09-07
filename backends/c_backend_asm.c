@@ -36,23 +36,7 @@ static void __attribute__((constructor)) init_fft_backend(void) {
     fft2d = fft2d_asm;
 }
 
-static PyMethodDef PureCBackendMethods[] = {
-    {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
-    {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
-    {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
-    {"get_intensity", c_get_intensity, METH_VARARGS, "Get wave intensity"},
-    {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
-    {NULL, NULL, 0, NULL}};
-
-// Module definition
-static struct PyModuleDef purecbackendmodule = {
-    PyModuleDef_HEAD_INIT,
-    "c_backend_asm",
-    "Pure C backend core functions without NumPy",
-    -1,
-    PureCBackendMethods};
-
 PyMODINIT_FUNC PyInit_c_backend_asm(void)
 {
-    return PyModule_Create(&purecbackendmodule);
+    return create_python_module("c_backend_asm", "Pure C backend core functions without NumPy");
 }

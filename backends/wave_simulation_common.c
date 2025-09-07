@@ -9,12 +9,40 @@ Complex complex_add(Complex a, Complex b)
     return result;
 }
 
+Complex complex_sub(Complex a, Complex b)
+{
+    Complex result = {a.real - b.real, a.imag - b.imag};
+    return result;
+}
+
 Complex complex_mul(Complex a, Complex b)
 {
     Complex result = {
         a.real * b.real - a.imag * b.imag,
         a.real * b.imag + a.imag * b.real};
     return result;
+}
+
+// Bit reversal for FFT
+void bit_reverse(Complex *x, int n)
+{
+    int j = 0;
+    for (int i = 1; i < n; i++)
+    {
+        int bit = n >> 1;
+        while (j & bit)
+        {
+            j ^= bit;
+            bit >>= 1;
+        }
+        j ^= bit;
+        if (i < j)
+        {
+            Complex temp = x[i];
+            x[i] = x[j];
+            x[j] = temp;
+        }
+    }
 }
 
 WaveSimulation *create_wave_simulation(int size, double domain_size, double wave_speed, double dt)
@@ -270,4 +298,31 @@ PyObject *c_get_real_part(PyObject *self, PyObject *args)
 
     WaveSimulation *sim = (WaveSimulation *)PyLong_AsVoidPtr(ptr_obj);
     return wave_sim_get_real_part(sim);
+}
+
+// Method definitions
+PyMethodDef PureCBackendMethods[] = {
+    {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
+    {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
+    {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
+    {"get_intensity", c_get_intensity, METH_VARARGS, "Get wave intensity"},
+    {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
+    {NULL, NULL, 0, NULL}};
+
+// Create python module
+PyObject* create_python_module(const char* module_name, const char* module_doc)
+{
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        NULL, // module name will be set dynamically
+        NULL, // module doc will be set dynamically
+        -1,
+        PureCBackendMethods
+    };
+    
+    // Set module name and doc
+    moduledef.m_name = module_name;
+    moduledef.m_doc = module_doc;
+    
+    return PyModule_Create(&moduledef);
 }

@@ -30,7 +30,11 @@ typedef struct
 
 // Common helper functions
 Complex complex_add(Complex a, Complex b);
+Complex complex_sub(Complex a, Complex b);
 Complex complex_mul(Complex a, Complex b);
+
+// Common FFT helper functions
+void bit_reverse(Complex *x, int n);
 
 // Wave simulation functions
 WaveSimulation *create_wave_simulation(int size, double domain_size, double wave_speed, double dt);
@@ -49,5 +53,9 @@ PyObject *c_get_real_part(PyObject *self, PyObject *args);
 
 // FFT function pointer - each backend will provide its own implementation
 extern void (*fft2d)(Complex *data, int rows, int cols, int inverse);
+
+// Common Python module setup
+extern PyMethodDef PureCBackendMethods[];
+PyObject* create_python_module(const char* module_name, const char* module_doc);
 
 #endif // WAVE_SIMULATION_COMMON_H
