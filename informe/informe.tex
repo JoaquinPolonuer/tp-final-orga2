@@ -319,7 +319,7 @@ significativamente su resolución numérica mediante métodos espectrales.
 \section{Metodología}
 Se propone implementar un simulador físico que permita visualizar la evolución de una onda a traves de un campo. Para esto, se desarrollaron
 las interfaces `WaveSimulation2D` y `WaveVisualizer` (ver seccion experimental). A su vez, la interfaz `WaveSimulation2D` se implemento en varios
-backends distintos: Python, NumPy, C, C + ASM (Assembly), C + ASM + SIMD, y C + AVX.
+backends distintos: Python, NumPy, C, C + ASM (Assembly), y C + AVX.
 
 El objetivo es evaluar el rendimiento de cada implementación midiendo la variable \textit{steps per second} (pasos por segundo), que
 indica cuántos pasos de simulación puede procesar cada backend en un segundo. Esta métrica es fundamental para evaluar la eficiencia
@@ -594,15 +594,6 @@ addsd   xmm5, xmm11                     ; v_i = t_r * wn_i + t_i * wn_r
 
 Esta implementación demuestra cómo el Assembly permite un control granular sobre el uso de registros y operaciones, optimizando tanto la precisión como el rendimiento.
 
-\subsection{C + ASM + SIMD}
-
-Implementación híbrida que extiende la versión C + ASM utilizando instrucciones SIMD (Single Instruction, Multiple Data) más avanzadas para procesamiento vectorial optimizado.
-Esta implementación aprovecha los registros vectoriales para procesar múltiples elementos simultáneamente.
-
-Código Assembly optimizado con SIMD:
-\begin{verbatim}
-\end{verbatim}
-
 \subsection{C + AVX}
 Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente,
 duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
@@ -733,7 +724,6 @@ Se evaluaron seis implementaciones diferentes:
     \item \textbf{NumPy}: Utilizando la biblioteca NumPy optimizada
     \item \textbf{C}: Implementación en C con optimizaciones del compilador
     \item \textbf{C + ASM}: C con rutinas críticas en Assembly x86-64
-    \item \textbf{C + ASM + SIMD}: Extensión con instrucciones SIMD
     \item \textbf{C + AVX}: Utilizando extensiones AVX para paralelización vectorial
 \end{enumerate}
 
@@ -770,7 +760,6 @@ A continuación se detallan los resultados:
         \midrule
         Python          & 631\textbf{.}8             & 158\textbf{.}1             & 38\textbf{.}5             & 9\textbf{.}2              & 2\textbf{.}2            & 0\textbf{.}5              & 0\textbf{.}1              \\
         ASM             & 51.501\textbf{.}8          & 16.331\textbf{.}7          & 4.226\textbf{.}1          & 1.058\textbf{.}5          & 242\textbf{.}8          & 57\textbf{.}3             & 11\textbf{.}9             \\
-        ASM+SIMD        & 55.790\textbf{.}2          & 17.182\textbf{.}7          & 4.581\textbf{.}8          & 1.140\textbf{.}7          & 264\textbf{.}3          & 62\textbf{.}5             & 12\textbf{.}9             \\
         C               & 77.787\textbf{.}5          & 21.308\textbf{.}2          & 5.043\textbf{.}0          & 1.170\textbf{.}4          & 262\textbf{.}1          & 60\textbf{.}8             & 13\textbf{.}4             \\
         C+AVX           & \textbf{82.080\textbf{.}3} & \textbf{23.863\textbf{.}8} & \textbf{5.701\textbf{.}4} & \textbf{1.352\textbf{.}0} & \textbf{297\textbf{.}4} & \underline{68\textbf{.}3} & \underline{16\textbf{.}0} \\
         NumPy           & 21.262\textbf{.}8          & 13.473\textbf{.}5          & 5.801\textbf{.}6          & 1.645\textbf{.}3          & 382\textbf{.}8          & \textbf{86\textbf{.}8}    & \textbf{16\textbf{.}6}    \\
@@ -813,8 +802,6 @@ Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el me
     \item Mejor manejo de registros y pipeline por parte del compilador
     \item Posibles ineficiencias en la implementación manual de Assembly
 \end{itemize}
-
-\textbf{ASM+SIMD:} La adición de instrucciones SIMD mejora el rendimiento del Assembly puro en aproximadamente 7-15\%, especialmente notable en grillas medianas (128×128 a 256×256).
 
 \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
 
