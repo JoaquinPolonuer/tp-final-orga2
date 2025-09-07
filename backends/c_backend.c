@@ -70,7 +70,7 @@ static void fft2d_basic(Complex *data, int rows, int cols, int inverse)
 {
 
     Complex *temp = (Complex *)malloc(cols * sizeof(Complex));
-    // FFT on rows
+
     for (int i = 0; i < rows; i++)
     {
         memcpy(temp, &data[i * cols], cols * sizeof(Complex));
@@ -78,7 +78,6 @@ static void fft2d_basic(Complex *data, int rows, int cols, int inverse)
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
 
-    // FFT on columns
     temp = (Complex *)realloc(temp, rows * sizeof(Complex));
     for (int j = 0; j < cols; j++)
     {

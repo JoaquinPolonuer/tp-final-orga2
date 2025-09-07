@@ -1,10 +1,10 @@
 \documentclass[a4paper]{article}
 
 \setlength{\parskip}{2mm}
-\setlength{\parindent}{0pt} % Make  the default
+\setlength{\parindent}{0pt}
 \newcommand{\tab}{~ \qquad}
 \input{Macros}
-\usepackage{caratula} % Version modificada para usar las macros de algo1 de ~> https://github.com/bcardiff/dc-tex
+\usepackage{caratula}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{amsmath}
@@ -13,7 +13,6 @@
 \begin{document}
 
 \titulo{Resolviendo la Ecuación de Onda mediante la Transformada de Fourier Acelerada}
-% \subtitulo{Estudiando la performance de }
 \fecha{30 de Agosto de 2025}
 \materia{Organización del Computador II}
 
@@ -33,13 +32,11 @@ perturbaciones en medios continuos. Desde ondas sonoras y electromagnéticas has
 encuentra aplicación en campos tan diversos como la acústica, la óptica, la sismología y la ingeniería estructural.
 
 La ecuación de onda unidimensional se expresa como:
-
 \begin{equation}
     \frac{\partial^2 u}{\partial t^2} = c^2 \frac{\partial^2 u}{\partial x^2}
 \end{equation}
 
-donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo $t$, y $c$ es la velocidad de propagación característica
-del medio. Esta ecuación en derivadas parciales de segundo orden describe fenómenos como:
+donde $u(x,t)$ representa el desplazamiento de la onda en el punto $x$ y tiempo $t$, y $c$ es la velocidad de propagación característica del medio. Esta ecuación en derivadas parciales de segundo orden describe fenómenos como:
 
 \begin{itemize}
     \item Vibraciones de cuerdas tensadas
@@ -48,7 +45,6 @@ del medio. Esta ecuación en derivadas parciales de segundo orden describe fenó
 \end{itemize}
 
 Naturalmente, su extensión a dos dimensiones espaciales es:
-
 \begin{equation}
     \frac{\partial^2 u}{\partial t^2} = c^2 \left(\frac{\partial^2 u}{\partial x^2} + \frac{\partial^2 u}{\partial y^2}\right) = c^2 \nabla^2 u
 \end{equation}
@@ -69,49 +65,40 @@ descomponer señales complejas en sus componentes frecuenciales básicas. Esta t
 contexto de la resolución de ecuaciones diferenciales parciales.
 
 La Transformada de Fourier continua de una función $f(x)$ se define como:
-
 \begin{equation}
     \hat{f}(\omega) = \int_{-\infty}^{\infty} f(x) e^{-i\omega x} dx
 \end{equation}
 
 y su transformada inversa:
-
 \begin{equation}
     f(x) = \frac{1}{2\pi} \int_{-\infty}^{\infty} \hat{f}(\omega) e^{i\omega x} d\omega
 \end{equation}
-
 
 \subsection{Resolución de la Ecuación de Onda mediante la Transformada de Fourier}
 
 La aplicación de la Transformada de Fourier a la ecuación de onda permite convertir la ecuación en derivadas parciales en una ecuación diferencial ordinaria,
 lo que simplifica notablemente su resolución. Para abordar la ecuación (1), se aprovechan propiedades fundamentales de la transformada de Fourier relacionadas con las derivadas:
 
-% Props
 \textbf{Propiedad 1:} La transformada de Fourier de la derivada $n$-ésima de una función es igual a la multiplicación por $(i\omega)^n$ de la transformada de la función original. En particular, para $n=1$ se obtiene el caso de la derivada simple.
-
 \begin{equation}
     \mathcal{F}\left\{\frac{\partial^n f}{\partial x^n}\right\} = (i\omega)^n \hat{f}(\omega)
 \end{equation}
 
 \textbf{Propiedad 2:} Cuando se transforma respecto a una variable diferente a la que se deriva, la derivada parcial se convierte en una derivada ordinaria de la transformada:
-
 \begin{equation}
     \mathcal{F}_x\left\{\frac{\partial f}{\partial t}\right\} = \frac{\partial \hat{f}}{\partial t}
 \end{equation}
 
 donde $\mathcal{F}_x$ denota la transformada de Fourier respecto a la variable $x$.
-% fin props
 
 Es por estas dos propiedades que al aplicar la Transformada de Fourier espacial, obtenemos:
-
 \begin{equation}
     \frac{\partial^2 \hat{u}}{\partial t^2} = -c^2 \omega^2 \hat{u}
 \end{equation}
 
 donde $\hat{u}(\omega, t)$ es la transformada de Fourier de $u(x,t)$ respecto a $x$.
 
-Que es ecuación diferencial ordinaria con solución analitica conocida:
-
+Que es ecuación diferencial ordinaria con solución analítica conocida:
 \begin{equation}
     \hat{u}(\omega, t) = A(\omega) e^{ic\omega t} + B(\omega) e^{-ic\omega t}
 \end{equation}
@@ -121,15 +108,12 @@ aplicando la transformada inversa.
 
 \subsection{Transformada Discreta de Fourier}
 
-Para implementaciones computacionales, la Transformada de Fourier continua debe discretizarse. La Transformada Discreta de Fourier
-(DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
-
+Para implementaciones computacionales, la Transformada de Fourier continua debe discretizarse. La Transformada Discreta de Fourier (DFT) de una secuencia finita $x[n]$ de $N$ elementos se define como:
 \begin{equation}
     \hat{x}[k] = \sum_{n=0}^{N-1} x[n] e^{-i2\pi kn/N}, \quad k = 0, 1, \ldots, N-1
 \end{equation}
 
 donde $\hat{x}[k]$ representa los coeficientes espectrales discretos. La transformada inversa se expresa como:
-
 \begin{equation}
     x[n] = \frac{1}{N} \sum_{k=0}^{N-1} \hat{x}[k] e^{i2\pi kn/N}, \quad n = 0, 1, \ldots, N-1
 \end{equation}
@@ -143,13 +127,11 @@ El algoritmo FFT, desarrollado por Cooley y Tukey en 1965, reduce la complejidad
 mediante la estrategia de divide and conquer. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
 
 El algoritmo DIT (Decimation-in-Time) separa la secuencia de entrada en muestras pares e impares:
-
 \begin{equation}
     \hat{x}[k] = \sum_{n \text{ par}} x[n] e^{-i2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-i2\pi kn/N}
 \end{equation}
 
 Sustituyendo $n = 2r$ para índices pares y $n = 2r+1$ para impares:
-
 \begin{equation}
     \hat{x}[k] = \sum_{r=0}^{N/2-1} x[2r] e^{-i2\pi kr/(N/2)} + e^{-i2\pi k/N} \sum_{r=0}^{N/2-1} x[2r+1] e^{-i2\pi kr/(N/2)}
 \end{equation}
@@ -161,7 +143,6 @@ Definiendo:
 \end{align}
 
 La ecuación se simplifica a:
-
 \begin{equation}
     \hat{x}[k] = \hat{x}_{\text{par}}[k] + W_N^k \cdot \hat{x}_{\text{impar}}[k]
 \end{equation}
@@ -253,7 +234,6 @@ def fft_iterative(x):
 \end{verbatim}
 
 Esta implementación iterativa presenta varias ventajas sobre la versión recursiva:
-
 \begin{itemize}
     \item \textbf{Acceso secuencial a memoria}: Mejor utilización de la jerarquía de cache
     \item \textbf{Sin overhead de recursión}: Elimina el costo de las llamadas a función
@@ -265,9 +245,7 @@ El algoritmo mantiene la misma complejidad $O(N \log N)$ pero con constantes sig
 
 \subsection{Transformada de Fourier Bidimensional}
 
-Para la resolución numérica de la ecuación de onda en dos dimensiones, es necesario extender la Transformada de Fourier al caso
-bidimensional. La Transformada Discreta de Fourier en 2D de una matriz $x[m,n]$ de dimensiones $M \times N$ se define como:
-
+Para la resolución numérica de la ecuación de onda en dos dimensiones, es necesario extender la Transformada de Fourier al caso bidimensional. La Transformada Discreta de Fourier en 2D de una matriz $x[m,n]$ de dimensiones $M \times N$ se define como:
 \begin{equation}
     \hat{x}[k,l] = \sum_{m=0}^{M-1} \sum_{n=0}^{N-1} x[m,n] e^{-i2\pi (km/M + ln/N)}
 \end{equation}
@@ -275,14 +253,11 @@ bidimensional. La Transformada Discreta de Fourier en 2D de una matriz $x[m,n]$ 
 donde $k = 0, 1, \ldots, M-1$ y $l = 0, 1, \ldots, N-1$.
 
 La transformada inversa se expresa como:
-
 \begin{equation}
     x[m,n] = \frac{1}{MN} \sum_{k=0}^{M-1} \sum_{l=0}^{N-1} \hat{x}[k,l] e^{i2\pi (km/M + ln/N)}
 \end{equation}
 
-Una propiedad fundamental de la FFT bidimensional es su separabilidad, que permite descomponer el cálculo en aplicaciones
-consecutivas de FFT unidimensionales:
-
+Una propiedad fundamental de la FFT bidimensional es su separabilidad, que permite descomponer el cálculo en aplicaciones consecutivas de FFT unidimensionales:
 \begin{equation}
     \hat{x}[k,l] = \sum_{m=0}^{M-1} e^{-i2\pi km/M} \left[ \sum_{n=0}^{N-1} x[m,n] e^{-i2\pi ln/N} \right]
 \end{equation}
@@ -301,17 +276,46 @@ Esto se puede implementar eficientemente mediante el siguiente algoritmo de dos 
           \end{equation}
 \end{enumerate}
 
+Esto se implementa en C de la siguiente manera:
+\begin{verbatim}
+static void fft2d(Complex *data, int rows, int cols, int inverse)
+{
+
+    Complex *temp = (Complex *)malloc(cols * sizeof(Complex));
+
+    for (int i = 0; i < rows; i++)
+    {
+        memcpy(temp, &data[i * cols], cols * sizeof(Complex));
+        fft_1d(temp, cols, inverse);
+        memcpy(&data[i * cols], temp, cols * sizeof(Complex));
+    }
+
+    temp = (Complex *)realloc(temp, rows * sizeof(Complex));
+    for (int j = 0; j < cols; j++)
+    {
+        for (int i = 0; i < rows; i++)
+        {
+            temp[i] = data[i * cols + j];
+        }
+        fft_1d(temp, rows, inverse);
+        for (int i = 0; i < rows; i++)
+        {
+            data[i * cols + j] = temp[i];
+        }
+    }
+
+    free(temp);
+}
+\end{verbatim}
+
 \subsubsection{Aplicación a la Ecuación de Onda}
 
-En el contexto de la resolución de la ecuación de onda bidimensional, la FFT 2D permite transformar el operador Laplaciano $\nabla^2$
-del dominio espacial al dominio frecuencial:
-
+En el contexto de la resolución de la ecuación de onda bidimensional, la FFT 2D permite transformar el operador Laplaciano $\nabla^2$ del dominio espacial al dominio frecuencial:
 \begin{equation}
     \nabla^2 u(x,y) \xrightarrow{\text{FFT 2D}} -(\omega_x^2 + \omega_y^2) \hat{u}(\omega_x, \omega_y)
 \end{equation}
 
-donde $\omega_x = 2\pi k_x/L_x$ y $\omega_y = 2\pi k_y/L_y$ son las frecuencias espaciales discretas, y $L_x$, $L_y$ son las
-dimensiones del dominio computacional.
+donde $\omega_x = 2\pi k_x/L_x$ y $\omega_y = 2\pi k_y/L_y$ son las frecuencias espaciales discretas, y $L_x$, $L_y$ son las dimensiones del dominio computacional.
 
 Esta transformación convierte la ecuación diferencial parcial en una ecuación algebraica en el dominio frecuencial, facilitando
 significativamente su resolución numérica mediante métodos espectrales.
@@ -330,27 +334,26 @@ Con el objetivo de facilitar la experimentación, se propone utilizar un diseño
 la implementacion de uno de ellos:
 
 \begin{verbatim}
+class ASMWaveSimulation2D:
+    def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
+        self.c_core = c_backend_asm
+        self._sim_ptr = self.c_core.create_simulation(size, domain_size, wave_speed, dt)
     
-    class ASMWaveSimulation2D:
-        def __init__(self, size=256, domain_size=10.0, wave_speed=1.0, dt=0.01):
-            self.c_core = c_backend_asm
-            self._sim_ptr = self.c_core.create_simulation(size, domain_size, wave_speed, dt)
-        
-        def add_wave_source(self, x_pos, y_pos, amplitude=1.0, frequency=3.0, width=0.5):
-            self.c_core.add_wave_source(self._sim_ptr, x_pos, y_pos, amplitude, frequency, width)
-        
-        def step(self):
-            self.c_core.step_simulation(self._sim_ptr)
-        
-        def get_intensity(self):
-            return self.c_core.get_intensity(self._sim_ptr)
-        
-        def get_real_part(self):
-            return self.c_core.get_real_part(self._sim_ptr)
+    def add_wave_source(self, x_pos, y_pos, amplitude=1.0, frequency=3.0, width=0.5):
+        self.c_core.add_wave_source(self._sim_ptr, x_pos, y_pos, amplitude, frequency, width)
+    
+    def step(self):
+        self.c_core.step_simulation(self._sim_ptr)
+    
+    def get_intensity(self):
+        return self.c_core.get_intensity(self._sim_ptr)
+    
+    def get_real_part(self):
+        return self.c_core.get_real_part(self._sim_ptr)
 \end{verbatim}
 
-La clase principal esta hecha en Python, porque facilita la visualización. Sin embargo, toda la logíca y el procesamiento se realiza
-en C y Assembler. A continuacion se muestra un diagrama:
+La clase principal está hecha en Python, porque facilita la visualización. Sin embargo, toda la lógica y el procesamiento se realiza en C y Assembler. A continuación se muestra un diagrama:
+
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.7\textwidth]{extra/diagram.png}
@@ -358,20 +361,15 @@ en C y Assembler. A continuacion se muestra un diagrama:
     \label{fig:wave_sim_architecture}
 \end{figure}
 
-\textbf{Initialize (C)}
-Toma un tamaño de grilla, un tamaño del dominio, la velocidad de la hola y el intervalo de tiempo
+\subsubsection{Initialize} Establece el escenario matemático de la simulación: crea una grilla 2D que representa el espacio físico donde se propagarán las ondas, prepara las herramientas matemáticas (transformadas de Fourier) y define los parámetros fundamentales como la velocidad de propagación.
 
-\textbf{Add Wave Source (C)}
-Toma la posicion de la ola a agregar a la simulacion.
+\subsubsection{Add Wave Source} Introduce perturbaciones localizadas en el dominio, como "tirar una piedra al agua". Genera patrones de ondas circulares que se propagan desde un punto específico, con una amplitud y frecuencia determinadas. Cada fuente crea ondas concéntricas que luego interactúan entre sí y con las ondas ya existentes.
 
-\textbf{Step (C)}
-Hace avanzar el tiempo de la simulacion.
+\subsubsection{Step} Hace avanzar el tiempo de la simulación resolviendo la ecuación de ondas. Calcula cómo cada punto de la grilla cambia su altura/amplitud basándose en la física de propagación de ondas. Utiliza métodos espectrales que transforman el problema al dominio de frecuencias, donde es más eficiente calcular la evolución temporal.
 
-\textbf{Get Intensity (C)}
-Devuelve una grilla con la norma de la funcion en cada punto
+\subsubsection{Get Intensity} Calcula la "intensidad" o densidad de energía en cada punto del dominio. Representa qué tan "fuerte" es la onda en cada ubicación, siempre como valores positivos. Es útil para visualizar dónde se concentra la energía de las ondas y observar patrones de interferencia constructiva.
 
-\textbf{Get Real Part (C)}
-Devuelve una grilla con la parte real de la funcion en cada punto, que sería la altura de la onda que veríamos en la vida real.
+\subsubsection{Get Real Part} Extrae la parte real del campo de ondas complejo, representando el desplazamiento físico real que veríamos. Puede ser positiva (cresta) o negativa (valle), mostrando las oscilaciones reales de la superficie. Es la representación más directa de "altura de la onda" en cada punto del espacio.
 
 Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
 propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
@@ -380,21 +378,89 @@ propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y 
 
 Para establecer un baseline de rendimiento, implementamos dos versiones en Python:
 
-\textbf{Python puro:} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos. Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
+\subsubsection{Python puro} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos.
+Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
 
-Esta implementación presenta limitaciones inherentes de Python: lentitud en operaciones numéricas y uso ineficiente de memoria, ya que las listas se almacenan de forma dispersa en memoria.
+Esta implementación presenta limitaciones inherentes de Python:
+\begin{itemize}
+    \item Lentitud en operaciones numéricas
+    \item Uso ineficiente de memoria, ya que las listas se almacenan de forma dispersa en memoria
+\end{itemize}
 
-\textbf{NumPy:} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
+\subsubsection{NumPy} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar
+de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
 
 \begin{verbatim}
 def fft2(self, x):
     return np.fft.fft2(x)
 \end{verbatim}
 
-Como se observará en los resultados experimentales, la implementación de NumPy es extremadamente rápida y difícil de superar, aunque lograremos un rendimiento bastante similar con nuestras implementaciones optimizadas en C.
+Como se observará en los resultados experimentales, la implementación de NumPy es extremadamente rápida y difícil de superar, aunque lograremos
+un rendimiento bastante similar con nuestras implementaciones optimizadas en C.
 
 \subsection{C}
-Implementación en lenguaje
+Como se ve en \texttt{ASMWaveSimulation2D}, la clase implementada en Python es simplemente una fachada, y toda la lógica y estructuras de datos utilizadas para correr la simulación se manejan desde C. Esto funciona así en el backend de C puro, como en el de C~+~AVX y C~+~Assembler.
+
+En el archivo \texttt{c\_backend.c} definimos dos structs fundamentales: \texttt{Complex} y \texttt{WaveSimulation}.
+
+\begin{verbatim}
+typedef struct
+{
+    double real;
+    double imag;
+} Complex;
+
+typedef struct
+{
+    Complex *wave;
+    Complex *wave_k;
+    double *grid_coords;
+    double *k_grid_coords;
+    double *K;
+    int size;
+    double domain_size;
+    double wave_speed;
+    double dt;
+    double dx;
+} WaveSimulation;
+\end{verbatim}
+
+WaveSimulation funciona de la siguiente manera:
+\begin{itemize}
+    \item \textbf{grid\_coords}: Es una grilla cuadrada de un tamaño determinado (\texttt{size}). En cada posición guarda un valor $(x, y)$ que determina a qué punto del dominio equivale esa posición. En la práctica, los valores se guardan todos contiguos en memoria: $[x_0, y_0, x_1, y_1, \ldots]$.
+    \item \textbf{k\_grid\_coords}: Es exactamente lo mismo pero en el dominio de las frecuencias. Recordemos que la transformada de Fourier permite resolver la ecuación diferencial fácilmente al cambiar el dominio del espacio a las frecuencias.
+    \item \textbf{wave} y \textbf{wave\_k}: Funcionan en conjunto con \texttt{grid\_coords} y \texttt{k\_grid\_coords}. Tienen, para cada valor de la grilla, el valor de la función en ese punto. Básicamente, \texttt{wave[i][j] = phi(grid\_coords[i][j])}.
+    \item \textbf{K}: Matriz que almacena, para cada punto en el dominio de las frecuencias, el valor de $k^2 = k_x^2 + k_y^2$, necesario para la evolución temporal de la ecuación de onda en el dominio espectral.
+    \item Los demás elementos son parámetros que manejan el paso del tiempo y la velocidad de las olas. El primero no afecta la precisión de la simulación, dado que la solución utilizada es analítica. El segundo, \texttt{wave\_speed}, es un parámetro de la ecuación diferencial.
+\end{itemize}
+
+Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_simulation}, \texttt{add\_wave\_source} y \texttt{wave\_sim\_step}.
+
+\subsubsection{create\_wave\_simulation}
+\begin{itemize}
+    \item Reserva memoria para la estructura \texttt{WaveSimulation} y sus arrays: \texttt{wave} y \texttt{wave\_k} de números complejos (size$^2$×Complex), \texttt{grid\_coords} y \texttt{k\_grid\_coords} (size$^2$×2×double), y \texttt{K} (size$^2$×double)
+    \item Inicializa \texttt{grid\_coords} con coordenadas espaciales en formato plano [$x_0,y_0,x_1,y_1,...$] centradas en el dominio
+    \item Calcula \texttt{k\_grid\_coords} usando frecuencias FFT con desplazamiento de frecuencias negativas para valores j,i > size/2
+    \item Computa magnitudes \texttt{K} como $k_{mag} = \sqrt{k_x^2 + k_y^2} \times 2\pi$, evitando división por cero en k=0 con valor 1e-10
+\end{itemize}
+
+\subsubsection{add\_wave\_source}
+\begin{itemize}
+    \item Itera sobre todo el grid calculando la distancia radial $r^2 = (x-x_0)^2 + (y-y_0)^2$ desde la posición de la fuente
+    \item Genera una envolvente gaussiana (amplitude $\times e^{-r^2/width^2}$) y fase radial (frequency $\times r$)
+    \item Suma al array \texttt{wave} valores complejos envelope$\times$(cos(phase) + $i\times$sin(phase)) usando \texttt{complex\_add}
+    \item Copia \texttt{wave} a \texttt{wave\_k} y aplica FFT2D directa para obtener la representación en k-space
+\end{itemize}
+
+\subsubsection{wave\_sim\_step}
+\begin{itemize}
+    \item Calcula evolución temporal en k-space: para cada punto obtiene $\omega$ = wave\_speed $\times$ K[idx] y phase = $-\omega \times$ dt
+    \item Multiplica \texttt{wave\_k[idx]} por factor de fase complex (cos(phase) + i×sin(phase)) usando \texttt{complex\_mul}
+    \item Copia \texttt{wave\_k} a \texttt{wave} y aplica FFT2D inversa para transformar de vuelta al espacio real
+    \item La función preserva la ecuación de onda dispersiva aplicando el operador de evolución temporal $e^{-i\omega t}$
+\end{itemize}
+
+Estos métodos son fundamentales y, como se mencionó previamente, son la base necesaria que nos permite acelerar la simulación en todos los backends. Ya aclarado esto, la implementación de la transformada de Fourier:
 
 \begin{verbatim}
 static void fft_1d(Complex *x, int n, int inverse)
@@ -433,196 +499,121 @@ static void fft_1d(Complex *x, int n, int inverse)
 }
 \end{verbatim}
 
-Como puede verse, la implementacion de C es bastante parecida a la de Python.
-
 \subsection{C + ASM}
 
-Código Assembly (x86-64):
+La motivación de esta optimización es que necesitamos calcular la transformada todo el tiempo para volver desde el dominio de las frecuencias al dominio espacial, y esto requiere calcular la transformada en cada paso de la simulación.
+
+La implementación en Assembler puede entenderse fácilmente haciendo un paralelismo línea por línea con la implementación en C. Sin embargo, hay algunos detalles interesantes que vale la pena mencionar.
+
+\subsubsection{Uso de la pila x87 para operaciones matemáticas}
+La arquitectura x86-64 incluye una pila de registros especializada, conocida como la \textbf{pila x87}, diseñada para operaciones matemáticas en punto flotante.
+Esta pila, compuesta por ocho registros de 80 bits (st0--st7), permite realizar cálculos complejos de manera eficiente, especialmente en operaciones trigonométricas
+y exponenciales, que son fundamentales para la Transformada de Fourier.
+
+En la implementación en Assembly, la pila x87 se utiliza para calcular funciones como seno y coseno de un ángulo, aprovechando instrucciones dedicadas como
+\texttt{fsin} y \texttt{fcos}. El flujo típico consiste en cargar el ángulo en la pila, calcular el seno (dejando el ángulo aún disponible en la pila), almacenar
+el resultado en memoria, y luego calcular el coseno sobre el mismo ángulo. Finalmente, ambos resultados se transfieren a registros xmm para su uso vectorizado.
+
+El siguiente fragmento ilustra este proceso, equivalente a la operación en C \texttt{Complex w = {cos(angle), sin(angle)}}:
 \begin{verbatim}
-; void fft_1d_asm(Complex *x, int n, int inverse)
-; rdi = *x, rsi = n, rdx = inverse
-fft_1d_asm:
-    .out_loop:
-        ...
+.declarar_w:
+fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
+fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
+fstp    qword [rsp]                     ; guardar sin en memoria
+movhpd  xmm6, [rsp]                     ; xmm6 = [?, w_i]
 
-        ; angle = 2pi/len * (inverse ? +1 : -1)
-        ; Calculamos w = cos(angle) + i sin(angle) con x87 para evitar tablas/constantes en memoria.
-        
-        ; st0 = 2pi
-        fldpi                                   ; st0 = pi
-        fadd    st0, st0                        ; st0 = 2pi
+fcos                                    ; st0 = cos(ang)
+fstp    qword [rsp]                     ; guardar cos
+movlpd   xmm6, [rsp]                     ; xmm6 = [w_r, w_i]
+; (pila x87 vacía)
+\end{verbatim}
+En este código, se observa cómo la pila x87 permite calcular ambas funciones trigonométricas sin necesidad de recalcular el ángulo ni acceder repetidamente a memoria, optimizando así el rendimiento en operaciones matemáticas intensivas.
 
-        mov     [rsp], r14                      ; guardar len (int64) en el scratch de 8 bytes
-        fild    qword [rsp]                     ; st0 = (double)len, st1 = 2pi
-        fdivp   st1, st0                        ; st0 = 2pi/len
 
-        test    r13, r13
-        jnz     .declarar_w                     ; Si inverse es 1, seguimos
-        fchs                                    ; Si inverse es 0, fchs (float change sign) cambia el signo de st0
-        
-        ; Esta seccion es el equivalente a Complex w = {cos(angle), sin(angle)};
-        .declarar_w:
-        fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
-        fsin                                    ; st0 = sin(ang)   (ángulo sigue en st1)
-        fstp    qword [rsp]                     ; guardar sin en memoria
-        movsd   xmm7, [rsp]                     ; w_i = sin(ang)
-        fcos                                    ; st0 = cos(ang)
-        fstp    qword [rsp]                     ; guardar cos
-        movsd   xmm6, [rsp]                     ; w_r = cos(ang)
-        ; (pila x87 vacía)
+\subsubsection{Representación de números complejos}
+Dado que la Transformada de Fourier trabaja con números complejos, es fundamental definir cómo vamos a manejarlos en Assembler. Como vimos en la implementación de C, la función recibe un puntero a un arreglo de complejos. Como ya vimos antes, el tipo de dato \texttt{Complex} ocupa 128 bits, o dos doubles, por lo que resulta ideal usar registros xmm para operar con ellos. En este trabajo, trabajamos con números complejos en los registros xmm de la siguiente manera:
 
-        ...
-        .mid_loop:
-            ; ------- wn = 1 + 0i -------
-            pxor    xmm9, xmm9                      ; xmm9 = wn_i = 0.0
-            fld1
-            fstp    qword [rsp]
-            movsd   xmm8, [rsp]                     ; xmm8 = wn_r = 1.0
-            ; ------- Fin wn = 1 + 0i -------
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{extra/xmm complex.png}
+    \caption{Representación de números complejos en memoria para la implementación en Assembly}
+    \label{fig:asm_complex_representation}
+\end{figure}
+Esta representación no solo permite hacer solo una lectura de memoria por cada complejo, lo cual es razonable, sino que además permite aprovechar las instrucciones de packed double para paralelizar sumas y restas, es decir, al sumar dos números complejos, la suma de la parte real e imaginaria se realiza simultáneamente.
 
-            ; base del bloque i
-            mov     rax, r15                        ; rax = i
-            shl     rax, 4                          ; rax = i * 16
-            lea     r10, [rbx + rax]                ; r10 = &x[i]
-
-            xor     rcx, rcx                        ; j = 0
-            .in_loop:
-                mov     rdx, rcx                        ; rdx = j
-                shl     rdx, 4                          ; rdx = j * 16 (porque estamos operando con punteros a complejos)
-                lea     rdi, [r10 + rdx]                ; rdi = &x[i + j]
-                lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
-
-                ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
-                movsd   xmm0, [rdi]                     ; xmm0 = u_r
-                movsd   xmm1, [rdi+8]                   ; xmm1 = u_i
-
-                movsd   xmm2, [rsi]                     ; xmm2 = t_r
-                movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
-
-                ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
-                movapd  xmm4, xmm2                      ; xmm4 = t_r
-                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
-                movapd  xmm5, xmm3                      ; xmm5 = t_i
-                mulsd   xmm5, xmm9                      ; t_i * wn_i
-                subsd   xmm4, xmm5                      ; xmm4 = v_r
-
-                movapd  xmm5, xmm2                      ; xmm5 = t_r
-                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
-                movapd  xmm11, xmm3                     ; xmm11 = t_i
-                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
-                addsd   xmm5, xmm11                     ; xmm5 = v_i
-                ; -----------------------------------------------------------
-                ...
-            ...
-        ...
-    ...
+\begin{verbatim}
+; --------------- x[i + j] = complex_add(u, v) --------------
+movapd  xmm11, xmm0                     ; xmm11 = u_r, u_i
+addpd   xmm11, xmm4                     ; xmm11 = u_r + v_r, u_i + v_i
+movapd  [rdi],   xmm11
 \end{verbatim}
 
-\subsubsection{Análisis del Código Assembly}
-
-Este fragmento de código Assembly presenta varias características técnicas importantes que merecen explicación detallada:
-
-\paragraph{Representación de Números Complejos según ABI x86-64}
-
-En la convención de llamada System V ABI para x86-64, los números complejos se representan como estructuras de 16 bytes contiguos en memoria:
+Otro detalle interesante de la implementación en Assembler es la utilización de una macro para el cálculo de la multiplicación compleja, dado que la misma se utiliza más de una vez. Esto resulta conveniente porque:
 
 \begin{itemize}
-    \item \textbf{Parte real}: 8 bytes (double precision) en offset 0
-    \item \textbf{Parte imaginaria}: 8 bytes (double precision) en offset 8
+    \item Facilita la edición del código si queremos hacer optimizaciones posteriores
+    \item Al añadirse al código al momento de compilar, no tiene efectos en la performance, como sí tendría utilizar una función
 \end{itemize}
 
-Esto se observa en el código:
-\begin{verbatim}
-movsd   xmm0, [rdi]                     ; xmm0 = u_r (offset 0)
-movsd   xmm1, [rdi+8]                   ; xmm1 = u_i (offset 8)
-\end{verbatim}
-
-El cálculo de direcciones utiliza multiplicación por 16 bytes:
-\begin{verbatim}
-shl     rdx, 4                          ; rdx = j * 16 (16 bytes por complejo)
-\end{verbatim}
-
-\paragraph{Uso de Registros x87 (st0, st1)}
-
-El código hace uso estratégico de la pila de registros x87 para cálculos trigonométricos:
-
-\begin{itemize}
-    \item \textbf{\texttt{fldpi}}: Carga la constante $\pi$ en st0
-    \item \textbf{\texttt{fadd st0, st0}}: Duplica el valor (st0 = 2$\pi$)
-    \item \textbf{\texttt{fild}}: Convierte entero a double y lo apila
-    \item \textbf{\texttt{fdivp}}: Divide y hace pop de la pila
-    \item \textbf{\texttt{fchs}}: Cambia el signo (Float Change Sign)
-\end{itemize}
-
-La secuencia de cálculo del factor de giro (twiddle factor) demuestra el uso eficiente de la pila x87:
+La macro se define de la siguiente manera:
 
 \begin{verbatim}
-fld     st0                             ; Duplica el ángulo
-fsin                                    ; st0 = sin(angle), st1 = angle
-fstp    qword [rsp]                     ; Guarda sin y hace pop
-fcos                                    ; st0 = cos(angle)
-fstp    qword [rsp]                     ; Guarda cos y hace pop
+; Macro para multiplicación compleja: result = a * b
+; Parámetros: a, b, result
+; Fórmula: (a_r + a_i*i) * (b_r + b_i*i) = (a_r*b_r - a_i*b_i) + (a_r*b_i + a_i*b_r)*i
+%macro COMPLEX_MUL 3
+    movapd  %3, %1                      ; t1 = a
+    mulpd   %3, %2                      ; t1 = [ar*br, ai*bi]
+    xorpd   %3, [rel COMPLEX_NEGHI]     ; t1 = [ar*br, -(ai*bi)]
+
+    movapd  xmm15, %1
+    shufpd  xmm15, xmm15, 1   ; xmm15 = [ai, ar]
+    mulpd   xmm15, %2         ; xmm15 = [ai*br, ar*bi]
+
+    haddpd  %3, xmm15         ; %3 = [ar*br - ai*bi, ai*br + ar*bi]
+%endmacro
 \end{verbatim}
 
-\paragraph{Ventajas del Enfoque Híbrido}
-
-Esta implementación combina lo mejor de ambos mundos:
-
-\begin{enumerate}
-    \item \textbf{Precisión x87}: Los registros x87 ofrecen mayor precisión para cálculos trigonométricos que las aproximaciones en tablas
-    \item \textbf{Velocidad XMM}: Los registros XMM (xmm0-xmm15) permiten operaciones vectoriales eficientes
-    \item \textbf{Evita dependencias de memoria}: No requiere tablas precalculadas de senos/cosenos
-    \item \textbf{Compatibilidad ABI}: Respeta completamente la convención de llamada System V
-\end{enumerate}
-
-\paragraph{Operaciones de Números Complejos}
-
-La multiplicación compleja se implementa siguiendo la fórmula:
-$$(a + bi) \cdot (c + di) = (ac - bd) + (ad + bc)i$$
-
-\begin{verbatim}
-; v_r = t_r * wn_r - t_i * wn_i
-mulsd   xmm4, xmm8                      ; t_r * wn_r
-mulsd   xmm5, xmm9                      ; t_i * wn_i
-subsd   xmm4, xmm5                      ; v_r = t_r * wn_r - t_i * wn_i
-
-; v_i = t_r * wn_i + t_i * wn_r
-mulsd   xmm5, xmm9                      ; t_r * wn_i
-mulsd   xmm11, xmm8                     ; t_i * wn_r
-addsd   xmm5, xmm11                     ; v_i = t_r * wn_i + t_i * wn_r
-\end{verbatim}
-
-Esta implementación demuestra cómo el Assembly permite un control granular sobre el uso de registros y operaciones, optimizando tanto la precisión como el rendimiento.
+Y utiliza una mascara definida en la seccion .rodata que permite negar la parte imaginaria del numero.
 
 \subsection{C + AVX}
-Implementación que utiliza las extensiones AVX (Advanced Vector Extensions) para aprovechar registros de 256 bits, permitiendo procesar 4 elementos double precision simultáneamente,
-duplicando el paralelismo respecto a las instrucciones SSE tradicionales.
+Como se mencionó en la sección anterior, cada número complejo ocupa 128 bits, por lo que el uso de los registros xmm, a pesar de permitir paralelizar las operaciones efectivamente, solo soporta operar sobre un elemento del arreglo a la vez. Es por esto que se propone utilizar AVX para acelerar el ciclo interno de la transformada, habitualmente llamado \textit{butterfly}.
 
-\subsubsection{¿Qué es AVX2?}
+AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Los registros introducidos duplican el ancho
+de los registros SSE (128 bits), por lo que permiten operar sobre 4 valores double precision simultáneamente.
 
-AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Las características principales incluyen:
+\subsubsection{Representación de números complejos}
 
-\begin{itemize}
-    \item \textbf{Registros de 256 bits}: Duplican el ancho de los registros SSE (128 bits)
-    \item \textbf{Procesamiento vectorial}: Permite operar sobre 4 valores double precision simultáneamente
-    \item \textbf{Instrucciones especializadas}: Incluye operaciones horizontales (\texttt{\_mm256\_hadd\_pd}, \texttt{\_mm256\_hsub\_pd})
-    \item \textbf{Shuffling avanzado}: Mejores capacidades de reorganización de datos
-    \item \textbf{Compatibilidad}: Extiende las instrucciones SSE existentes al ancho de 256 bits
-\end{itemize}
+El uso de estos registros es analogo al explicado en la implementacion de C + ASM, solo que guardando dos numeros complejo por cada registro ymm:
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.7\textwidth]{extra/ymm complex.png}
+    \caption{Esquema del ciclo butterfly vectorizado con AVX para la FFT}
+    \label{fig:avx_butterfly}
+\end{figure}
+
+Para simplificar la implementación y aprovechar las optimizaciones realizadas por el compilador, utilizamos C para añadir estas operaciones \textit{inline}.
 
 \subsubsection{Implementación del Ciclo Butterfly}
 
-La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly donde se procesan múltiples elementos simultáneamente:
+La implementación AVX mantiene la misma estructura algorítmica que las versiones anteriores, con la diferencia clave en el ciclo butterfly, donde se procesan
+múltiples elementos simultáneamente. Las funciones que permiten esta aceleración son:
+\begin{itemize}
+    \item \texttt{\_mm256\_loadu\_pd}: Carga 256 bits de memoria como 4 packed doubles.
+    \item \texttt{\_mm256\_setr\_pd}: Carga 4 doubles en un registro avx.
+    \item \texttt{\_mm256\_add\_pd} y \texttt{\_mm256\_sub\_pd}: Similares a addpd y subpd de Assembler, suma 4 packed doubles, posición a posición.
+    \item \texttt{\_mm256\_mul\_pd}: Multiplica 4 packed doubles, posición a posición.
+    \item \texttt{\_mm256\_hadd\_pd} y \texttt{\_mm256\_hsub\_pd}: Realizan sumas y restas horizontales entre pares de elementos del registro.
+    \item \texttt{\_mm256\_storeu\_pd}: Guarda 4 packed doubles en memoria.
+\end{itemize}
 
-Código C:
+Y vale la pena detenerse a considerar la implementación de \texttt{complex\_mul\_simd}, dado que utiliza operaciones interesantes:
 \begin{verbatim}
-// SIMD complex operations using AVX
-// Data layout: [real1, imag1, real2, imag2] in __m256d
-static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
+Recibe: z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
+Devuelve: [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
+static inline __m256d complex_mul_simd(__m256d z1, __m256d z2) 
 {
-    // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
-    // Result = [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
-    
     __m256d ac_bd = _mm256_mul_pd(z1, z2);               // [a1*c1, b1*d1, a2*c2, b2*d2]
     __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // [d1, c1, d2, c2]
     __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // [a1*d1, b1*c1, a2*d2, b2*c2]
@@ -632,77 +623,12 @@ static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
     
     return _mm256_unpacklo_pd(real_parts, imag_parts);
 }
-
-// Ciclo principal FFT - el resto es idéntico a la implementación C estándar
-for (int len = 2; len <= n; len <<= 1)
-{
-    double angle = 2.0 * M_PI / len * (inverse ? 1 : -1);
-    Complex w = {cos(angle), sin(angle)};
-
-    for (int i = 0; i < n; i += len)
-    {
-        Complex wn = {1.0, 0.0};
-        int j;
-
-        // SIMD loop: process 2 complex pairs at once (4 doubles total)
-        for (j = 0; j < (len / 2) - 1; j += 2)
-        {
-            // Load 2 pairs of complex numbers
-            __m256d u = _mm256_loadu_pd((double *)&x[i + j]);
-            __m256d v = _mm256_loadu_pd((double *)&x[i + j + len / 2]);
-            
-            // Prepare twiddle factors: wn and wn*w
-            Complex wn2 = complex_mul(wn, w);
-            __m256d twiddle = _mm256_setr_pd(wn.real, wn.imag, wn2.real, wn2.imag);
-            
-            // v = v * twiddle (complex multiplication)
-            v = complex_mul_simd(v, twiddle);
-            
-            // Butterfly operations: u + v and u - v
-            __m256d result1 = _mm256_add_pd(u, v); // u + v
-            __m256d result2 = _mm256_sub_pd(u, v); // u - v
-            
-            // Store results
-            _mm256_storeu_pd((double *)&x[i + j], result1);
-            _mm256_storeu_pd((double *)&x[i + j + len / 2], result2);
-            
-            // Update twiddle factor for next iteration
-            wn = complex_mul(wn2, w);
-        }
-
-        // Handle remaining iterations (scalar fallback)
-        for (; j < len / 2; j++)
-        {
-            Complex u = x[i + j];
-            Complex v = complex_mul(x[i + j + len / 2], wn);
-            x[i + j] = complex_add(u, v);
-            x[i + j + len / 2] = complex_sub(u, v);
-            wn = complex_mul(wn, w);
-        }
-    }
-}
 \end{verbatim}
-
-\subsubsection{Análisis de la Optimización AVX}
-
-\textbf{Procesamiento Vectorial:} La implementación procesa 2 números complejos (4 valores double) simultáneamente, duplicando el throughput respecto a operaciones escalares.
-
-\textbf{Operaciones Horizontales:} Las instrucciones \texttt{\_mm256\_hsub\_pd} y \texttt{\_mm256\_hadd\_pd} realizan sumas y restas horizontales, esenciales para la multiplicación compleja:
-\begin{itemize}
-    \item \texttt{hsub\_pd}: Calcula $[a-b, c-d, a-b, c-d]$
-    \item \texttt{hadd\_pd}: Calcula $[a+b, c+d, a+b, c+d]$
-\end{itemize}
-
-\textbf{Fallback Escalar:} Para casos donde el número de elementos no es múltiplo de 2, se mantiene un bucle escalar que garantiza la corrección del algoritmo.
-
-\textbf{Compatibilidad:} El resto de la transformada (bit reversal, estructura de bucles, manejo de twiddle factors) permanece idéntico a la implementación C estándar, asegurando la corrección matemática del algoritmo FFT.
 
 \section{Experimentos}
 
 Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos
 el rendimiento en distintos tamaños.
-
-\subsection{Configuración Experimental}
 
 Los experimentos se realizaron en un sistema con las siguientes especificaciones:
 \begin{itemize}
@@ -727,13 +653,8 @@ Se evaluaron seis implementaciones diferentes:
     \item \textbf{C + AVX}: Utilizando extensiones AVX para paralelización vectorial
 \end{enumerate}
 
-Para cada implementación, se midió el rendimiento en grillas de tamaño $16 \times 16$, $32 \times 32$, $64 \times 64$, $128 \times 128$, $256 \times 256$, $512 \times 512$, y $1024 \times 1024$. La métrica principal fue \textit{steps per second}, que indica cuántos pasos de simulación puede procesar cada backend en un segundo.
-
-
-
 \subsection{Visualización Interactiva}
-Obviamente, una parte fundamental del trabajo es poder visualizar interactivamente la simulacion. Por ese motivo, se implemento una visualización que permite colocar
-agregar ondas clickeando en cualquier lugar del campo.
+Obviamente, una parte fundamental del trabajo es poder visualizar interactivamente la simulación. Por ese motivo, se implementó una visualización que permite agregar ondas haciendo clic en cualquier lugar del campo.
 
 \begin{figure}[h]
     \centering
@@ -743,12 +664,9 @@ agregar ondas clickeando en cualquier lugar del campo.
 \end{figure}
 
 \subsection{Rendimiento por Tamaño de Grilla}
-Una vez verificado el correcto funcionamiento de cada backend, decidimos medir mas precisamente la performance. Para esto, dejamos de lado la visualizacion y simplemente
-medimos la variable \textit{steps per second}. Basicamente, nos importa cuanto tarda en correr la funcion `step` en cada uno de los backends. Un parentesis importante es
-que, a los efectos de la visualizacion, las impementaciones en C tienen un pequeño _overhead_ porque deben convertir su grilla a un numpy array y esto consume un tiempo extra.
-En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulacion, porque es lo que decidimos optimizar.
+Una vez verificado el correcto funcionamiento de cada backend, decidimos medir más precisamente la performance. Para esto, dejamos de lado la visualización y simplemente medimos cantidad de pasos que puede computar la simulacion por segundo. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends.
 
-A continuación se detallan los resultados:
+Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidimos optimizar.\\
 
 \begin{table}[h]
     \centering
@@ -762,7 +680,7 @@ A continuación se detallan los resultados:
         ASM             & 58.661,6             & 17.405,2             & 4.397,7             & 1.088,5             & 243,1             & 58,0             & 13,4               \\
         C               & \underline{78.603,9} & 22.248,6             & 5.091,3             & 1.186,9             & 261,5             & 61,0             & 14,1               \\
         C\_AVX          & \textbf{82.695,3}    & \textbf{23.736,9}    & \underline{5.697,9} & \underline{1.335,2} & \underline{296,9} & \underline{68,7} & \underline{15,3}   \\
-        Numpy           & 19.689,7             & \underline{12.918,3} & \textbf{5.707,2} & \textbf{1.617,4}    & \textbf{380,6 }   & \textbf{85,4}    & \textbf{15,8}      \\
+        Numpy           & 19.689,7             & \underline{12.918,3} & \textbf{5.707,2}    & \textbf{1.617,4}    & \textbf{380,6 }   & \textbf{85,4}    & \textbf{15,8}      \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -772,55 +690,65 @@ A continuación se detallan los resultados:
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{extra/steps_per_second.png}
-        \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
+        \caption{Comparación rendimiento entre los distintos backends. Se utiliza escala logaritmica en ambos ejes.}
         \label{fig:performance}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{extra/steps_per_second_top3.png}
-        \caption{Comparación detallada del rendimiento en grillas grandes}
+        \caption{Comparación detallada del rendimiento de las implementaciones rapidas en grillas grandes.}
         \label{fig:performance_top3}
     \end{minipage}
 \end{figure}
 
-\subsection{Análisis de Resultados}
-
-Los resultados experimentales revelan patrones interesantes en el rendimiento de las diferentes implementaciones. Como se observa en la Tabla \ref{tab:performance_results}, las Figuras \ref{fig:performance} y \ref{fig:performance_top3}, el rendimiento del backend en Python puro es significativamente inferior al resto, actuando como un baseline que demuestra la importancia de las optimizaciones.
-
-\subsubsection{Rendimiento por Tamaño de Grilla}
-
-Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el mejor rendimiento, alcanzando hasta 82,080.3 steps/second en grillas de 16×16. Sin embargo, a medida que el tamaño de la grilla aumenta, NumPy comienza a superar a las implementaciones custom, especialmente en grillas grandes (512×512 y 1024×1024). La Figura \ref{fig:performance_top3} muestra con mayor detalle la competencia entre las tres mejores implementaciones en los tamaños más grandes, donde se puede apreciar claramente cómo NumPy toma la delantera en grillas de 512×512 y superiores.
-
-\subsubsection{Comparación de Implementaciones}
-
-\textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, con un factor de mejora de hasta 1,000x en grillas pequeñas comparado con las implementaciones optimizadas.
-
-\textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
+Los resultados experimentales presentados en \ref{tab:performance_results} revelan patrones interesantes en el rendimiento de las diferentes implementaciones:
 \begin{itemize}
-    \item Optimizaciones avanzadas del compilador GCC con flags -O3
-    \item Mejor manejo de registros y pipeline por parte del compilador
-    \item Posibles ineficiencias en la implementación manual de Assembly
+    \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 1.000 veces más lenta que las implementaciones optimizadas.
+
+    \item \textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Las bibliotecas altamente optimizadas pueden superar implementaciones custom, especialmente en problemas de gran escala.
+
+    \item \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente, mostrando que las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente. Sin embargo, requieren mayor esfuerzo de desarrollo.
+
+    \item \textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
+          \begin{itemize}
+              \item Optimizaciones avanzadas del compilador GCC, que pueden superar implementaciones manuales en Assembly en muchos casos.
+              \item Mejor manejo de registros y pipeline por parte del compilador.
+              \item Posibles ineficiencias en la implementación manual de Assembly.
+          \end{itemize}
 \end{itemize}
 
-\textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
-
-\textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Su implementación altamente optimizada, que probablemente utiliza BLAS/LAPACK y optimizaciones específicas de la arquitectura, la convierte en el líder en grillas de 512×512 y superiores.
-
-\subsubsection{Escalabilidad}
-
-Un aspecto notable es cómo las diferentes implementaciones escalan con el tamaño de la grilla. Mientras que las implementaciones custom mantienen un rendimiento relativamente constante en términos de steps/second, NumPy muestra una degradación más gradual, lo que sugiere una mejor optimización para problemas de gran escala.
-
-\subsubsection{Conclusiones del Análisis}
-
-\begin{enumerate}
-    \item \textbf{Optimizaciones del compilador}: Las optimizaciones automáticas del compilador pueden superar implementaciones manuales en Assembly en muchos casos.
-    \item \textbf{Paralelización vectorial}: Las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente.
-    \item \textbf{Bibliotecas optimizadas}: NumPy demuestra que las bibliotecas altamente optimizadas pueden superar implementaciones custom, especialmente en problemas de gran escala.
-    \item \textbf{Trade-off complejidad/rendimiento}: Las implementaciones más complejas (AVX) requieren más esfuerzo de desarrollo pero ofrecen mejor rendimiento.
-\end{enumerate}
-
 \section{Conclusiones}
+
+Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. Los resultados experimentales proporcionan insights valiosos sobre el rendimiento de diferentes técnicas de optimización.
+
+Los experimentos demuestran que las técnicas de optimización pueden generar mejoras dramáticas de rendimiento. La implementación en Python puro exhibe un rendimiento base que sirve como referencia, pero resulta inadecuado para aplicaciones que requieran cálculos en tiempo real. Las implementaciones en C muestran mejoras de hasta dos órdenes de magnitud respecto al baseline de Python.
+
+La implementación C+AVX emerge como la más eficiente entre las implementaciones desarrolladas, logrando un 20-25\% de mejora respecto a C puro gracias al paralelismo a nivel de instrucción. Esto demuestra el valor de las extensiones vectoriales modernas cuando se aplican correctamente a problemas computacionalmente intensivos.
+
+Sorprendentemente, NumPy supera consistentemente a todas las implementaciones custom en grillas grandes (256×256 y superiores), evidenciando la efectividad de bibliotecas altamente optimizadas que incorporan décadas de optimizaciones y técnicas avanzadas como BLAS y LAPACK.
+
+Contrario a las expectativas iniciales, la implementación en Assembly puro no superó a la versión en C. Este resultado subraya una realidad importante en la optimización moderna: los compiladores actuales incorporan optimizaciones sofisticadas que pueden superar implementaciones manuales en muchos escenarios. Las optimizaciones automáticas del compilador incluyen scheduling de instrucciones, manejo inteligente de registros, y aprovechamiento del pipeline del procesador.
+
+Los resultados tienen implicaciones importantes para el desarrollo de software científico:
+
+\textbf{Selección de herramientas:} Para la mayoría de aplicaciones científicas, bibliotecas maduras como NumPy ofrecen el mejor balance entre facilidad de desarrollo y rendimiento.
+
+\textbf{Optimización custom:} Cuando se requieren optimizaciones específicas, las extensiones AVX proporcionan un camino viable, especialmente en aplicaciones que procesan grandes volúmenes de datos regulares.
+
+\textbf{Desarrollo iterativo:} La estrategia de implementar primero en lenguajes de alto nivel y optimizar posteriormente las secciones críticas resultó efectiva para identificar cuellos de botella reales.
+
+Este trabajo abre varias direcciones para investigación adicional:
+
+\begin{itemize}
+    \item \textbf{Paralelización multi-core}: Explorar OpenMP o threading manual para aprovechar múltiples núcleos de procesamiento.
+    \item \textbf{Optimizaciones de memoria}: Investigar técnicas de cache-blocking y prefetching para mejorar el rendimiento en grillas muy grandes.
+    \item \textbf{GPU Computing}: Evaluar implementaciones en CUDA o OpenCL para problemas de mayor escala.
+    \item \textbf{Precisión mixta}: Analizar el trade-off entre precisión numérica y rendimiento usando aritmética de precisión reducida.
+\end{itemize}
+
+En conclusión, este trabajo demuestra que la optimización efectiva requiere un entendimiento profundo tanto del problema matemático como de la arquitectura del procesador, y que las bibliotecas especializadas representan una opción competitiva frente a implementaciones custom para muchas aplicaciones científicas.
+
 
 
 \begin{thebibliography}{9}
