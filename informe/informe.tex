@@ -358,20 +358,29 @@ en C y Assembler. A continuacion se muestra un diagrama:
     \label{fig:wave_sim_architecture}
 \end{figure} \\
 
-\textbf{Initialize (C)} \\
-Toma un tamaño de grilla, un tamaño del dominio, la velocidad de la hola y el intervalo de tiempo
+\textbf{Initialize} \\
+Establece el escenario matemático de la simulación: crea una grilla 2D que representa el espacio físico donde se propagarán las ondas, 
+prepara las herramientas matemáticas (transformadas de Fourier) y define los parámetros fundamentales como la velocidad de propagación. 
 
-\textbf{Add Wave Source (C)} \\
-Toma la posicion de la ola a agregar a la simulacion.
+\textbf{Add Wave Source} \\
+Introduce perturbaciones localizadas en el dominio, como "tirar una piedra al agua". Genera patrones de ondas circulares que se propagan 
+desde un punto específico, con una amplitud y frecuencia determinadas. Cada fuente crea ondas concéntricas que luego interactúan entre sí 
+y con las ondas ya existentes.
 
-\textbf{Step (C)} \\
-Hace avanzar el tiempo de la simulacion.
+\textbf{Step} \\
+Hace avanzar el tiempo de la simulación resolviendo la ecuación de ondas. Calcula cómo cada punto de la grilla cambia su altura/amplitud 
+basándose en la física de propagación de ondas. Utiliza métodos espectrales que transforman el problema al dominio de frecuencias, donde 
+es más eficiente calcular la evolución temporal.
 
-\textbf{Get Intensity (C)} \\
-Devuelve una grilla con la norma de la funcion en cada punto
+\textbf{Get Intensity} \\
+Calcula la "intensidad" o densidad de energía en cada punto del dominio. Representa qué tan "fuerte" es la onda en cada ubicación, 
+siempre como valores positivos. Es útil para visualizar dónde se concentra la energía de las ondas y observar patrones de interferencia 
+constructiva.
 
-\textbf{Get Real Part (C)} \\
-Devuelve una grilla con la parte real de la funcion en cada punto, que sería la altura de la onda que veríamos en la vida real.
+\textbf{Get Real Part} \\
+Extrae la parte real del campo de ondas complejo, representando el desplazamiento físico real que veríamos. Puede ser positiva (cresta) 
+o negativa (valle), mostrando las oscilaciones reales de la superficie. Es la representación más directa de "altura de la onda" en cada 
+punto del espacio.
 
 Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
 propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
@@ -380,18 +389,22 @@ propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y 
 
 Para establecer un baseline de rendimiento, implementamos dos versiones en Python:
 
-\textbf{Python puro:} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos. Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
+\textbf{Python puro:} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos. 
+Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
 
-Esta implementación presenta limitaciones inherentes de Python: lentitud en operaciones numéricas y uso ineficiente de memoria, ya que las listas se almacenan de forma dispersa en memoria.
+Esta implementación presenta limitaciones inherentes de Python: lentitud en operaciones numéricas y uso ineficiente de memoria, ya que las 
+listas se almacenan de forma dispersa en memoria.
 
-\textbf{NumPy:} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
+\textbf{NumPy:} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar 
+de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
 
 \begin{verbatim}
 def fft2(self, x):
     return np.fft.fft2(x)
 \end{verbatim}
 
-Como se observará en los resultados experimentales, la implementación de NumPy es extremadamente rápida y difícil de superar, aunque lograremos un rendimiento bastante similar con nuestras implementaciones optimizadas en C.
+Como se observará en los resultados experimentales, la implementación de NumPy es extremadamente rápida y difícil de superar, aunque lograremos 
+un rendimiento bastante similar con nuestras implementaciones optimizadas en C.
 
 \subsection{C}
 Como se ve en `ASMWaveSimulation2D`, la clase implementada en Python es simplemente una fachada, y toda la logica y estructuras de datos
@@ -730,10 +743,6 @@ Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el me
 \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
 
 \textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Su implementación altamente optimizada, que probablemente utiliza BLAS/LAPACK y optimizaciones específicas de la arquitectura, la convierte en el líder en grillas de 512×512 y superiores.
-
-\subsubsection{Escalabilidad}
-
-Un aspecto notable es cómo las diferentes implementaciones escalan con el tamaño de la grilla. Mientras que las implementaciones custom mantienen un rendimiento relativamente constante en términos de steps/second, NumPy muestra una degradación más gradual, lo que sugiere una mejor optimización para problemas de gran escala.
 
 \subsubsection{Conclusiones del Análisis}
 
