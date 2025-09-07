@@ -56,25 +56,13 @@ WaveSimulation *create_wave_simulation(int size, double domain_size, double wave
     sim->dt = dt;
     sim->dx = domain_size / size;
 
-    // Allocate arrays
     sim->wave = (Complex *)calloc(size * size, sizeof(Complex));
     sim->wave_k = (Complex *)calloc(size * size, sizeof(Complex));
     sim->grid_coords = (double *)malloc(size * size * 2 * sizeof(double));
     sim->k_grid_coords = (double *)malloc(size * size * 2 * sizeof(double));
     sim->K = (double *)malloc(size * size * sizeof(double));
 
-    if (!sim->wave || !sim->wave_k || !sim->grid_coords || !sim->k_grid_coords || !sim->K)
-    {
-        free(sim->wave);
-        free(sim->wave_k);
-        free(sim->grid_coords);
-        free(sim->k_grid_coords);
-        free(sim->K);
-        free(sim);
-        return NULL;
-    }
-
-    // Initialize grid coordinates
+    // Inicializacion de la grilla espacial
     double start = -domain_size / 2.0;
     double step = domain_size / size;
     for (int i = 0; i < size; i++)
@@ -87,7 +75,7 @@ WaveSimulation *create_wave_simulation(int size, double domain_size, double wave
         }
     }
 
-    // Initialize k-grid coordinates
+    // Inicializacion de la grilla de frecuencias
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
@@ -118,7 +106,7 @@ WaveSimulation *create_wave_simulation(int size, double domain_size, double wave
         }
     }
 
-    // Initialize K magnitude array
+    // Inicializacion la grilla de K
     for (int i = 0; i < size; i++)
     {
         for (int j = 0; j < size; j++)
@@ -163,16 +151,14 @@ void wave_sim_add_source(WaveSimulation *sim, double x_pos, double y_pos,
         }
     }
 
-    // Update wave_k using FFT
+    // Pasar a dominio frecuencial
     memcpy(sim->wave_k, sim->wave, sim->size * sim->size * sizeof(Complex));
     fft2d(sim->wave_k, sim->size, sim->size, 0);
 }
 
 void wave_sim_step(WaveSimulation *sim)
 {
-    // Apply phase evolution in k-space
-
-    // Time phase evolution
+    // Evolucion temporal en el dominio frecuencial, usando la solucion analitica
     for (int i = 0; i < sim->size; i++)
     {
         for (int j = 0; j < sim->size; j++)
@@ -186,9 +172,8 @@ void wave_sim_step(WaveSimulation *sim)
         }
     }
 
-    // Transform back to real space
+    // Volver a dominio espacial
     memcpy(sim->wave, sim->wave_k, sim->size * sim->size * sizeof(Complex));
-
     fft2d(sim->wave, sim->size, sim->size, 1);
 }
 
