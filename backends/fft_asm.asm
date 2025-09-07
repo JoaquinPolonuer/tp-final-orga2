@@ -5,11 +5,11 @@ global bit_reverse_asm
 ; Parámetros: a, b, result
 ; Fórmula: (a_r + a_i*i) * (b_r + b_i*i) = (a_r*b_r - a_i*b_i) + (a_r*b_i + a_i*b_r)*i
 %macro COMPLEX_MUL 3
-    movupd  %3, %1                      ; t1 = a
+    movapd  %3, %1                      ; t1 = a
     mulpd   %3, %2                      ; t1 = [ar*br, ai*bi]
     xorpd   %3, [rel COMPLEX_NEGHI]     ; t1 = [ar*br, -(ai*bi)]
 
-    movupd  xmm15, %1
+    movapd  xmm15, %1
     shufpd  xmm15, xmm15, 1   ; xmm15 = [ai, ar]
     mulpd   xmm15, %2         ; xmm15 = [ai*br, ar*bi]
 
@@ -69,14 +69,14 @@ bit_reverse_asm:
         shl     rdx, 4                   ; rdx = j * 16
 
         ; temp = x[i]
-        movupd  xmm0, [rbx + rax]        ; temp (real + imag)
+        movapd  xmm0, [rbx + rax]        ; temp (real + imag)
 
         ; x[i] = x[j]
-        movupd  xmm2, [rbx + rdx]        ; x[j] (real + imag)
-        movupd  [rbx + rax], xmm2
+        movapd  xmm2, [rbx + rdx]        ; x[j] (real + imag)
+        movapd  [rbx + rax], xmm2
 
         ; x[j] = temp
-        movupd  [rbx + rdx], xmm0
+        movapd  [rbx + rdx], xmm0
     .no_swap:
         inc     r14                      ; ++i
         jmp     .i_loop
@@ -172,27 +172,27 @@ fft_1d_asm:
                 lea     rsi, [rdi + r11]                ; rsi = &x[i + j + len/2]
 
                 ; Cargar u = (u_r, u_i), t = x[i + j + len/2] = (t_r, t_i)
-                movupd  xmm0, [rdi]                     ; xmm0 = {u_r, u_i}
-                movupd   xmm2, [rsi]                     ; xmm2 = {t_r, t_i}
+                movapd  xmm0, [rdi]                     ; xmm0 = {u_r, u_i}
+                movapd   xmm2, [rsi]                     ; xmm2 = {t_r, t_i}
                 
                 ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
                 COMPLEX_MUL xmm2, xmm8, xmm4
                 ; -----------------------------------------------------------
 
                 ; --------------- x[i + j] = complex_add(u, v) --------------
-                movupd  xmm11, xmm0                     ; xmm11 = u_r, u_i
+                movapd  xmm11, xmm0                     ; xmm11 = u_r, u_i
                 addpd   xmm11, xmm4                     ; xmm11 = u_r + v_r, u_i + v_i
-                movupd  [rdi],   xmm11
+                movapd  [rdi],   xmm11
                 ; -----------------------------------------------------------
 
                 ; --------- x[i + j + len / 2] = complex_sub(u, v) ----------
                 subpd   xmm0, xmm4                      ; xmm0 = u_r - v_r, u_i - v_i
-                movupd  [rsi],   xmm0
+                movapd  [rsi],   xmm0
                 ; -----------------------------------------------------------
 
                 ; ------------------ wn = complex_mul(wn, w) ----------------
                 COMPLEX_MUL xmm8, xmm6, xmm11
-                movupd  xmm8, xmm11                     ; xmm8 = wn = new_wn
+                movapd  xmm8, xmm11                     ; xmm8 = wn = new_wn
                 ; -----------------------------------------------------------
 
                 ; Guarda de in_loop
@@ -230,13 +230,13 @@ fft_1d_asm:
         shl     rax, 4                      ; i * 16
 
         ; cargar x[i]_r e imag
-        movupd   xmm0, [rbx + rax]           ; real
+        movapd   xmm0, [rbx + rax]
 
         ; dividir por n
         divpd   xmm0, xmm10
 
         ; guardar de vuelta
-        movupd   [rbx + rax],     xmm0
+        movapd   [rbx + rax], xmm0
 
         ; i++
         inc     r15

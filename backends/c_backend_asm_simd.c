@@ -66,7 +66,7 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
         {
             temp[i] = data[i * cols + j];
         }
-        fft_1d_asm_simd(temp, cols, inverse);
+        fft_1d_asm_simd(temp, rows, inverse);
         // fft_1d(temp, rows, inverse);
         for (int i = 0; i < rows; i++)
         {

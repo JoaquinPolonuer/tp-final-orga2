@@ -25,7 +25,7 @@ class WaveVisualizer:
             extent=[-4, 4, -4, 4],
             cmap="hot",
             vmin=0,
-            vmax=2,
+            vmax=0.5,
             origin="lower",
         )
         self.ax1.set_title(f"Wave Intensity |ψ|² ({self.backend_name} backend) - FPS: 0.0")
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     #     dt=0.02,
     # )
 
-    sim = OptimizedCWaveSimulation2D(
+    sim = ASMWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,
