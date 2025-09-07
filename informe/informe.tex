@@ -505,7 +505,7 @@ La motivación de esta optimización es que necesitamos calcular la transformada
 
 La implementación en Assembler puede entenderse fácilmente haciendo un paralelismo línea por línea con la implementación en C. Sin embargo, hay algunos detalles interesantes que vale la pena mencionar.
 
-\textbf{Uso de la pila x87 para operaciones matemáticas}
+\textbf{Uso de la pila x87 para operaciones matemáticas} \\
 La arquitectura x86-64 incluye una pila de registros especializada, conocida como la \textbf{pila x87}, diseñada para operaciones matemáticas en punto flotante.
 Esta pila, compuesta por ocho registros de 80 bits (st0--st7), permite realizar cálculos complejos de manera eficiente, especialmente en operaciones trigonométricas
 y exponenciales, que son fundamentales para la Transformada de Fourier.
@@ -530,7 +530,7 @@ movlpd   xmm6, [rsp]                     ; xmm6 = [w_r, w_i]
 En este código, se observa cómo la pila x87 permite calcular ambas funciones trigonométricas sin necesidad de recalcular el ángulo ni acceder repetidamente a memoria, optimizando así el rendimiento en operaciones matemáticas intensivas.
 
 
-\textbf{Representación de números complejos}
+\textbf{Representación de números complejos} \\
 Dado que la Transformada de Fourier trabaja con números complejos, es fundamental definir cómo vamos a manejarlos en Assembler. Como vimos en la implementación de C, la función recibe un puntero a un arreglo de complejos. Como ya vimos antes, el tipo de dato \texttt{Complex} ocupa 128 bits, o dos doubles, por lo que resulta ideal usar registros xmm para operar con ellos. En este trabajo, trabajamos con números complejos en los registros xmm de la siguiente manera:
 
 \begin{figure}[h]
@@ -550,7 +550,7 @@ movapd  [rdi],   xmm11
 
 Es decir, al sumar dos números complejos, la suma de la parte real e imaginaria se realiza simultáneamente.
 
-\textbf{Definición de la macro de multiplicación}
+\textbf{Definición de la macro de multiplicación} \\
 Otro detalle interesante de la implementación en Assembler es la utilización de una macro para el cálculo de la multiplicación compleja, dado que la misma se utiliza más de una vez. Esto resulta conveniente porque:
 
 \begin{itemize}
@@ -705,31 +705,22 @@ Un paréntesis importante es que, a los efectos de la visualización, las implem
 
 Los resultados experimentales presentados en \ref{tab:performance_results} revelan patrones interesantes en el rendimiento de las diferentes implementaciones:
 \begin{itemize}
-    \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 1.000 veces mas lento que las implementaciones optimizadas.
+    \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 1.000 veces más lenta que las implementaciones optimizadas.
 
-    \item \textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. 
-    
-    \item \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
+    \item \textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Las bibliotecas altamente optimizadas pueden superar implementaciones custom, especialmente en problemas de gran escala.
+
+    \item \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente, mostrando que las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente. Sin embargo, requieren mayor esfuerzo de desarrollo.
 
     \item \textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
     \begin{itemize}
-        \item Optimizaciones avanzadas del compilador GCC
-        \item Mejor manejo de registros y pipeline por parte del compilador
-        \item Posibles ineficiencias en la implementación manual de Assembly
+        \item Optimizaciones avanzadas del compilador GCC, que pueden superar implementaciones manuales en Assembly en muchos casos.
+        \item Mejor manejo de registros y pipeline por parte del compilador.
+        \item Posibles ineficiencias en la implementación manual de Assembly.
     \end{itemize}
-
 \end{itemize}
 
-\subsubsection{Conclusiones del Análisis}
-
-\begin{enumerate}
-    \item \textbf{Optimizaciones del compilador}: Las optimizaciones automáticas del compilador pueden superar implementaciones manuales en Assembly en muchos casos.
-    \item \textbf{Paralelización vectorial}: Las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente.
-    \item \textbf{Bibliotecas optimizadas}: NumPy demuestra que las bibliotecas altamente optimizadas pueden superar implementaciones custom, especialmente en problemas de gran escala.
-    \item \textbf{Trade-off complejidad/rendimiento}: Las implementaciones más complejas (AVX) requieren más esfuerzo de desarrollo pero ofrecen mejor rendimiento.
-\end{enumerate}
-
 \section{Conclusiones}
+
 
 
 \begin{thebibliography}{9}
