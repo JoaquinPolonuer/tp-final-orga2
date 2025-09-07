@@ -65,7 +65,6 @@ static void fft_1d(Complex *x, int n, int inverse)
     }
 }
 
-// 2D FFT implementation
 static void fft2d_basic(Complex *data, int rows, int cols, int inverse)
 {
 
@@ -95,12 +94,11 @@ static void fft2d_basic(Complex *data, int rows, int cols, int inverse)
     free(temp);
 }
 
-// Initialize the FFT function pointer
-static void __attribute__((constructor)) init_fft_backend(void) {
+static void __attribute__((constructor)) init_fft_backend(void)
+{
     fft2d = fft2d_basic;
 }
 
-// Method definitions
 static PyMethodDef PureCBackendMethods[] = {
     {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
     {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
@@ -109,7 +107,6 @@ static PyMethodDef PureCBackendMethods[] = {
     {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
     {NULL, NULL, 0, NULL}};
 
-// Module definition
 static struct PyModuleDef purecbackendmodule = {
     PyModuleDef_HEAD_INIT,
     "c_backend",

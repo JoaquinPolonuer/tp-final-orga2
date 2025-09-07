@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <immintrin.h>
 
-// Helper function for complex subtraction (used only in FFT)
 static Complex complex_sub(Complex a, Complex b)
 {
     Complex result = {a.real - b.real, a.imag - b.imag};
@@ -36,7 +35,6 @@ static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
     return _mm256_unpacklo_pd(real_parts, imag_parts); // [a1*c1-b1*d1, a1*d1+b1*c1, a2*c2-b2*d2, a2*d2+b2*c2]
 }
 
-// Bit reversal for FFT
 static void bit_reverse(Complex *x, int n)
 {
     int j = 0;
@@ -58,10 +56,8 @@ static void bit_reverse(Complex *x, int n)
     }
 }
 
-// 1D FFT implementation (Cooley-Tukey). Requires n to be a power of 2.
 static void fft_1d_vectorized(Complex *x, int n, int inverse)
 {
-    // Precondition: n must be a power of 2
     assert(n > 0 && (n & (n - 1)) == 0 && "Input length must be a power of 2");
 
     bit_reverse(x, n);
@@ -124,12 +120,10 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
     }
 }
 
-// 2D FFT implementation
 static void fft2d_vectorized(Complex *data, int rows, int cols, int inverse)
 {
 
     Complex *temp = (Complex *)malloc(cols * sizeof(Complex));
-    // FFT on rows
     for (int i = 0; i < rows; i++)
     {
         memcpy(temp, &data[i * cols], cols * sizeof(Complex));
@@ -137,7 +131,6 @@ static void fft2d_vectorized(Complex *data, int rows, int cols, int inverse)
         memcpy(&data[i * cols], temp, cols * sizeof(Complex));
     }
 
-    // FFT on columns
     temp = (Complex *)realloc(temp, rows * sizeof(Complex));
     for (int j = 0; j < cols; j++)
     {
@@ -155,7 +148,6 @@ static void fft2d_vectorized(Complex *data, int rows, int cols, int inverse)
     free(temp);
 }
 
-// Initialize the FFT function pointer
 static void __attribute__((constructor)) init_fft_backend(void) {
     fft2d = fft2d_vectorized;
 }

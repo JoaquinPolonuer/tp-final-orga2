@@ -3,7 +3,6 @@
 // FFT function pointer - will be set by each backend
 void (*fft2d)(Complex *data, int rows, int cols, int inverse) = NULL;
 
-// Common helper functions
 Complex complex_add(Complex a, Complex b)
 {
     Complex result = {a.real + b.real, a.imag + b.imag};
@@ -18,7 +17,6 @@ Complex complex_mul(Complex a, Complex b)
     return result;
 }
 
-// Wave simulation functions
 WaveSimulation *create_wave_simulation(int size, double domain_size, double wave_speed, double dt)
 {
     WaveSimulation *sim = (WaveSimulation *)malloc(sizeof(WaveSimulation));
