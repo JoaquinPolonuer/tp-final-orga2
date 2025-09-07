@@ -82,14 +82,7 @@ class WaveVisualizer:
 
 
 if __name__ == "__main__":
-    # sim = ASMSIMDWaveSimulation2D(
-    #     size=128,
-    #     domain_size=8.0,
-    #     wave_speed=2.0,
-    #     dt=0.02,
-    # )
-
-    sim = CWaveSimulation2D(
+    sim = OptimizedCWaveSimulation2D(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,

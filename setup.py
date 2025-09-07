@@ -32,16 +32,16 @@ class CustomBuildExt(build_ext):
 
 c_backend_extension = Extension(
     "backends.c_backend",
-    sources=["backends/c_backend.c"],
+    sources=["backends/c_backend.c", "backends/wave_simulation_common.c"],
 )
 
 c_backend_asm_extension = Extension(
     "backends.c_backend_asm",
-    sources=["backends/c_backend_asm.c", "backends/fft_asm.asm"],
+    sources=["backends/c_backend_asm.c", "backends/wave_simulation_common.c", "backends/fft_asm.asm"],
 )
 c_backend_avx_extension = Extension(
     "backends.c_backend_avx",
-    sources=["backends/c_backend_avx.c"],
+    sources=["backends/c_backend_avx.c", "backends/wave_simulation_common.c"],
     extra_compile_args=["-mavx", "-mavx2"],
 )
 

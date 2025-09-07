@@ -5,15 +5,15 @@ global bit_reverse_asm
 ; Parámetros: a, b, result
 ; Fórmula: (a_r + a_i*i) * (b_r + b_i*i) = (a_r*b_r - a_i*b_i) + (a_r*b_i + a_i*b_r)*i
 %macro COMPLEX_MUL 3
-    movapd  %3, %1                      ; t1 = a
-    mulpd   %3, %2                      ; t1 = [ar*br, ai*bi]
-    xorpd   %3, [rel COMPLEX_NEGHI]     ; t1 = [ar*br, -(ai*bi)]
+    movapd  %3, %1                          ; t1 = a
+    mulpd   %3, %2                          ; t1 = [ar*br, ai*bi]
+    xorpd   %3, [rel COMPLEX_NEGHI]         ; t1 = [ar*br, -(ai*bi)]
 
-    movapd  xmm15, %1
-    shufpd  xmm15, xmm15, 1   ; xmm15 = [ai, ar]
-    mulpd   xmm15, %2         ; xmm15 = [ai*br, ar*bi]
+    movapd  xmm15, %1                       ; Copio a en xmm15
+    shufpd  xmm15, xmm15, 1                 ; xmm15 = [ai, ar]
+    mulpd   xmm15, %2                       ; xmm15 = [ai*br, ar*bi]
 
-    haddpd  %3, xmm15         ; %3 = [ar*br - ai*bi, ai*br + ar*bi]
+    haddpd  %3, xmm15                       ; %3 = [ar*br - ai*bi, ai*br + ar*bi]
 %endmacro
 
 ; void bit_reverse_asm(Complex *x, int n)
@@ -30,58 +30,59 @@ bit_reverse_asm:
     sub     rsp, 8
     ;--------------- PROLOGO ---------------
 
-    mov     rbx, rdi                ; rbx = base x
-    mov     r12, rsi                ; r12 = n
+    mov     rbx, rdi                        ; rbx = base x
+    mov     r12, rsi                        ; r12 = n
 
     ; j = 0; i = 1;
-    xor     r13d, r13d              ; r13 = j
-    mov     r14, 1                  ; r14 = i
+    xor     r13d, r13d                      ; r13 = j
+    mov     r14, 1                          ; r14 = i
 
     ; for (i = 1; i < n; ++i)
     .i_loop:
-        cmp     r14, r12
-        jge     .done
+        cmp     r14, r12                    ; Comparo i con n
+        jge     .done                       ; Si i >= n termino
 
         ; bit = n >> 1;
-        mov     r15, r12
-        shr     r15, 1                  ; r15 = bit
+        mov     r15, r12                    ; r15 = n
+        shr     r15, 1                      ; r15 = bit = n >> 1
 
-    ; while (j & bit) { j ^= bit; bit >>= 1; }
-    .while_loop:
-        test    r13, r15
-        jz      .after_while
-        xor     r13, r15                ; j ^= bit
-        shr     r15, 1                  ; bit >>= 1
-        jmp     .while_loop
+        ; while (j & bit) { j ^= bit; bit >>= 1; }
+        .while_loop:
+            test    r13, r15                ; Chequeo si j & bit
+            jz      .after_while            ; Si es 0, salgo del while
+            xor     r13, r15                ; j ^= bit
+            shr     r15, 1                  ; bit >>= 1
+            jmp     .while_loop             ; Continuo el while
 
-    .after_while:
-        ; j ^= bit;
-        xor     r13, r15
+        .after_while:
+            ; j ^= bit;
+            xor     r13, r15                ; j ^= bit
 
         ; if (i < j) swap(x[i], x[j])
-        cmp     r14, r13
-        jge     .no_swap
+        cmp     r14, r13                    ; Comparo i con j
+        jge     .no_swap                    ; Si i >= j no swappeo
 
         ; addr_i = &x[i], addr_j = &x[j]   (Complex = 16 bytes)
-        mov     rax, r14
-        shl     rax, 4                   ; rax = i * 16
-        mov     rdx, r13
-        shl     rdx, 4                   ; rdx = j * 16
+        mov     rax, r14                    ; rax = i
+        shl     rax, 4                      ; rax = i * 16 (bytes de offset)
+        mov     rdx, r13                    ; rdx = j
+        shl     rdx, 4                      ; rdx = j * 16 (bytes de offset)
 
         ; temp = x[i]
-        movapd  xmm0, [rbx + rax]        ; temp (real + imag)
+        movapd  xmm0, [rbx + rax]           ; temp = x[i] (real + imag)
 
         ; x[i] = x[j]
-        movapd  xmm2, [rbx + rdx]        ; x[j] (real + imag)
-        movapd  [rbx + rax], xmm2
+        movapd  xmm2, [rbx + rdx]           ; xmm2 = x[j] (real + imag)
+        movapd  [rbx + rax], xmm2          ; x[i] = x[j]
 
         ; x[j] = temp
-        movapd  [rbx + rdx], xmm0
+        movapd  [rbx + rdx], xmm0          ; x[j] = temp
     .no_swap:
-        inc     r14                      ; ++i
-        jmp     .i_loop
+        inc     r14                         ; i++
+        jmp     .i_loop                     ; Continuo el loop
 
     .done:
+    ;--------------- EPILOGO ---------------
         add     rsp, 8
         pop     r15
         pop     r14
@@ -90,6 +91,7 @@ bit_reverse_asm:
         pop     rbx
         pop     rbp
         ret
+    ;--------------- EPILOGO ---------------
 
 ; void fft_1d_asm(Complex *x, int n, int inverse)
 ; rdi = *x, rsi = n, rdx = inverse
@@ -141,7 +143,7 @@ fft_1d_asm:
 
         fcos                                    ; st0 = cos(ang)
         fstp    qword [rsp]                     ; guardar cos
-        movlpd   xmm6, [rsp]                     ; xmm6 = [w_r, w_i]        ; (pila x87 vacía)
+        movlpd   xmm6, [rsp]                    ; xmm6 = [w_r, w_i]        ; (pila x87 vacía)
 
         ; -------- Calculitos que voy a usar en el in_loop ---------
         mov     r9, r14                         ; r9  = len
@@ -211,38 +213,39 @@ fft_1d_asm:
     
     .inverse:
         ; Si no es inversa, saltar el escalado 1/n
-        test    r13, r13
-        jz      .end_fft
+        test    r13, r13                    ; Chequeo si inverse != 0
+        jz      .end_fft                    ; Si inverse == 0, no escalo
 
         ; scale = (double)n  (usamos xmm10 como divisor)
-        cvtsi2sd xmm10, r12
-        shufpd   xmm10, xmm10, 0
+        cvtsi2sd xmm10, r12                 ; xmm10 = (double)n
+        shufpd   xmm10, xmm10, 0            ; xmm10 = [n, n] para dividir ambas partes
 
         ; i = 0
-        xor     r15, r15
+        xor     r15, r15                    ; i = 0
     .inverse_loop:
         ; if (i >= n) break
-        cmp     r15, r12
-        jge     .end_fft
+        cmp     r15, r12                    ; Comparo i con n
+        jge     .end_fft                    ; Si i >= n termino
 
         ; addr = &x[i]  (Complex ocupa 16 bytes: real, imag)
-        mov     rax, r15
-        shl     rax, 4                      ; i * 16
+        mov     rax, r15                    ; rax = i
+        shl     rax, 4                      ; rax = i * 16 (bytes de offset)
 
         ; cargar x[i]_r e imag
-        movapd   xmm0, [rbx + rax]
+        movapd   xmm0, [rbx + rax]          ; xmm0 = x[i] (real + imag)
 
         ; dividir por n
-        divpd   xmm0, xmm10
+        divpd   xmm0, xmm10                ; xmm0 = x[i] / n
 
         ; guardar de vuelta
-        movapd   [rbx + rax], xmm0
+        movapd   [rbx + rax], xmm0          ; x[i] = x[i] / n
 
         ; i++
-        inc     r15
-        jmp     .inverse_loop
+        inc     r15                         ; i++
+        jmp     .inverse_loop               ; Continuo el loop
 
     .end_fft:
+        ;--------------- EPILOGO ---------------
         add rsp, 8
         pop r15
         pop r14
@@ -251,6 +254,7 @@ fft_1d_asm:
         pop rbx
         pop rbp
         ret
+        ;--------------- EPILOGO ---------------
 
 section .data align=16
 COMPLEX_NEGHI: dq 0x0000000000000000, 0x8000000000000000
