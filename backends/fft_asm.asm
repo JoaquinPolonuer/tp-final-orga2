@@ -1,6 +1,25 @@
 global fft_1d_asm
 global bit_reverse_asm
 
+; Macro para multiplicación compleja: result = a * b
+; Parámetros: a_r, a_i, b_r, b_i, result_r, result_i
+; Fórmula: (a_r + a_i*i) * (b_r + b_i*i) = (a_r*b_r - a_i*b_i) + (a_r*b_i + a_i*b_r)*i
+%macro COMPLEX_MUL 6
+    ; result_r = a_r * b_r - a_i * b_i
+    movapd  %5, %1                      ; %5 = a_r
+    mulsd   %5, %3                      ; %5 = a_r * b_r
+    movapd  xmm15, %2                   ; xmm15 = a_i
+    mulsd   xmm15, %4                   ; xmm15 = a_i * b_i
+    subsd   %5, xmm15                   ; %5 = a_r * b_r - a_i * b_i
+
+    ; result_i = a_r * b_i + a_i * b_r
+    movapd  %6, %1                      ; %6 = a_r
+    mulsd   %6, %4                      ; %6 = a_r * b_i
+    movapd  xmm15, %2                   ; xmm15 = a_i
+    mulsd   xmm15, %3                   ; xmm15 = a_i * b_r
+    addsd   %6, xmm15                   ; %6 = a_r * b_i + a_i * b_r
+%endmacro
+
 ; void bit_reverse_asm(Complex *x, int n)
 ; rdi = x, rsi = n
 bit_reverse_asm:
@@ -169,17 +188,7 @@ fft_1d_asm:
                 movsd   xmm3, [rsi+8]                   ; xmm3 = t_i
 
                 ; ----- Complex v = complex_mul(x[i + j + len / 2], wn) -----
-                movapd  xmm4, xmm2                      ; xmm4 = t_r
-                mulsd   xmm4, xmm8                      ; xmm4 = t_r * wn_r
-                movapd  xmm5, xmm3                      ; xmm5 = t_i
-                mulsd   xmm5, xmm9                      ; t_i * wn_i
-                subsd   xmm4, xmm5                      ; xmm4 = v_r
-
-                movapd  xmm5, xmm2                      ; xmm5 = t_r
-                mulsd   xmm5, xmm9                      ; xmm5 = t_r * wn_i
-                movapd  xmm11, xmm3                     ; xmm11 = t_i
-                mulsd   xmm11, xmm8                     ; xmm1 = t_i * wn_r
-                addsd   xmm5, xmm11                     ; xmm5 = v_i
+                COMPLEX_MUL xmm2, xmm3, xmm8, xmm9, xmm4, xmm5
                 ; -----------------------------------------------------------
 
                 ; --------------- x[i + j] = complex_add(u, v) --------------
@@ -199,18 +208,7 @@ fft_1d_asm:
                 ; -----------------------------------------------------------
 
                 ; ------------------ wn = complex_mul(wn, w) ----------------
-                movapd  xmm11, xmm8                     ; xmm11 = wn_r
-                mulsd   xmm11, xmm6                     ; xmm11 = wn_r * w_r
-                movapd  xmm12, xmm9                     ; xmm12 = wn_i
-                mulsd   xmm12, xmm7                     ; xmm12 = wn_i * w_i
-                subsd   xmm11, xmm12                    ; xmm11 = new_r
-
-                movapd  xmm13, xmm8                     ; xmm13 = wn_r
-                mulsd   xmm13, xmm7                     ; xmm13 = wn_r * w_i
-                movapd  xmm14, xmm9                     ; xmm14 = wn_i
-                mulsd   xmm14, xmm6                     ; xmm14 = wn_i * w_r
-                addsd   xmm13, xmm14                    ; xmm14 = new_i
-
+                COMPLEX_MUL xmm8, xmm9, xmm6, xmm7, xmm11, xmm13
                 movapd  xmm8, xmm11                     ; xmm8 = wn_r = new_r
                 movapd  xmm9, xmm13                     ; xmm9 = wn_i = new_i
                 ; -----------------------------------------------------------
