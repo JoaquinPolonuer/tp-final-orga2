@@ -163,7 +163,7 @@ def create_performance_plots(df, output_dir="/home/joacopolo/Documents/tp-final-
     plt.xlabel("Tamaño de la grilla (N×N)", fontsize=12)
     plt.ylabel("Iteraciones por segundo", fontsize=12)
     plt.title(
-        "Top 3 tamaños de grilla (sin Python): Rendimiento",
+        "Rendimiento para grillas grandes (excluyendo Python)",
         fontsize=14,
         fontweight="bold",
     )
@@ -181,8 +181,8 @@ def create_performance_plots(df, output_dir="/home/joacopolo/Documents/tp-final-
 
 
 if __name__ == "__main__":
-    backends = ["numpy", "c", "c_avx", "asm"]
-    sizes = [ 128, 256, 512]
+    backends = ["numpy", "c", "c_avx", "asm", "python"]
+    sizes = [16, 32, 64, 128, 256, 512, 1024]
     steps = 50
 
     # if not os.path.exists("results/table_of_results.csv"):
