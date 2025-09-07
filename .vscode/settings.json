@@ -6,6 +6,8 @@
     "latex-workshop.formatting.latex": "latexindent",
     "latex-workshop.latexindent.path": "/Library/TeX/texbin/latexindent",
     "[latex]": {
+        "editor.wordWrap": "wordWrapColumn",
+        "editor.wordWrapColumn": 140,
         "editor.defaultFormatter": "James-Yu.latex-workshop",
         "editor.formatOnSave": true
     }

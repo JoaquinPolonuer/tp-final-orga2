@@ -438,20 +438,26 @@ Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_
 
 \textbf{create\_wave\_simulation:}
 \begin{itemize}
-    \item Asigna las variables, realizando las reservas de memoria necesarias
-    \item Inicializa \texttt{grid\_coords}, \texttt{k\_grid\_coords} y \texttt{K}
+    \item Reserva memoria para la estructura \texttt{WaveSimulation} y sus arrays: \texttt{wave} y \texttt{wave\_k} de números complejos (size$^2$×Complex), \texttt{grid\_coords} y \texttt{k\_grid\_coords} (size$^2$×2×double), y \texttt{K} (size$^2$×double)
+    \item Inicializa \texttt{grid\_coords} con coordenadas espaciales en formato plano [$x_0,y_0,x_1,y_1,...$] centradas en el dominio
+    \item Calcula \texttt{k\_grid\_coords} usando frecuencias FFT con desplazamiento de frecuencias negativas para valores j,i > size/2
+    \item Computa magnitudes \texttt{K} como $k_{mag} = \sqrt{k_x^2 + k_y^2} \times 2\pi$, evitando división por cero en k=0 con valor 1e-10
 \end{itemize}
 
 \textbf{add\_wave\_source:}
 \begin{itemize}
-    \item Agrega un círculo de perturbación
-    \item Aplica la transformada y vuelve a resolver la ecuación
+    \item Itera sobre todo el grid calculando la distancia radial $r^2 = (x-x_0)^2 + (y-y_0)^2$ desde la posición de la fuente
+    \item Genera una envolvente gaussiana (amplitude $\times e^{-r^2/width^2}$) y fase radial (frequency $\times r$)
+    \item Suma al array \texttt{wave} valores complejos envelope$\times$(cos(phase) + $i\times$sin(phase)) usando \texttt{complex\_add}
+    \item Copia \texttt{wave} a \texttt{wave\_k} y aplica FFT2D directa para obtener la representación en k-space
 \end{itemize}
 
 \textbf{wave\_sim\_step:}
 \begin{itemize}
-    \item Obtiene, para cada punto del dominio de las frecuencias, el nuevo valor
-    \item Aplica la transformada inversa para obtener el nuevo valor de la función de onda
+    \item Calcula evolución temporal en k-space: para cada punto obtiene $\omega$ = wave\_speed $\times$ K[idx] y phase = $-\omega \times$ dt
+    \item Multiplica \texttt{wave\_k[idx]} por factor de fase complex (cos(phase) + i×sin(phase)) usando \texttt{complex\_mul}
+    \item Copia \texttt{wave\_k} a \texttt{wave} y aplica FFT2D inversa para transformar de vuelta al espacio real
+    \item La función preserva la ecuación de onda dispersiva aplicando el operador de evolución temporal $e^{-i\omega t}$
 \end{itemize}
 
 Estos métodos son fundamentales y, como se mencionó previamente, son la base necesaria que nos permite acelerar la simulación en todos los backends. Ya aclarado esto, la implementación de la transformada de Fourier:
@@ -659,9 +665,9 @@ Obviamente, una parte fundamental del trabajo es poder visualizar interactivamen
 \end{figure}
 
 \subsection{Rendimiento por Tamaño de Grilla}
-Una vez verificado el correcto funcionamiento de cada backend, decidimos medir más precisamente la performance. Para esto, dejamos de lado la visualización y simplemente medimos la variable \textit{steps per second}. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends. Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidimos optimizar.
+Una vez verificado el correcto funcionamiento de cada backend, decidimos medir más precisamente la performance. Para esto, dejamos de lado la visualización y simplemente medimos cantidad de pasos que puede computar la simulacion por segundo. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends.
 
-A continuación se detallan los resultados:
+Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidimos optimizar.\\
 
 \begin{table}[h]
     \centering
@@ -685,40 +691,34 @@ A continuación se detallan los resultados:
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{extra/steps_per_second.png}
-        \caption{Comparación visual del rendimiento entre implementaciones de FFT y solver de ecuación de onda}
+        \caption{Comparación rendimiento entre los distintos backends. Se utiliza escala logaritmica en ambos ejes.}
         \label{fig:performance}
     \end{minipage}
     \hfill
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{extra/steps_per_second_top3.png}
-        \caption{Comparación detallada del rendimiento en grillas grandes}
+        \caption{Comparación detallada del rendimiento de las implementaciones rapidas en grillas grandes.}
         \label{fig:performance_top3}
     \end{minipage}
 \end{figure}
 
-\subsection{Análisis de Resultados}
-
-Los resultados experimentales revelan patrones interesantes en el rendimiento de las diferentes implementaciones. Como se observa en la Tabla \ref{tab:performance_results}, las Figuras \ref{fig:performance} y \ref{fig:performance_top3}, el rendimiento del backend en Python puro es significativamente inferior al resto, actuando como un baseline que demuestra la importancia de las optimizaciones.
-
-\subsubsection{Rendimiento por Tamaño de Grilla}
-
-Para grillas pequeñas (16×16 a 64×64), la implementación C+AVX muestra el mejor rendimiento, alcanzando hasta 82,080.3 steps/second en grillas de 16×16. Sin embargo, a medida que el tamaño de la grilla aumenta, NumPy comienza a superar a las implementaciones custom, especialmente en grillas grandes (512×512 y 1024×1024). La Figura \ref{fig:performance_top3} muestra con mayor detalle la competencia entre las tres mejores implementaciones en los tamaños más grandes, donde se puede apreciar claramente cómo NumPy toma la delantera en grillas de 512×512 y superiores.
-
-\subsubsection{Comparación de Implementaciones}
-
-\textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, con un factor de mejora de hasta 1,000x en grillas pequeñas comparado con las implementaciones optimizadas.
-
-\textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
+Los resultados experimentales presentados en \ref{tab:performance_results} revelan patrones interesantes en el rendimiento de las diferentes implementaciones:
 \begin{itemize}
-    \item Optimizaciones avanzadas del compilador GCC con flags -O3
-    \item Mejor manejo de registros y pipeline por parte del compilador
-    \item Posibles ineficiencias en la implementación manual de Assembly
+    \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 1.000 veces mas lento que las implementaciones optimizadas.
+
+    \item \textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. 
+    
+    \item \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
+
+    \item \textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
+    \begin{itemize}
+        \item Optimizaciones avanzadas del compilador GCC
+        \item Mejor manejo de registros y pipeline por parte del compilador
+        \item Posibles ineficiencias en la implementación manual de Assembly
+    \end{itemize}
+
 \end{itemize}
-
-\textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente.
-
-\textbf{NumPy:} A pesar de ser una biblioteca de alto nivel, NumPy demuestra un rendimiento excepcional, especialmente en grillas grandes. Su implementación altamente optimizada, que probablemente utiliza BLAS/LAPACK y optimizaciones específicas de la arquitectura, la convierte en el líder en grillas de 512×512 y superiores.
 
 \subsubsection{Conclusiones del Análisis}
 
