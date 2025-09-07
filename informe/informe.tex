@@ -13,7 +13,7 @@
 \begin{document}
 
 \titulo{Resolviendo la Ecuación de Onda mediante la Transformada de Fourier Acelerada}
-\subtitulo{Optimización de simulador fisico utilizando SIMD}
+% \subtitulo{Estudiando la performance de }
 \fecha{30 de Agosto de 2025}
 \materia{Organización del Computador II}
 
@@ -756,13 +756,13 @@ A continuación se detallan los resultados:
     \label{tab:performance_results}
     \begin{tabular}{lccccccc}
         \toprule
-        \textbf{Método} & \textbf{16×16}             & \textbf{32×32}             & \textbf{64×64}            & \textbf{128×128}          & \textbf{256×256}        & \textbf{512×512}          & \textbf{1024×1024}        \\
+        \textbf{Método} & \textbf{16×16}       & \textbf{32×32}       & \textbf{64×64}      & \textbf{128×128}    & \textbf{256×256}  & \textbf{512×512} & \textbf{1024×1024} \\
         \midrule
-        Python          & 631\textbf{.}8             & 158\textbf{.}1             & 38\textbf{.}5             & 9\textbf{.}2              & 2\textbf{.}2            & 0\textbf{.}5              & 0\textbf{.}1              \\
-        ASM             & 51.501\textbf{.}8          & 16.331\textbf{.}7          & 4.226\textbf{.}1          & 1.058\textbf{.}5          & 242\textbf{.}8          & 57\textbf{.}3             & 11\textbf{.}9             \\
-        C               & 77.787\textbf{.}5          & 21.308\textbf{.}2          & 5.043\textbf{.}0          & 1.170\textbf{.}4          & 262\textbf{.}1          & 60\textbf{.}8             & 13\textbf{.}4             \\
-        C+AVX           & \textbf{82.080\textbf{.}3} & \textbf{23.863\textbf{.}8} & \textbf{5.701\textbf{.}4} & \textbf{1.352\textbf{.}0} & \textbf{297\textbf{.}4} & \underline{68\textbf{.}3} & \underline{16\textbf{.}0} \\
-        NumPy           & 21.262\textbf{.}8          & 13.473\textbf{.}5          & 5.801\textbf{.}6          & 1.645\textbf{.}3          & 382\textbf{.}8          & \textbf{86\textbf{.}8}    & \textbf{16\textbf{.}6}    \\
+        Python          & 629,3                & 155,0                & 37,3                & 9,1                 & 2,1               & 0,5              & 0,1                \\
+        ASM             & 58.661,6             & 17.405,2             & 4.397,7             & 1.088,5             & 243,1             & 58,0             & 13,4               \\
+        C               & \underline{78.603,9} & 22.248,6             & 5.091,3             & 1.186,9             & 261,5             & 61,0             & 14,1               \\
+        C\_AVX          & \textbf{82.695,3}    & \textbf{23.736,9}    & \underline{5.697,9} & \underline{1.335,2} & \underline{296,9} & \underline{68,7} & \underline{15,3}   \\
+        Numpy           & 19.689,7             & \underline{12.918,3} & \textbf{5.707,2} & \textbf{1.617,4}    & \textbf{380,6 }   & \textbf{85,4}    & \textbf{15,8}      \\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -779,7 +779,7 @@ A continuación se detallan los resultados:
     \begin{minipage}[t]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{extra/steps_per_second_top3.png}
-        \caption{Comparación detallada del rendimiento en grillas grandes (top 3 implementaciones)}
+        \caption{Comparación detallada del rendimiento en grillas grandes}
         \label{fig:performance_top3}
     \end{minipage}
 \end{figure}
