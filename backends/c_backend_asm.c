@@ -38,5 +38,5 @@ static void __attribute__((constructor)) init_fft_backend(void) {
 
 PyMODINIT_FUNC PyInit_c_backend_asm(void)
 {
-    return create_python_module("c_backend_asm", "Pure C backend core functions without NumPy");
+    return create_python_module("c_backend_asm", "C backend optimized with FFT in Assembler");
 }

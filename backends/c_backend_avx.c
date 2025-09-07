@@ -2,8 +2,7 @@
 #include <assert.h>
 #include <immintrin.h>
 
-// SIMD complex operations
-// Data layout: [real1, imag1, real2, imag2] in __m256d
+// z = [real1, imag1, real2, imag2] en __m256d
 static inline __m256d complex_add_simd(__m256d z1, __m256d z2)
 {
     return _mm256_add_pd(z1, z2);
@@ -14,11 +13,10 @@ static inline __m256d complex_sub_simd(__m256d z1, __m256d z2)
     return _mm256_sub_pd(z1, z2);
 }
 
+// Recibe: z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
+// Devuelve: [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
 static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
 {
-    // z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
-    // Result = [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
-
     __m256d ac_bd = _mm256_mul_pd(z1, z2);               // ac_bd = [a1*c1, b1*d1, a2*c2, b2*d2]
     __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // z2_swapped = [d1, c1, d2, c2] (intercambio real/imag)
     __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // ad_bc = [a1*d1, b1*c1, a2*d2, b2*c2]
@@ -45,7 +43,7 @@ static void fft_1d_vectorized(Complex *x, int n, int inverse)
             Complex wn = {1.0, 0.0};
             int j;
 
-            // Proceso 2 elementos complejos por iteración
+            // Proceso 2 complejos por iteración
             for (j = 0; j < (len / 2) - 1; j += 2)
             {
                 __m256d u = _mm256_loadu_pd((double *)&x[i + j]);           // u = [u1.real, u1.imag, u2.real, u2.imag]
@@ -122,5 +120,5 @@ static void __attribute__((constructor)) init_fft_backend(void)
 
 PyMODINIT_FUNC PyInit_c_backend_avx(void)
 {
-    return create_python_module("c_backend_avx", "Pure C backend core functions without NumPy");
+    return create_python_module("c_backend_avx", "C backend optimized with AVX2 operations");
 }

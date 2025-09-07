@@ -1,6 +1,6 @@
 #include "wave_simulation_common.h"
 
-// FFT function pointer - will be set by each backend
+// Puntero a funcion de FFT, cada backend setea la propia
 void (*fft2d)(Complex *data, int rows, int cols, int inverse) = NULL;
 
 Complex complex_add(Complex a, Complex b)
@@ -23,7 +23,6 @@ Complex complex_mul(Complex a, Complex b)
     return result;
 }
 
-// Bit reversal for FFT
 void bit_reverse(Complex *x, int n)
 {
     int j = 0;
@@ -193,6 +192,8 @@ void wave_sim_step(WaveSimulation *sim)
     fft2d(sim->wave, sim->size, sim->size, 1);
 }
 
+// ------------------------ Interfaz con Python ------------------------------
+
 PyObject *wave_sim_get_intensity(WaveSimulation *sim)
 {
     PyObject *result = PyList_New(sim->size);
@@ -227,7 +228,6 @@ PyObject *wave_sim_get_real_part(WaveSimulation *sim)
     return result;
 }
 
-// Python interface functions
 PyObject *c_create_simulation(PyObject *self, PyObject *args)
 {
     int size;
@@ -300,8 +300,7 @@ PyObject *c_get_real_part(PyObject *self, PyObject *args)
     return wave_sim_get_real_part(sim);
 }
 
-// Method definitions
-PyMethodDef PureCBackendMethods[] = {
+PyMethodDef BackendMethods[] = {
     {"create_simulation", c_create_simulation, METH_VARARGS, "Create wave simulation"},
     {"add_wave_source", c_add_wave_source, METH_VARARGS, "Add wave source"},
     {"step_simulation", c_step_simulation, METH_VARARGS, "Step simulation"},
@@ -309,20 +308,17 @@ PyMethodDef PureCBackendMethods[] = {
     {"get_real_part", c_get_real_part, METH_VARARGS, "Get real part of wave"},
     {NULL, NULL, 0, NULL}};
 
-// Create python module
-PyObject* create_python_module(const char* module_name, const char* module_doc)
+PyObject *create_python_module(const char *module_name, const char *module_doc)
 {
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        NULL, // module name will be set dynamically
-        NULL, // module doc will be set dynamically
+        NULL,
+        NULL,
         -1,
-        PureCBackendMethods
-    };
-    
-    // Set module name and doc
+        BackendMethods};
+
     moduledef.m_name = module_name;
     moduledef.m_doc = module_doc;
-    
+
     return PyModule_Create(&moduledef);
 }

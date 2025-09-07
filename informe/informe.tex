@@ -610,18 +610,18 @@ múltiples elementos simultáneamente. Las funciones que permiten esta aceleraci
 
 Y vale la pena detenerse a considerar la implementación de \texttt{complex\_mul\_simd}, dado que utiliza operaciones interesantes:
 \begin{verbatim}
-Recibe: z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
-Devuelve: [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
-static inline __m256d complex_mul_simd(__m256d z1, __m256d z2) 
+// Recibe: z1 = [a1, b1, a2, b2], z2 = [c1, d1, c2, d2]
+// Devuelve: [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
+static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
 {
-    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // [a1*c1, b1*d1, a2*c2, b2*d2]
-    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // [d1, c1, d2, c2]
-    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // [a1*d1, b1*c1, a2*d2, b2*c2]
-    
-    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd);   // [a1*c1-b1*d1, ...]
-    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc);   // [a1*d1+b1*c1, ...]
-    
-    return _mm256_unpacklo_pd(real_parts, imag_parts);
+    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // ac_bd = [a1*c1, b1*d1, a2*c2, b2*d2]
+    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // z2_swapped = [d1, c1, d2, c2] (intercambio real/imag)
+    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // ad_bc = [a1*d1, b1*c1, a2*d2, b2*c2]
+
+    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd); // real_parts = [a1*c1-b1*d1, a1*c1-b1*d1, a2*c2-b2*d2, a2*c2-b2*d2]
+    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc); // imag_parts = [a1*d1+b1*c1, a1*d1+b1*c1, a2*d2+b2*c2, a2*d2+b2*c2]
+
+    return _mm256_unpacklo_pd(real_parts, imag_parts); // Resultado = [a1*c1-b1*d1, a1*d1+b1*c1, a2*c2-b2*d2, a2*d2+b2*c2]
 }
 \end{verbatim}
 
