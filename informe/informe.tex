@@ -361,15 +361,15 @@ La clase principal está hecha en Python, porque facilita la visualización. Sin
     \label{fig:wave_sim_architecture}
 \end{figure}
 
-\textbf{Initialize:} Establece el escenario matemático de la simulación: crea una grilla 2D que representa el espacio físico donde se propagarán las ondas, prepara las herramientas matemáticas (transformadas de Fourier) y define los parámetros fundamentales como la velocidad de propagación.
+\subsubsection{Initialize} Establece el escenario matemático de la simulación: crea una grilla 2D que representa el espacio físico donde se propagarán las ondas, prepara las herramientas matemáticas (transformadas de Fourier) y define los parámetros fundamentales como la velocidad de propagación.
 
-\textbf{Add Wave Source:} Introduce perturbaciones localizadas en el dominio, como "tirar una piedra al agua". Genera patrones de ondas circulares que se propagan desde un punto específico, con una amplitud y frecuencia determinadas. Cada fuente crea ondas concéntricas que luego interactúan entre sí y con las ondas ya existentes.
+\subsubsection{Add Wave Source} Introduce perturbaciones localizadas en el dominio, como "tirar una piedra al agua". Genera patrones de ondas circulares que se propagan desde un punto específico, con una amplitud y frecuencia determinadas. Cada fuente crea ondas concéntricas que luego interactúan entre sí y con las ondas ya existentes.
 
-\textbf{Step:} Hace avanzar el tiempo de la simulación resolviendo la ecuación de ondas. Calcula cómo cada punto de la grilla cambia su altura/amplitud basándose en la física de propagación de ondas. Utiliza métodos espectrales que transforman el problema al dominio de frecuencias, donde es más eficiente calcular la evolución temporal.
+\subsubsection{Step} Hace avanzar el tiempo de la simulación resolviendo la ecuación de ondas. Calcula cómo cada punto de la grilla cambia su altura/amplitud basándose en la física de propagación de ondas. Utiliza métodos espectrales que transforman el problema al dominio de frecuencias, donde es más eficiente calcular la evolución temporal.
 
-\textbf{Get Intensity:} Calcula la "intensidad" o densidad de energía en cada punto del dominio. Representa qué tan "fuerte" es la onda en cada ubicación, siempre como valores positivos. Es útil para visualizar dónde se concentra la energía de las ondas y observar patrones de interferencia constructiva.
+\subsubsection{Get Intensity} Calcula la "intensidad" o densidad de energía en cada punto del dominio. Representa qué tan "fuerte" es la onda en cada ubicación, siempre como valores positivos. Es útil para visualizar dónde se concentra la energía de las ondas y observar patrones de interferencia constructiva.
 
-\textbf{Get Real Part:} Extrae la parte real del campo de ondas complejo, representando el desplazamiento físico real que veríamos. Puede ser positiva (cresta) o negativa (valle), mostrando las oscilaciones reales de la superficie. Es la representación más directa de "altura de la onda" en cada punto del espacio.
+\subsubsection{Get Real Part} Extrae la parte real del campo de ondas complejo, representando el desplazamiento físico real que veríamos. Puede ser positiva (cresta) o negativa (valle), mostrando las oscilaciones reales de la superficie. Es la representación más directa de "altura de la onda" en cada punto del espacio.
 
 Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
 propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
@@ -378,7 +378,7 @@ propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y 
 
 Para establecer un baseline de rendimiento, implementamos dos versiones en Python:
 
-\textbf{Python puro:} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos.
+\subsubsection{Python puro} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos.
 Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
 
 Esta implementación presenta limitaciones inherentes de Python:
@@ -387,7 +387,7 @@ Esta implementación presenta limitaciones inherentes de Python:
     \item Uso ineficiente de memoria, ya que las listas se almacenan de forma dispersa en memoria
 \end{itemize}
 
-\textbf{NumPy:} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar
+\subsubsection{NumPy} Implementación optimizada que aprovecha las operaciones vectorizadas y bibliotecas optimizadas de álgebra lineal. En lugar
 de implementar la FFT manualmente, utilizamos directamente la función optimizada de NumPy:
 
 \begin{verbatim}
@@ -436,7 +436,7 @@ WaveSimulation funciona de la siguiente manera:
 
 Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_simulation}, \texttt{add\_wave\_source} y \texttt{wave\_sim\_step}.
 
-\textbf{create\_wave\_simulation:}
+\subsubsection{create\_wave\_simulation}
 \begin{itemize}
     \item Reserva memoria para la estructura \texttt{WaveSimulation} y sus arrays: \texttt{wave} y \texttt{wave\_k} de números complejos (size$^2$×Complex), \texttt{grid\_coords} y \texttt{k\_grid\_coords} (size$^2$×2×double), y \texttt{K} (size$^2$×double)
     \item Inicializa \texttt{grid\_coords} con coordenadas espaciales en formato plano [$x_0,y_0,x_1,y_1,...$] centradas en el dominio
@@ -444,7 +444,7 @@ Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_
     \item Computa magnitudes \texttt{K} como $k_{mag} = \sqrt{k_x^2 + k_y^2} \times 2\pi$, evitando división por cero en k=0 con valor 1e-10
 \end{itemize}
 
-\textbf{add\_wave\_source:}
+\subsubsection{add\_wave\_source}
 \begin{itemize}
     \item Itera sobre todo el grid calculando la distancia radial $r^2 = (x-x_0)^2 + (y-y_0)^2$ desde la posición de la fuente
     \item Genera una envolvente gaussiana (amplitude $\times e^{-r^2/width^2}$) y fase radial (frequency $\times r$)
@@ -452,7 +452,7 @@ Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_
     \item Copia \texttt{wave} a \texttt{wave\_k} y aplica FFT2D directa para obtener la representación en k-space
 \end{itemize}
 
-\textbf{wave\_sim\_step:}
+\subsubsection{wave\_sim\_step}
 \begin{itemize}
     \item Calcula evolución temporal en k-space: para cada punto obtiene $\omega$ = wave\_speed $\times$ K[idx] y phase = $-\omega \times$ dt
     \item Multiplica \texttt{wave\_k[idx]} por factor de fase complex (cos(phase) + i×sin(phase)) usando \texttt{complex\_mul}
@@ -505,7 +505,7 @@ La motivación de esta optimización es que necesitamos calcular la transformada
 
 La implementación en Assembler puede entenderse fácilmente haciendo un paralelismo línea por línea con la implementación en C. Sin embargo, hay algunos detalles interesantes que vale la pena mencionar.
 
-\textbf{Uso de la pila x87 para operaciones matemáticas} \\
+\subsubsection{Uso de la pila x87 para operaciones matemáticas}
 La arquitectura x86-64 incluye una pila de registros especializada, conocida como la \textbf{pila x87}, diseñada para operaciones matemáticas en punto flotante.
 Esta pila, compuesta por ocho registros de 80 bits (st0--st7), permite realizar cálculos complejos de manera eficiente, especialmente en operaciones trigonométricas
 y exponenciales, que son fundamentales para la Transformada de Fourier.
@@ -530,7 +530,7 @@ movlpd   xmm6, [rsp]                     ; xmm6 = [w_r, w_i]
 En este código, se observa cómo la pila x87 permite calcular ambas funciones trigonométricas sin necesidad de recalcular el ángulo ni acceder repetidamente a memoria, optimizando así el rendimiento en operaciones matemáticas intensivas.
 
 
-\textbf{Representación de números complejos} \\
+\subsubsection{Representación de números complejos}
 Dado que la Transformada de Fourier trabaja con números complejos, es fundamental definir cómo vamos a manejarlos en Assembler. Como vimos en la implementación de C, la función recibe un puntero a un arreglo de complejos. Como ya vimos antes, el tipo de dato \texttt{Complex} ocupa 128 bits, o dos doubles, por lo que resulta ideal usar registros xmm para operar con ellos. En este trabajo, trabajamos con números complejos en los registros xmm de la siguiente manera:
 
 \begin{figure}[h]
@@ -539,7 +539,7 @@ Dado que la Transformada de Fourier trabaja con números complejos, es fundament
     \caption{Representación de números complejos en memoria para la implementación en Assembly}
     \label{fig:asm_complex_representation}
 \end{figure}
-Esta representación no solo permite hacer solo una lectura de memoria por cada complejo, lo cual es razonable, sino que además permite aprovechar las instrucciones de packed double para paralelizar sumas y restas:
+Esta representación no solo permite hacer solo una lectura de memoria por cada complejo, lo cual es razonable, sino que además permite aprovechar las instrucciones de packed double para paralelizar sumas y restas, es decir, al sumar dos números complejos, la suma de la parte real e imaginaria se realiza simultáneamente.
 
 \begin{verbatim}
 ; --------------- x[i + j] = complex_add(u, v) --------------
@@ -548,9 +548,6 @@ addpd   xmm11, xmm4                     ; xmm11 = u_r + v_r, u_i + v_i
 movapd  [rdi],   xmm11
 \end{verbatim}
 
-Es decir, al sumar dos números complejos, la suma de la parte real e imaginaria se realiza simultáneamente.
-
-\textbf{Definición de la macro de multiplicación} \\
 Otro detalle interesante de la implementación en Assembler es la utilización de una macro para el cálculo de la multiplicación compleja, dado que la misma se utiliza más de una vez. Esto resulta conveniente porque:
 
 \begin{itemize}
@@ -585,7 +582,9 @@ Como se mencionó en la sección anterior, cada número complejo ocupa 128 bits,
 AVX2 (Advanced Vector Extensions 2) es una extensión del conjunto de instrucciones x86-64 introducida por Intel en 2013. Los registros introducidos duplican el ancho
 de los registros SSE (128 bits), por lo que permiten operar sobre 4 valores double precision simultáneamente.
 
-El uso de estos registros en este trabajo es analogo al explicado en la implementacion de C + ASM, solo que guardando dos numeros complejo por cada registro ymm:
+\subsubsection{Representación de números complejos}
+
+El uso de estos registros es analogo al explicado en la implementacion de C + ASM, solo que guardando dos numeros complejo por cada registro ymm:
 
 \begin{figure}[h]
     \centering
@@ -712,11 +711,11 @@ Los resultados experimentales presentados en \ref{tab:performance_results} revel
     \item \textbf{C+AVX:} Esta implementación representa el mejor rendimiento entre las implementaciones custom, siendo en promedio 20-25\% más rápida que C puro. El uso de registros AVX de 256 bits permite procesar 4 elementos double precision simultáneamente, mostrando que las extensiones AVX proporcionan mejoras significativas de rendimiento cuando se implementan correctamente. Sin embargo, requieren mayor esfuerzo de desarrollo.
 
     \item \textbf{C vs. ASM:} Contrariamente a la expectativa inicial, la implementación en Assembly puro (ASM) resulta ligeramente más lenta que la versión en C. Esto puede atribuirse a:
-    \begin{itemize}
-        \item Optimizaciones avanzadas del compilador GCC, que pueden superar implementaciones manuales en Assembly en muchos casos.
-        \item Mejor manejo de registros y pipeline por parte del compilador.
-        \item Posibles ineficiencias en la implementación manual de Assembly.
-    \end{itemize}
+          \begin{itemize}
+              \item Optimizaciones avanzadas del compilador GCC, que pueden superar implementaciones manuales en Assembly en muchos casos.
+              \item Mejor manejo de registros y pipeline por parte del compilador.
+              \item Posibles ineficiencias en la implementación manual de Assembly.
+          \end{itemize}
 \end{itemize}
 
 \section{Conclusiones}
