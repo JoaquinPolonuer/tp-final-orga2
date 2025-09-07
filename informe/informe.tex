@@ -666,7 +666,7 @@ Obviamente, una parte fundamental del trabajo es poder visualizar interactivamen
 \subsection{Rendimiento por Tamaño de Grilla}
 Una vez verificado el correcto funcionamiento de cada backend, decidimos medir más precisamente la performance. Para esto, dejamos de lado la visualización y simplemente medimos cantidad de pasos que puede computar la simulacion por segundo. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends.
 
-Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidimos optimizar.\\
+Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidimos optimizar. \\
 
 \begin{table}[h]
     \centering
@@ -677,15 +677,15 @@ Un paréntesis importante es que, a los efectos de la visualización, las implem
         \textbf{Método} & \textbf{16×16}       & \textbf{32×32}       & \textbf{64×64}      & \textbf{128×128}    & \textbf{256×256}  & \textbf{512×512} & \textbf{1024×1024} \\
         \midrule
         Python          & 626,5                & 154,3                & 37,3                & 9,1                 & 2,1               & 0,5              & 0,1                \\
-        ASM             & \underline{54.928,0} & 16.541,7             & 4.321,6             & 1.064,1             & 245,3             & 57,2             & 12,0               \\
-        C               & 56.649,2             & 14.737,5             & 3.341,2             & 789,0               & 178,1             & 41,6             & 9,4                \\
-        C\_AVX          & \textbf{65.495,1}    & \underline{18.320,5} & \underline{4.338,2} & \underline{1.026,6} & \underline{230,9} & \underline{53,7} & \underline{12,2}   \\
+        ASM             & 54.928,0             & 16.541,7             & 4.321,6             & \underline{1.064,1} & \underline{245,3} & \underline{57,2} & 12,0               \\
+        C               & \underline{56.649,2} & 14.737,5             & 3.341,2             & 789,0               & 178,1             & 41,6             & 9,4                \\
+        C\_AVX          & \textbf{65.495,1}    & \underline{18.320,5} & \underline{4.338,2} & 1.026,6             & 230,9             & 53,7             & \underline{12,2}   \\
         Numpy           & 19.148,6             & \textbf{12.521,8}    & \textbf{5.472,7}    & \textbf{1.610,4}    & \textbf{368,8 }   & \textbf{88,5}    & \textbf{15,7}      \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-\begin{figure}[h]
+\begin{figure}[H]
     \centering
     \begin{minipage}[t]{0.48\textwidth}
         \centering
@@ -702,51 +702,24 @@ Un paréntesis importante es que, a los efectos de la visualización, las implem
     \end{minipage}
 \end{figure}
 
+\subsection{Analisis}
+
 Los resultados experimentales presentados en \ref{tab:performance_results} revelan patrones interesantes en el rendimiento de las diferentes implementaciones:
 \begin{itemize}
-    \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 650 veces más lenta que las implementaciones optimizadas en grillas pequeñas.
+    \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 1000 veces más lenta que las implementaciones optimizadas.
 
-    \item \textbf{C+AVX:} Esta implementación demuestra el mejor rendimiento en grillas pequeñas (16×16), alcanzando más de 65.000 steps per second. Sin embargo, su ventaja se reduce progresivamente en grillas más grandes, donde NumPy toma el liderazgo.
+    \item La implementacion en \textbf{C} es una alternativa excelente, combinando simplicidad de implementacion con buena performance. En los tamaños mas grandes, pierde con
+          la version optimizada por AVX o la version acelerada con Assembler, pero se mantiene competitiva.
 
-    \item \textbf{NumPy:} Domina consistentemente en grillas grandes (64×64 y superiores), evidenciando la efectividad de bibliotecas altamente optimizadas que incorporan décadas de optimizaciones y técnicas avanzadas como BLAS y LAPACK. Su rendimiento superior se vuelve más pronunciado a medida que aumenta el tamaño de la grilla.
+    \item \textbf{C + AVX} y \textbf{C + ASM} compiten por el segundo puesto, lo cual resulta interesante. Los dos metodos mejoran el rendimiento del backend en C pero implementan
+          optimizaciones muy diferentes.
 
-    \item \textbf{C vs. ASM:} Los resultados muestran un rendimiento mixto entre estas implementaciones. En grillas pequeñas, C supera ligeramente a ASM, pero en tamaños medios (32×32 a 128×128), ASM obtiene mejor rendimiento. Esto sugiere que las optimizaciones manuales en Assembly pueden ser efectivas en ciertos rangos de tamaño, pero requieren ajustes específicos para cada escenario.
-
-    \item \textbf{Escalabilidad:} Todas las implementaciones muestran una degradación del rendimiento esperada al aumentar el tamaño de la grilla, siguiendo aproximadamente la complejidad $O(N^2 \log N)$ de la FFT bidimensional.
+    \item \textbf{NumPy:} Domina consistentemente en grillas grandes, evidenciando la efectividad de bibliotecas altamente optimizadas.
 \end{itemize}
 
 \section{Conclusiones}
 
-Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. Los resultados experimentales proporcionan insights valiosos sobre el rendimiento de diferentes técnicas de optimización.
-
-Los experimentos demuestran que las técnicas de optimización pueden generar mejoras dramáticas de rendimiento. La implementación en Python puro exhibe un rendimiento base que sirve como referencia, pero resulta inadecuado para aplicaciones que requieran cálculos en tiempo real. Las implementaciones optimizadas muestran mejoras de hasta tres órdenes de magnitud respecto al baseline de Python.
-
-La implementación C+AVX demuestra ser la más eficiente en grillas pequeñas, alcanzando rendimientos excepcionales de más de 65.000 steps per second en configuraciones 16×16. Sin embargo, su ventaja relativa disminuye progresivamente con el tamaño de la grilla, lo que sugiere que las optimizaciones vectoriales son más efectivas en problemas de escala menor a media.
-
-NumPy emerge como la solución dominante para grillas grandes (64×64 y superiores), superando consistentemente a todas las implementaciones custom. Esta biblioteca evidencia la efectividad de décadas de optimizaciones especializadas, técnicas avanzadas como BLAS y LAPACK, y optimizaciones específicas del hardware que son difíciles de replicar en implementaciones individuales.
-
-La relación entre C y Assembly presenta resultados mixtos que desafían expectativas tradicionales. Mientras que C supera ligeramente a Assembly en grillas pequeñas, Assembly obtiene mejor rendimiento en tamaños medios. Esto sugiere que las optimizaciones manuales pueden ser efectivas en rangos específicos, pero requieren ajustes precisos según el contexto del problema.
-
-Los resultados tienen implicaciones importantes para el desarrollo de software científico:
-
-\textbf{Selección de herramientas:} Para aplicaciones de gran escala, bibliotecas maduras como NumPy ofrecen el mejor rendimiento. Sin embargo, para aplicaciones de escala pequeña a media, implementaciones custom con AVX pueden superar estas bibliotecas.
-
-\textbf{Optimización específica por tamaño:} Los resultados demuestran que diferentes técnicas de optimización son efectivas en diferentes rangos de tamaño de problema. Las extensiones AVX brillan en problemas pequeños, mientras que bibliotecas especializadas dominan en problemas grandes.
-
-\textbf{Desarrollo estratégico:} La elección de técnica de optimización debe considerar el rango de tamaños de problema esperado. Un enfoque híbrido que seleccione el algoritmo según el tamaño de entrada podría ser la estrategia óptima.
-
-Este trabajo abre varias direcciones para investigación adicional:
-
-\begin{itemize}
-    \item \textbf{Paralelización multi-core}: Explorar OpenMP o threading manual para aprovechar múltiples núcleos de procesamiento.
-    \item \textbf{Optimizaciones de memoria}: Investigar técnicas de cache-blocking y prefetching para mejorar el rendimiento en grillas muy grandes.
-    \item \textbf{GPU Computing}: Evaluar implementaciones en CUDA o OpenCL para problemas de mayor escala.
-    \item \textbf{Precisión mixta}: Analizar el trade-off entre precisión numérica y rendimiento usando aritmética de precisión reducida.
-\end{itemize}
-
-En conclusión, este trabajo demuestra que la optimización efectiva requiere un entendimiento profundo tanto del problema matemático como de la arquitectura del procesador. Los resultados revelan que no existe una solución única óptima: las bibliotecas especializadas dominan en problemas grandes, mientras que las implementaciones custom con optimizaciones vectoriales pueden superar estas bibliotecas en aplicaciones de menor escala. La clave del éxito radica en seleccionar la técnica de optimización apropiada según el contexto específico del problema.
-
-
+Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. Los resultados experimentales proporcionan insights importantes sobre el rendimiento relativo de diferentes técnicas de optimización.
 
 \begin{thebibliography}{9}
     \bibitem{cooley1965algorithm}
