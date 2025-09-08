@@ -7,4 +7,5 @@ dependencies = [
     "numpy",
     "matplotlib",
     "setuptools",
+    "PyQt5",
 ]
