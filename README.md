@@ -16,6 +16,10 @@ Simulador fisico de ondas 2D implementado con múltiples backends para comparaci
 - Benchmarking para comparación de rendimiento
 
 ## Uso
+Si no tenes instalado uv, instalar:
+```
+curl -LsSf https://astral.sh/uv/install.sh | less
+```
 
 Primero compilar las extensiones:
 ```bash
