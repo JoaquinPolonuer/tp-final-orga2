@@ -15,25 +15,32 @@ Simulador fisico de ondas 2D implementado con múltiples backends para comparaci
   - C con Assembly
 - Benchmarking para comparación de rendimiento
 
-## Uso
-Si no tenes instalado uv, instalar:
-```
-curl -LsSf https://astral.sh/uv/install.sh | less
+## Instalación y Uso
+
+Instalar uv si no lo tenés:
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-Primero compilar las extensiones:
+Instalar dependencias y compilar extensiones:
 ```bash
+uv sync
 make
 ```
 
-Ejecutar la simulación interactiva:
+Ejecutar la simulación:
 ```bash
-python main.py
+uv run python main.py
 ```
 
 Con un backend específico:
 ```bash
-python main.py --backend <backend>
+uv run python main.py --backend <backend>
+```
+
+Con parámetros personalizados:
+```bash
+uv run python main.py --backend numpy --size 256 --wave-speed 3.0
 ```
 
 Backends disponibles:
@@ -42,6 +49,10 @@ Backends disponibles:
 - `c`: Implementación en C
 - `avx`: C con optimizaciones AVX
 - `asm`: Assembly optimizado
+
+Parámetros adicionales:
+- `--size`: Tamaño de la grilla de simulación (default: 128)
+- `--wave-speed`: Velocidad de propagación de las ondas (default: 2.0)
 
 Correr benchmarks:
 ```bash

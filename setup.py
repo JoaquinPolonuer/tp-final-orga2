@@ -53,5 +53,6 @@ setup(
     description="C backends for wave simulation (NumPy-based and Pure C)",
     ext_modules=ext_modules,
     cmdclass={"build_ext": CustomBuildExt},
+    packages=[],
     zip_safe=False,
 )

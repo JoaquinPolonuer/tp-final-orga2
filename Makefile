@@ -17,9 +17,9 @@ clean:
 build-c:
 	@echo "Building C backend..."
 	$(MAKE) clean
-	python setup.py build_ext --inplace
+	uv run python setup.py build_ext --inplace
 	@echo "C backend built successfully!"
 
 benchmark: build-c
 	@echo "Running performance benchmark..."
-	python benchmark.py
+	uv run python benchmark.py

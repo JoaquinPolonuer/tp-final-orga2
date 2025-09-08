@@ -1,0 +1,10 @@
+[project]
+name = "simulacion-ondas-2d"
+version = "1.0.0"
+description = "Simulador físico de ondas 2D con múltiples backends para comparación de performance"
+requires-python = ">=3.8"
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "setuptools",
+]

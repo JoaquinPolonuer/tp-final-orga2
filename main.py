@@ -86,8 +86,10 @@ class WaveVisualizer:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simulación de ondas 2D con múltiples backends")
     parser.add_argument(
-        "--backend", choices=["python", "numpy", "c", "avx", "asm"], default="numpy", help="Backend a utilizar para la simulación (default: numpy)"
+        "--backend", choices=["python", "numpy", "c", "avx", "asm"], default="c", help="Backend a utilizar para la simulación (default: numpy)"
     )
+    parser.add_argument("--size", type=int, default=128, help="Tamaño de la grilla de simulación (default: 128)")
+    parser.add_argument("--wave-speed", type=float, default=2.0, help="Velocidad de propagación de las ondas (default: 2.0)")
     args = parser.parse_args()
 
     backends = {
@@ -104,9 +106,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     sim = backend_class(
-        size=128,
+        size=args.size,
         domain_size=8.0,
-        wave_speed=2.0,
+        wave_speed=args.wave_speed,
         dt=0.02,
     )
 
