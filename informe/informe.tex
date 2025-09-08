@@ -300,10 +300,10 @@ static void fft2d(Complex *data, int rows, int cols, int inverse)
 
 En el contexto de la resolución de la ecuación de onda bidimensional, la FFT 2D permite transformar el operador Laplaciano $\nabla^2$ del dominio espacial al dominio frecuencial:
 \begin{equation}
-    \nabla^2 u(x,y) \xrightarrow{\text{FFT 2D}} -(\omega_x^2 + \omega_y^2) \hat{u}(\omega_x, \omega_y)
+    \nabla^2 u(x,y) \xrightarrow{\text{FFT 2D}} -(k_x^2 + k_y^2) \hat{u}(k_x, k_y)
 \end{equation}
 
-donde $\omega_x = 2\pi k_x/L_x$ y $\omega_y = 2\pi k_y/L_y$ son las frecuencias espaciales discretas, y $L_x$, $L_y$ son las dimensiones del dominio computacional.
+donde $k_x = 2\pi n_x/L_x$ y $k_y = 2\pi n_y/L_y$ son los números de onda espaciales discretos, con $n_x$, $n_y$ los índices frecuenciales y $L_x$, $L_y$ las dimensiones del dominio computacional.
 
 Esta transformación convierte la ecuación diferencial parcial en una ecuación algebraica en el dominio frecuencial, facilitando
 significativamente su resolución numérica mediante métodos espectrales.
