@@ -27,6 +27,18 @@ Ejecutar la simulación interactiva:
 python main.py
 ```
 
+Con un backend específico:
+```bash
+python main.py --backend <backend>
+```
+
+Backends disponibles:
+- `python`: Python puro
+- `numpy`: NumPy (default)
+- `c`: Implementación en C
+- `avx`: C con optimizaciones AVX
+- `asm`: Assembly optimizado
+
 Correr benchmarks:
 ```bash
 make benchmark

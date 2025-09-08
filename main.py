@@ -1,4 +1,6 @@
 import time
+import argparse
+import sys
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from backends.wave_simulation_numpy import NumpyWaveSimulation2D
@@ -82,7 +84,26 @@ class WaveVisualizer:
 
 
 if __name__ == "__main__":
-    sim = NumpyWaveSimulation2D(
+    parser = argparse.ArgumentParser(description="Simulación de ondas 2D con múltiples backends")
+    parser.add_argument(
+        "--backend", choices=["python", "numpy", "c", "avx", "asm"], default="numpy", help="Backend a utilizar para la simulación (default: numpy)"
+    )
+    args = parser.parse_args()
+
+    backends = {
+        "python": PythonWaveSimulation2D,
+        "numpy": NumpyWaveSimulation2D,
+        "c": CWaveSimulation2D,
+        "avx": AVXWaveSimulation2D,
+        "asm": ASMWaveSimulation2D,
+    }
+    backend_class = backends.get(args.backend.lower())
+
+    if backend_class is None:
+        print(f"Error: Backend '{args.backend}' no válido", file=sys.stderr)
+        sys.exit(1)
+
+    sim = backend_class(
         size=128,
         domain_size=8.0,
         wave_speed=2.0,
