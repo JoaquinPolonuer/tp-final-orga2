@@ -37,32 +37,6 @@
     \field{year}{2008}
   \endentry
 
-  \entry{oppenheim1999discrete}{book}{}{}
-    \name{author}{2}{}{%
-      {{hash=OAV}{%
-         family={Oppenheim},
-         familyi={O\bibinitperiod},
-         given={Alan\bibnamedelima V},
-         giveni={A\bibinitperiod\bibinitdelim V\bibinitperiod},
-      }}%
-      {{hash=SRW}{%
-         family={Schafer},
-         familyi={S\bibinitperiod},
-         given={Ronald\bibnamedelima W},
-         giveni={R\bibinitperiod\bibinitdelim W\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Prentice Hall}%
-    }
-    \strng{namehash}{OAVSRW1}
-    \strng{fullhash}{OAVSRW1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{Discrete-time signal processing}
-    \field{year}{1999}
-  \endentry
-
   \entry{strang2007computational}{book}{}{}
     \name{author}{1}{}{%
       {{hash=SG}{%
@@ -112,26 +86,6 @@
     \field{volume}{19}
     \field{journaltitle}{Mathematics of computation}
     \field{year}{1965}
-  \endentry
-
-  \entry{brigham1988fast}{book}{}{}
-    \name{author}{1}{}{%
-      {{hash=BOE}{%
-         family={Brigham},
-         familyi={B\bibinitperiod},
-         given={Oran\bibnamedelima E},
-         giveni={O\bibinitperiod\bibinitdelim E\bibinitperiod},
-      }}%
-    }
-    \list{publisher}{1}{%
-      {Prentice Hall}%
-    }
-    \strng{namehash}{BOE1}
-    \strng{fullhash}{BOE1}
-    \field{labelnamesource}{author}
-    \field{labeltitlesource}{title}
-    \field{title}{The fast Fourier transform and its applications}
-    \field{year}{1988}
   \endentry
 
   \entry{duhamel1990fast}{article}{}{}

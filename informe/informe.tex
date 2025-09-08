@@ -63,7 +63,7 @@ Esta formulación bidimensional modela fenómenos como:
 \subsection{La Transformada de Fourier}
 
 La Transformada de Fourier constituye una herramienta matemática fundamental para el análisis de fenómenos ondulatorios, permitiendo
-descomponer señales complejas en sus componentes frecuenciales básicas \cite{oppenheim1999discrete}. Esta transformación resulta especialmente poderosa en el
+descomponer señales complejas en sus componentes frecuenciales básicas. Esta transformación resulta especialmente poderosa en el
 contexto de la resolución de ecuaciones diferenciales parciales \cite{strang2007computational}.
 
 La Transformada de Fourier continua de una función $f(x)$ se define como:
@@ -86,7 +86,7 @@ lo que simplifica notablemente su resolución. Para abordar la ecuación (1), se
     \mathcal{F}\left\{\frac{\partial^n f}{\partial x^n}\right\} = (i\omega)^n \hat{f}(\omega)
 \end{equation}
 
-\textbf{Propiedad 2:} Cuando se transforma respecto a una variable diferente a la que se deriva, la derivada parcial se convierte en una derivada ordinaria de la transformada:
+\textbf{Propiedad 2:} Cuando se transforma respecto a una variable diferente a la que se deriva, la transformada de la derivada es igual a la derivada de la transformada:
 \begin{equation}
     \mathcal{F}_x\left\{\frac{\partial f}{\partial t}\right\} = \frac{\partial \hat{f}}{\partial t}
 \end{equation}
@@ -126,9 +126,9 @@ secuencias largas. Esta limitación motivó el desarrollo del algoritmo Fast Fou
 \subsection{Transformada Rápida de Fourier (Cooley-Tukey)}
 
 El algoritmo FFT, desarrollado por Cooley y Tukey en 1965 \cite{cooley1965algorithm}, reduce la complejidad computacional de $O(N^2)$ a $O(N \log N)$
-mediante la estrategia de divide and conquer \cite{brigham1988fast}. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
+mediante la estrategia de divide and conquer. Para $N = 2^m$, el algoritmo descompone la DFT en DFTs más pequeñas.
 
-El algoritmo DIT (Decimation-in-Time) separa la secuencia de entrada en muestras pares e impares:
+El algoritmo separa la secuencia de entrada en muestras pares e impares:
 \begin{equation}
     \hat{x}[k] = \sum_{n \text{ par}} x[n] e^{-i2\pi kn/N} + \sum_{n \text{ impar}} x[n] e^{-i2\pi kn/N}
 \end{equation}
@@ -162,7 +162,7 @@ Este proceso se aplica recursivamente hasta obtener DFTs de un solo elemento.
 
 \subsubsection{Algoritmo Recursivo FFT}
 
-El algoritmo recursivo implementa directamente la estrategia divide and conquer descrita anteriormente:
+El algoritmo recursivo implementa directamente la estrategia divide and conquer descrita anteriormente, con complejidad $O(N \log N)$:
 
 \begin{verbatim}
 def fft_recursive(x):
@@ -188,18 +188,11 @@ def fft_recursive(x):
     return y
 \end{verbatim}
 
-Este algoritmo recursivo tiene complejidad $O(N \log N)$ pero presenta overhead significativo debido a:
-\begin{itemize}
-    \item Creación de múltiples listas temporales
-    \item Llamadas recursivas con overhead de stack
-    \item Acceso no secuencial a memoria
-\end{itemize}
-
-Por esta razón, las implementaciones prácticas utilizan versiones iterativas optimizadas que mantienen la misma complejidad algorítmica pero con mejor rendimiento en la práctica \cite{duhamel1990fast}.
+Sin embargo, las implementaciones prácticas utilizan la version iterativa, que mantienen la misma complejidad algorítmica pero con mejor rendimiento en la práctica \cite{duhamel1990fast}, evitando usar intensivamente el stack para hacer llamadas recursivas.
 
 \subsubsection{Algoritmo Iterativo FFT}
 
-La versión iterativa evita el overhead de la recursión mediante el uso de bit-reversal y bucles anidados:
+La versión iterativa corresponde a una implementación \textit{bottom-up}, comienza resolviendo DFTs de tamaño 2 y va duplicando la longitud en cada nivel. Para que los subproblemas se alineen correctamente en cada etapa, la señal de entrada debe reordenarse según el patrón de \textit{bit-reversal}. De este modo, los accesos secuenciales en los bucles anidados producen exactamente las mismas combinaciones que la versión recursiva.
 
 \begin{verbatim}
 def fft_iterative(x):
@@ -207,7 +200,7 @@ def fft_iterative(x):
     if n <= 1:
         return x
     
-    # Bit-reversal permutation
+    # Bit-reversal
     j = 0
     for i in range(1, n):
         bit = n >> 1
@@ -235,15 +228,8 @@ def fft_iterative(x):
     return x
 \end{verbatim}
 
-Esta implementación iterativa presenta varias ventajas sobre la versión recursiva:
-\begin{itemize}
-    \item \textbf{Acceso secuencial a memoria}: Mejor utilización de la jerarquía de cache
-    \item \textbf{Sin overhead de recursión}: Elimina el costo de las llamadas a función
-    \item \textbf{Menor uso de memoria}: No requiere múltiples copias de los datos
-    \item \textbf{Mejor paralelización}: Los bucles pueden ser optimizados por el compilador
-\end{itemize}
-
-El algoritmo mantiene la misma complejidad $O(N \log N)$ pero con constantes significativamente menores, lo que resulta en mejor rendimiento en la práctica.
+Esta implementación iterativa no solo ahorra el costo de llamar multiples veces a la funcion, sino que ademas permite realizar optimizaciones como las que veremos a continuacion,
+haciendo uso de herramientas de paralelización, lo que resulta en mejor rendimiento en la práctica.
 
 \subsection{Transformada de Fourier Bidimensional}
 
@@ -324,12 +310,10 @@ significativamente su resolución numérica mediante métodos espectrales.
 
 \section{Metodología}
 Se propone implementar un simulador físico que permita visualizar la evolución de una onda a traves de un campo. Para esto, se desarrollaron
-las interfaces `WaveSimulation2D` y `WaveVisualizer` (ver seccion experimental). A su vez, la interfaz `WaveSimulation2D` se implemento en varios
+las interfaces \texttt{WaveSimulation2D} y \texttt{WaveVisualizer} (ver seccion experimental). A su vez, la interfaz \texttt{WaveSimulation2D} se implemento en varios
 backends distintos: Python, NumPy, C, C + ASM (Assembly), y C + AVX.
 
-El objetivo es evaluar el rendimiento de cada implementación midiendo la variable \textit{steps per second} (pasos por segundo), que
-indica cuántos pasos de simulación puede procesar cada backend en un segundo. Esta métrica es fundamental para evaluar la eficiencia
-computacional de diferentes enfoques de implementación.
+El objetivo es evaluar el rendimiento de cada implementación midiendo la cantidad de pasos de simulación puede procesar cada backend en un segundo. Esta métrica es fundamental para evaluar la eficiencia computacional de diferentes enfoques de implementación.
 
 \subsection{Implementación Propuesta}
 Con el objetivo de facilitar la experimentación, se propone utilizar un diseño comun a todos los backends. A modo de ejemplo, se muestra
@@ -363,18 +347,19 @@ La clase principal está hecha en Python, porque facilita la visualización. Sin
     \label{fig:wave_sim_architecture}
 \end{figure}
 
+En el ejemplo anterior, Wave Simulation 2D provee una fachada en Python, FFT1D esta programada en Assembler y todo lo demas se programa en C.
+
 \subsubsection{Initialize} Establece el escenario matemático de la simulación: crea una grilla 2D que representa el espacio físico donde se propagarán las ondas, prepara las herramientas matemáticas (transformadas de Fourier) y define los parámetros fundamentales como la velocidad de propagación.
 
-\subsubsection{Add Wave Source} Introduce perturbaciones localizadas en el dominio, como "tirar una piedra al agua". Genera patrones de ondas circulares que se propagan desde un punto específico, con una amplitud y frecuencia determinadas. Cada fuente crea ondas concéntricas que luego interactúan entre sí y con las ondas ya existentes.
+\subsubsection{Add Wave Source} Introduce perturbaciones localizadas en el dominio, como tirar una piedra al agua. Genera patrones de ondas circulares que se propagan desde un punto específico, con una amplitud y frecuencia determinadas. Cada fuente crea ondas concéntricas que luego interactúan entre sí y con las ondas ya existentes.
 
 \subsubsection{Step} Hace avanzar el tiempo de la simulación resolviendo la ecuación de ondas. Calcula cómo cada punto de la grilla cambia su altura/amplitud basándose en la física de propagación de ondas. Utiliza métodos espectrales que transforman el problema al dominio de frecuencias, donde es más eficiente calcular la evolución temporal.
 
-\subsubsection{Get Intensity} Calcula la "intensidad" o densidad de energía en cada punto del dominio. Representa qué tan "fuerte" es la onda en cada ubicación, siempre como valores positivos. Es útil para visualizar dónde se concentra la energía de las ondas y observar patrones de interferencia constructiva.
+\subsubsection{Get Intensity} Calcula la intensidad o densidad de energía en cada punto del dominio. Representa qué tan fuerte es la onda en cada ubicación, siempre como valores positivos. Es útil para visualizar dónde se concentra la energía de las ondas y observar patrones de interferencia constructiva.
 
-\subsubsection{Get Real Part} Extrae la parte real del campo de ondas complejo, representando el desplazamiento físico real que veríamos. Puede ser positiva (cresta) o negativa (valle), mostrando las oscilaciones reales de la superficie. Es la representación más directa de "altura de la onda" en cada punto del espacio.
+\subsubsection{Get Real Part} Extrae la parte real del campo de ondas complejo, representando el desplazamiento físico real que veríamos. Puede ser positiva (cresta) o negativa (valle), mostrando las oscilaciones reales de la superficie. Es la representación más directa de altura de la onda en cada punto del espacio.
 
-Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la
-propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
+Como se ve en el diagrama, necesitamos calcular la transformada de fourier para cada paso de la simulacion. Es por esto que la propuesta del trabajo es tratar de optimizar el algoritmo a distintos niveles y comparar sus rendimientos.
 
 \subsection{Python y NumPy}
 
@@ -456,7 +441,7 @@ Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_
 
 \subsubsection{wave\_sim\_step}
 \begin{itemize}
-    \item Calcula evolución temporal en k-space: para cada punto obtiene $\omega$ = wave\_speed $\times$ K[idx] y phase = $-\omega \times$ dt
+    \item Calcula evolución temporal en el dominio frecuencial: para cada punto obtiene $\omega$ = wave\_speed $\times$ K[idx] y phase = $-\omega \times$ dt
     \item Multiplica \texttt{wave\_k[idx]} por factor de fase complex (cos(phase) + i×sin(phase)) usando \texttt{complex\_mul}
     \item Copia \texttt{wave\_k} a \texttt{wave} y aplica FFT2D inversa para transformar de vuelta al espacio real
     \item La función preserva la ecuación de onda dispersiva aplicando el operador de evolución temporal $e^{-i\omega t}$
@@ -513,10 +498,10 @@ Esta pila, compuesta por ocho registros de 80 bits (st0--st7), permite realizar 
 y exponenciales, que son fundamentales para la Transformada de Fourier.
 
 En la implementación en Assembly, la pila x87 se utiliza para calcular funciones como seno y coseno de un ángulo, aprovechando instrucciones dedicadas como
-\texttt{fsin} y \texttt{fcos}. El flujo típico consiste en cargar el ángulo en la pila, calcular el seno (dejando el ángulo aún disponible en la pila), almacenar
-el resultado en memoria, y luego calcular el coseno sobre el mismo ángulo. Finalmente, ambos resultados se transfieren a registros xmm para su uso vectorizado.
+\texttt{fsin} y \texttt{fcos}.
 
-El siguiente fragmento ilustra este proceso, equivalente a la operación en C \texttt{Complex w = {cos(angle), sin(angle)}}:
+A continuacion se demuestra un ejemplo, equivalente a la operación en C \texttt{Complex w = {cos(angle), sin(angle)}}, en el que cargamos el ángulo en la pila, calculamos el seno, almacenamos el resultado en memoria y luego calcular el coseno sobre el mismo ángulo. Finalmente, ambos resultados se transfieren a registros xmm para su uso vectorizado.
+
 \begin{verbatim}
 .declarar_w:
 fld     st0                             ; Copio el angulo devuelta en st0, st1 = angulo
@@ -529,6 +514,7 @@ fstp    qword [rsp]                     ; guardar cos
 movlpd   xmm6, [rsp]                     ; xmm6 = [w_r, w_i]
 ; (pila x87 vacía)
 \end{verbatim}
+
 En este código, se observa cómo la pila x87 permite calcular ambas funciones trigonométricas sin necesidad de recalcular el ángulo ni acceder repetidamente a memoria, optimizando así el rendimiento en operaciones matemáticas intensivas.
 
 
@@ -616,21 +602,22 @@ Y vale la pena detenerse a considerar la implementación de \texttt{complex\_mul
 // Devuelve: [(a1*c1-b1*d1), (a1*d1+b1*c1), (a2*c2-b2*d2), (a2*d2+b2*c2)]
 static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
 {
-    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // ac_bd = [a1*c1, b1*d1, a2*c2, b2*d2]
-    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // z2_swapped = [d1, c1, d2, c2] (intercambio real/imag)
-    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // ad_bc = [a1*d1, b1*c1, a2*d2, b2*c2]
+    __m256d ac_bd = _mm256_mul_pd(z1, z2);               // = [a1*c1, b1*d1, a2*c2, b2*d2]
+    __m256d z2_swapped = _mm256_shuffle_pd(z2, z2, 0x5); // = [d1, c1, d2, c2] (intercambio real/imag)
+    __m256d ad_bc = _mm256_mul_pd(z1, z2_swapped);       // = [a1*d1, b1*c1, a2*d2, b2*c2]
 
-    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd); // real_parts = [a1*c1-b1*d1, a1*c1-b1*d1, a2*c2-b2*d2, a2*c2-b2*d2]
-    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc); // imag_parts = [a1*d1+b1*c1, a1*d1+b1*c1, a2*d2+b2*c2, a2*d2+b2*c2]
+    __m256d real_parts = _mm256_hsub_pd(ac_bd, ac_bd); // = [a1*c1-b1*d1, a1*c1-b1*d1, ...]
+    __m256d imag_parts = _mm256_hadd_pd(ad_bc, ad_bc); // = [a1*d1+b1*c1, a1*d1+b1*c1, ...]
 
-    return _mm256_unpacklo_pd(real_parts, imag_parts); // Resultado = [a1*c1-b1*d1, a1*d1+b1*c1, a2*c2-b2*d2, a2*d2+b2*c2]
+    return _mm256_unpacklo_pd(real_parts, imag_parts); // Resultado = [a1*c1-b1*d1, a1*d1+b1*c1, ...]
 }
 \end{verbatim}
 
+
+
 \section{Experimentos}
 
-Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos
-el rendimiento en distintos tamaños.
+Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos el rendimiento en distintos tamaños.
 
 Los experimentos se realizaron en un sistema con las siguientes especificaciones:
 \begin{itemize}
@@ -664,6 +651,8 @@ Obviamente, una parte fundamental del trabajo es poder visualizar interactivamen
     \caption{Visualización interactiva del simulador de ondas 2D}
     \label{fig:live_visualization}
 \end{figure}
+
+Se puede acceder y testear la simulacion siguiendo las instrucciones del README.md presente en el repositorio del proyecto.
 
 \subsection{Rendimiento por Tamaño de Grilla}
 Una vez verificado el correcto funcionamiento de cada backend, decidimos medir más precisamente la performance. Para esto, dejamos de lado la visualización y simplemente medimos cantidad de pasos que puede computar la simulacion por segundo. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends.
@@ -710,19 +699,17 @@ Los resultados experimentales presentados en \ref{tab:performance_results} revel
 \begin{itemize}
     \item \textbf{Python vs. Implementaciones Optimizadas:} La implementación en Python puro muestra un rendimiento dramáticamente inferior, siendo hasta 1000 veces más lenta que las implementaciones optimizadas.
 
-    \item La implementacion en \textbf{C} es una alternativa excelente, combinando simplicidad de implementacion con buena performance. En los tamaños mas grandes, pierde con
-          la version optimizada por AVX o la version acelerada con Assembler, pero se mantiene competitiva.
-
-    \item \textbf{C + AVX} y \textbf{C + ASM} compiten por el segundo puesto, lo cual resulta interesante. Los dos metodos mejoran el rendimiento del backend en C pero implementan
-          optimizaciones muy diferentes.
-
     \item \textbf{NumPy:} Domina consistentemente en grillas grandes, evidenciando la efectividad de bibliotecas altamente optimizadas.
+
+    \item La implementacion en \textbf{C} es una alternativa excelente, combinando simplicidad de implementacion con buena performance. Supera a Numpy en grillas chicas, y a pesar de no ser la mejora en grillas grandes, se mantiene competititiva.
+
+    \item \textbf{C + AVX} y \textbf{C + ASM} mejoran ampliamente el rendimiento de la implementacion en C (alrededor de un 25\%) y se mantienen muy parejos entre ellos. Esto ultimo resulta llamativo, ya que el rendimiento es muy similar a pesar de que ambos implementan optimizaciones sumamente diferentes.
 \end{itemize}
 
 \section{Conclusiones}
+En este trabajo se exploraron distintas implementaciones de un simulador fisico 2D basado en la Transformada Rapida de Fourier. El trabajo combina un extenso marco teorico matematico y fisico con una implementacion computacional altamente optimizada.
 
-Este trabajo ha explorado la implementación y optimización de un simulador de ondas 2D basado en la Transformada de Fourier, evaluando diferentes enfoques de implementación desde Python puro hasta optimizaciones vectoriales con AVX. 
-
+Se compararon 6 backends distintos, demostrando la importancia de utilizar optimizaciones en bajo nivel cuando la performance es critica. Los resultados revelaron que el estado del arte de la tecnología es altamente performante y dificil de superar, pero aún asi las implementaciones propias utilizando Assembler y paralelizacion con AVX alcanzaron un rendimiento muy competitivo.
 \printbibliography
 
 \end{document}
