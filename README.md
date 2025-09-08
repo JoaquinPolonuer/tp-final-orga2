@@ -1,6 +1,6 @@
 # Simulación de Ondas 2D
 
-Un proyecto de simulación de ondas 2D de alto rendimiento implementado con múltiples backends para comparación de performance.
+Simulador fisico de ondas 2D implementado con múltiples backends para comparación de performance.
 
 ![Simulación](informe/extra/live_visualization.png)
 
@@ -8,11 +8,11 @@ Un proyecto de simulación de ondas 2D de alto rendimiento implementado con múl
 
 - Simulación de ondas interactiva con visualización en tiempo real
 - Múltiples implementaciones de backend:
-  - Python (Python puro)
-  - NumPy (operaciones vectorizadas)
+  - Python puro
+  - NumPy
   - C
-  - C con AVX (optimizaciones SIMD)
-  - Assembly (optimizaciones ASM)
+  - C con AVX
+  - C con Assembly
 - Benchmarking para comparación de rendimiento
 
 ## Uso
