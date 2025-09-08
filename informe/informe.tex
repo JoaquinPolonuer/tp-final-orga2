@@ -309,7 +309,7 @@ Esta transformación convierte la ecuación diferencial parcial en una ecuación
 significativamente su resolución numérica mediante métodos espectrales.
 
 \section{Metodología}
-Se propone implementar un simulador físico que permita visualizar la evolución de una onda a traves de un campo. Para esto, se desarrollaron
+Se propone implementar un simulador físico que permita visualizar la evolución de una onda a traves de un campo. Para esto, desarrollé
 las interfaces \texttt{WaveSimulation2D} y \texttt{WaveVisualizer} (ver seccion experimental). A su vez, la interfaz \texttt{WaveSimulation2D} se implemento en varios
 backends distintos: Python, NumPy, C, C + ASM (Assembly), y C + AVX.
 
@@ -363,7 +363,7 @@ Como se ve en el diagrama, necesitamos calcular la transformada de fourier para 
 
 \subsection{Python y NumPy}
 
-Para establecer un baseline de rendimiento, implementamos dos versiones en Python:
+Para establecer un baseline de rendimiento, implementé dos versiones en Python:
 
 \subsubsection{Python puro} La implementación utiliza el algoritmo iterativo FFT descrito en la sección 1.5, utilizando listas de números complejos.
 Esta versión sirve como referencia para entender cuánto más rápido funcionan las implementaciones en C y las librerías optimizadas como NumPy.
@@ -617,7 +617,7 @@ static inline __m256d complex_mul_simd(__m256d z1, __m256d z2)
 
 \section{Experimentos}
 
-Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, testeamos el correcto funcionamiento mediante una simulacion interactiva, y medimos el rendimiento en distintos tamaños.
+Se realizaron experimentos para evaluar el rendimiento de cada backend implementado. Para cada backend, verifiqué el correcto funcionamiento mediante una simulacion interactiva, y medí el rendimiento en distintos tamaños.
 
 Los experimentos se realizaron en un sistema con las siguientes especificaciones:
 \begin{itemize}
@@ -633,7 +633,7 @@ Los experimentos se realizaron en un sistema con las siguientes especificaciones
           \end{itemize}
 \end{itemize}
 
-Se evaluaron seis implementaciones diferentes:
+Se evaluaron cinco implementaciones diferentes:
 \begin{enumerate}
     \item \textbf{Python}: Implementación en Python puro como baseline
     \item \textbf{NumPy}: Utilizando la biblioteca NumPy optimizada
@@ -655,9 +655,9 @@ Obviamente, una parte fundamental del trabajo es poder visualizar interactivamen
 Se puede acceder y testear la simulacion siguiendo las instrucciones del README.md presente en el repositorio del proyecto: \url{https://github.com/JoaquinPolonuer/tp-final-orga2}.
 
 \subsection{Rendimiento por Tamaño de Grilla}
-Una vez verificado el correcto funcionamiento de cada backend, decidimos medir más precisamente la performance. Para esto, dejamos de lado la visualización y simplemente medimos cantidad de pasos que puede computar la simulacion por segundo. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends.
+Una vez verificado el correcto funcionamiento de cada backend, decidí medir más precisamente la performance. Para esto, dejé de lado la visualización y simplemente medí cantidad de pasos que puede computar la simulacion por segundo. Básicamente, nos importa cuánto tarda en correr la función \texttt{step} en cada uno de los backends.
 
-Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evitamos lidiar con eso y simplemente medimos el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidimos optimizar. \\
+Un paréntesis importante es que, a los efectos de la visualización, las implementaciones en C tienen un pequeño \textit{overhead} porque deben convertir su grilla a un numpy array y esto consume un tiempo extra. En este trabajo evité lidiar con eso y simplemente medí el tiempo que tarda en correr cada paso de la simulación, porque es lo que decidí optimizar. \\
 
 \begin{table}[h]
     \centering
@@ -709,7 +709,7 @@ Los resultados experimentales presentados en \ref{tab:performance_results} revel
 \section{Conclusiones}
 En este trabajo se exploraron distintas implementaciones de un simulador fisico 2D basado en la Transformada Rapida de Fourier. El trabajo combina un extenso marco teorico matematico y fisico con una implementacion computacional altamente optimizada.
 
-Se compararon 6 backends distintos, demostrando la importancia de utilizar optimizaciones en bajo nivel cuando la performance es critica. Los resultados revelaron que el estado del arte de la tecnología es altamente performante y dificil de superar, pero aún asi las implementaciones propias utilizando Assembler y paralelizacion con AVX alcanzaron un rendimiento muy competitivo.
+Se compararon 5 backends distintos, demostrando la importancia de utilizar optimizaciones en bajo nivel cuando la performance es critica. Los resultados revelaron que el estado del arte de la tecnología es altamente performante y dificil de superar, pero aún asi las implementaciones propias utilizando Assembler y paralelizacion con AVX alcanzaron un rendimiento muy competitivo.
 \printbibliography
 
 \end{document}
