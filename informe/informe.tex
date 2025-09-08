@@ -443,7 +443,7 @@ Añade fuente puntual gaussiana como condición inicial de la ecuación de onda:
     \item Calcula \texttt{envelope = amplitude * exp(-r\_sq / (width * width))} implementando $A(x,y) = A_0 e^{-r^2/w^2}$ que localiza espacialmente la fuente
     \item Genera \texttt{phase = frequency * r} donde $\phi(r) = f \cdot r$ crea frentes de onda concéntricos con número de onda $f$
     \item Suma \texttt{new\_val = \{envelope * cos(phase), envelope * sin(phase)\}} al array \texttt{wave}, implementando $u(x,y) = A(x,y) e^{i\phi(r)}$ mediante \texttt{complex\_add}
-    \item Copia \texttt{wave} a \texttt{wave\_k} y aplica \texttt{fft2d(..., 0)} para obtener $\tilde{u}(\vec{k})$ donde evoluciona temporalmente la simulación
+    \item Copia \texttt{wave} a \texttt{wave\_k} y aplica \texttt{fft2d(..., 0)} para obtener $\tilde{u}(\vec{k})$ donde evolucionará temporalmente la simulación
 \end{itemize}
 
 \subsubsection{wave\_sim\_step}
