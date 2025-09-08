@@ -424,27 +424,37 @@ WaveSimulation funciona de la siguiente manera:
 Este struct funciona gracias a tres métodos principales: \texttt{create\_wave\_simulation}, \texttt{add\_wave\_source} y \texttt{wave\_sim\_step}.
 
 \subsubsection{create\_wave\_simulation}
+
+Inicializa la simulación configurando los dominios espacial y frecuencial para resolver $\frac{\partial^2 u}{\partial t^2} = c^2 \nabla^2 u$ con FFT:
+
 \begin{itemize}
-    \item Reserva memoria para la estructura \texttt{WaveSimulation} y sus arrays: \texttt{wave} y \texttt{wave\_k} de números complejos (size$^2$×Complex), \texttt{grid\_coords} y \texttt{k\_grid\_coords} (size$^2$×2×double), y \texttt{K} (size$^2$×double)
-    \item Inicializa \texttt{grid\_coords} con coordenadas espaciales en formato plano [$x_0,y_0,x_1,y_1,...$] centradas en el dominio
-    \item Calcula \texttt{k\_grid\_coords} usando frecuencias FFT con desplazamiento de frecuencias negativas para valores j,i > size/2
-    \item Computa magnitudes \texttt{K} como $k_{mag} = \sqrt{k_x^2 + k_y^2} \times 2\pi$, evitando división por cero en k=0 con valor 1e-10
+    \item Aloca arrays \texttt{wave} y \texttt{wave\_k} para amplitudes complejas en dominios espacial y frecuencial, \texttt{grid\_coords} y \texttt{k\_grid\_coords} para coordenadas, y \texttt{K} para magnitudes del vector de onda
+    \item Inicializa \texttt{grid\_coords} con coordenadas $(x,y)$ uniformes usando \texttt{start = -domain\_size/2.0} y \texttt{step = domain\_size/size}, centrando el dominio en $[-L/2, +L/2]$ con espaciado $dx = L/N$
+    \item Implementa el mapeo FFT estándar donde frecuencias $k_x = j/(N \cdot dx)$ para $j \leq N/2$ y $k_x = (j-N)/(N \cdot dx)$ para $j > N/2$.
+    \item Computa $|\vec{k}| = 2\pi\sqrt{k_x^2 + k_y^2}$ donde el factor $2\pi$ convierte frecuencias espaciales a números de onda.
 \end{itemize}
 
 \subsubsection{add\_wave\_source}
+
+Añade fuente puntual gaussiana como condición inicial de la ecuación de onda:
+
 \begin{itemize}
-    \item Itera sobre todo el grid calculando la distancia radial $r^2 = (x-x_0)^2 + (y-y_0)^2$ desde la posición de la fuente
-    \item Genera una envolvente gaussiana (amplitude $\times e^{-r^2/width^2}$) y fase radial (frequency $\times r$)
-    \item Suma al array \texttt{wave} valores complejos envelope$\times$(cos(phase) + $i\times$sin(phase)) usando \texttt{complex\_add}
-    \item Copia \texttt{wave} a \texttt{wave\_k} y aplica FFT2D directa para obtener la representación en k-space
+    \item Computa \texttt{r\_sq = (x\_val - x\_pos) * (x\_val - x\_pos) + (y\_val - y\_pos) * (y\_val - y\_pos)} para obtener $r^2$ desde la posición de la fuente
+    \item Calcula \texttt{envelope = amplitude * exp(-r\_sq / (width * width))} implementando $A(x,y) = A_0 e^{-r^2/w^2}$ que localiza espacialmente la fuente
+    \item Genera \texttt{phase = frequency * r} donde $\phi(r) = f \cdot r$ crea frentes de onda concéntricos con número de onda $f$
+    \item Suma \texttt{new\_val = \{envelope * cos(phase), envelope * sin(phase)\}} al array \texttt{wave}, implementando $u(x,y) = A(x,y) e^{i\phi(r)}$ mediante \texttt{complex\_add}
+    \item Copia \texttt{wave} a \texttt{wave\_k} y aplica \texttt{fft2d(..., 0)} para obtener $\tilde{u}(\vec{k})$ donde evoluciona temporalmente la simulación
 \end{itemize}
 
 \subsubsection{wave\_sim\_step}
+
+Evoluciona la simulación un paso temporal usando la solución exacta espectral:
+
 \begin{itemize}
-    \item Calcula evolución temporal en el dominio frecuencial: para cada punto obtiene $\omega$ = wave\_speed $\times$ K[idx] y phase = $-\omega \times$ dt
-    \item Multiplica \texttt{wave\_k[idx]} por factor de fase complex (cos(phase) + i×sin(phase)) usando \texttt{complex\_mul}
-    \item Copia \texttt{wave\_k} a \texttt{wave} y aplica FFT2D inversa para transformar de vuelta al espacio real
-    \item La función preserva la ecuación de onda dispersiva aplicando el operador de evolución temporal $e^{-i\omega t}$
+    \item Calcula \texttt{omega = sim->wave\_speed * sim->K[idx]} implementando $\omega = c|\vec{k}|$.
+    \item Computa \texttt{phase = -omega * sim->dt} para el argumento del operador de evolución temporal $e^{-i\omega t}$
+    \item Multiplica cada modo por \texttt{phase\_factor = \{cos(phase), sin(phase)\}} usando \texttt{complex\_mul}, implementando exactamente la solución analítica $\tilde{u}(\vec{k},t) = \tilde{u}(\vec{k},0) e^{-i\omega(\vec{k})t}$
+    \item Copia \texttt{wave\_k} a \texttt{wave} y aplica \texttt{fft2d(..., 1)} para recuperar $u(x,y,t+dt)$ en el dominio espacial
 \end{itemize}
 
 Estos métodos son fundamentales y, como se mencionó previamente, son la base necesaria que nos permite acelerar la simulación en todos los backends. Ya aclarado esto, la implementación de la transformada de Fourier:
